@@ -191,31 +191,7 @@ const handleExportResults = (resultSet) => {
   ElMessage.info('导出功能开发中...')
 }
 
-// 显示关于信息
-const showAbout = () => {
-  ElMessageBox.alert(
-    `
-    <div style="text-align: left;">
-      <h3>SESI数据库客户端</h3>
-      <p><strong>版本:</strong> 1.0.0</p>
-      <p><strong>描述:</strong> 基于Vue3的数据库管理工具</p>
-      <p><strong>功能:</strong></p>
-      <ul>
-        <li>数据库连接管理</li>
-        <li>SQL编辑器（语法高亮）</li>
-        <li>SQL执行和结果展示</li>
-        <li>执行历史记录</li>
-        <li>多标签页支持</li>
-      </ul>
-    </div>
-    `,
-    '关于SESI数据库客户端',
-    {
-      dangerouslyUseHTMLString: true,
-      confirmButtonText: '确定'
-    }
-  )
-}
+
 
 // 组件挂载时的初始化
 console.log('SESI数据库客户端已启动')
