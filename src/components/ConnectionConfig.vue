@@ -87,7 +87,7 @@
           @click="handleSaveConnection"
           :loading="saving"
         >
-          保存并连接
+          连接
         </el-button>
       </span>
     </template>

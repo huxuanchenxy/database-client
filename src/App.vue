@@ -33,9 +33,10 @@
 
         <!-- 主内容区域 -->
         <el-main class="app-main">
-          <el-container>
+          <!-- 把 direction 设置成 vertical -->
+          <el-container direction="vertical">
             <!-- SQL编辑器 -->
-            <el-aside width="50%" class="sql-aside">
+            <el-aside class="sql-aside">
               <SqlEditor
                 :connection="currentConnection"
                 @execute="handleExecuteSql"
@@ -280,14 +281,25 @@ body {
 }
 
 .sql-aside {
+  flex: 1;
   background-color: #fff;
-  border-right: 1px solid #e4e7ed;
+  border-bottom: 1px solid #e4e7ed;
   padding: 0;
+  width: 100%; /* 保证横向占满 */
+  overflow: auto;
 }
 
 .result-main {
+  flex: 1;
   background-color: #fff;
   padding: 0;
+  overflow: auto;
+}
+
+.app-main .el-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Element Plus 样式覆盖 */
