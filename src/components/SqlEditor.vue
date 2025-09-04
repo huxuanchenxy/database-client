@@ -8,7 +8,7 @@
           :loading="executing"
           :icon="VideoPlay"  
         >
-          执行 (Ctrl+Enter)
+          执行
         </el-button>
         
         <el-button
@@ -42,14 +42,14 @@
       ></div>
     </div>
 
-    <div class="editor-footer">
+    <!-- <div class="editor-footer">
       <el-input
         v-model="sqlComment"
         placeholder="输入SQL注释（可选）"
         size="small"
         style="margin-bottom: 10px; width: 100%"
       />
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -141,7 +141,7 @@ const executeSqlInternal = async (sqlToExecute) => {
         sql: sqlToExecute,
         result: result,
         time: queryTime.value,
-        comment: sqlComment.value
+        // comment: sqlComment.value
       })
     }
     
@@ -176,7 +176,7 @@ const handleKeydown = (event) => {
 onMounted(async () => {
   await nextTick()
   if (editorElement.value) {
-    initEditor(editorElement.value)
+    //initEditor(editorElement.value)
   }
   
   // 添加键盘事件监听

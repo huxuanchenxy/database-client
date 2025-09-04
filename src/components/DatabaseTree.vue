@@ -8,7 +8,7 @@
       >
         连接数据库
       </el-button>
-      
+
       <div v-if="currentConnection" class="connection-info">
         <el-tag type="info">
           已连接: {{ currentConnection.name }}
@@ -47,12 +47,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { databaseApi } from '../api/api'
 import ConnectionConfig from './ConnectionConfig.vue'
-
+// import { databaseApi } from '../api/api'
 const props = defineProps({
   onDatabaseSelect: Function,
   onTableSelect: Function
@@ -66,97 +65,117 @@ const currentConnection = ref(null)
 const treeData = ref([])
 const loading = ref(false)
 
+// 模拟数据库API
+const mockDatabaseApi = {
+  // 模拟获取数据库列表
+  getDatabases: async (connectionConfig) => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    return {
+      success: true,
+      data: {
+        databases: ['test_db', 'user_management', 'order_system']
+      }
+    }
+  },
+
+  // 模拟获取数据库对象 (表、视图、存储过程、函数)
+  getDatabaseObjects: async ({ database }) => {
+    await new Promise(resolve => setTimeout(resolve, 300))
+
+    const dbMock = {
+      test_db: {
+        tables: ['users', 'orders', 'products'],
+        views: ['active_users', 'order_summary'],
+        procedures: ['sp_update_order', 'sp_recalc_stock'],
+        functions: ['fn_get_discount', 'fn_format_date']
+      },
+      user_management: {
+        tables: ['users', 'roles', 'permissions'],
+        views: ['user_roles_view'],
+        procedures: ['sp_add_user', 'sp_delete_user'],
+        functions: ['fn_user_count']
+      },
+      order_system: {
+        tables: ['orders', 'order_items', 'customers'],
+        views: ['order_summary_view'],
+        procedures: ['sp_create_order', 'sp_cancel_order'],
+        functions: ['fn_order_total']
+      }
+    }
+
+    return {
+      success: true,
+      data: dbMock[database] || { tables: [], views: [], procedures: [], functions: [] }
+    }
+  }
+}
+
 const treeProps = {
   children: 'children',
   label: 'label'
 }
 
-// 构建树形数据
+// 构建树形数据（数据库 -> [表、视图、存储过程、函数]）
 const buildTreeData = (data) => {
   const tree = []
-  
+
   if (data.databases && data.databases.length > 0) {
-    const databases = {
-      id: 'databases',
-      label: '🗃️ 数据库',
-      icon: 'Folder',
-      children: []
-    }
-    
     data.databases.forEach(db => {
-      databases.children.push({
+      tree.push({
         id: `db_${db}`,
         label: db,
         icon: 'Database',
         type: 'database',
         database: db,
-        connection: currentConnection.value
+        connection: currentConnection.value,
+        children: [
+          { id: `db_${db}_tables`, label: '表', type: 'tables', icon: 'Folder', database: db, children: [] },
+          { id: `db_${db}_views`, label: '视图', type: 'views', icon: 'Folder', database: db, children: [] },
+          { id: `db_${db}_procs`, label: '存储过程', type: 'procedures', icon: 'Folder', database: db, children: [] },
+          { id: `db_${db}_funcs`, label: '函数', type: 'functions', icon: 'Folder', database: db, children: [] }
+        ]
       })
     })
-    
-    tree.push(databases)
   }
-  
   return tree
 }
 
-// 处理节点点击
+// 点击节点加载子项
 const handleNodeClick = async (data) => {
-  if (data.type === 'database') {
+  if (['tables', 'views', 'procedures', 'functions'].includes(data.type)) {
     try {
       loading.value = true
-      ElMessage.info(`正在加载数据库 ${data.database} 的表...`)
-      
-      const result = await databaseApi.getTables({
-        ...currentConnection.value,
+      ElMessage.info(`正在加载 ${data.label}...`)
+
+      const result = await mockDatabaseApi.getDatabaseObjects({
         database: data.database
       })
-      
+
       if (result.success) {
-        // 更新树形数据，添加表信息
-        const updatedTreeData = [...treeData.value]
-        const databasesNode = updatedTreeData.find(node => node.id === 'databases')
-        
-        if (databasesNode) {
-          const dbNode = databasesNode.children.find(child => child.database === data.database)
-          if (dbNode) {
-            dbNode.children = result.data.map(table => ({
-              id: `table_${data.database}_${table}`,
-              label: table,
-              icon: 'Document',
-              type: 'table',
-              database: data.database,
-              table: table,
-              connection: currentConnection.value
-            }))
-          }
-        }
-        
-        treeData.value = updatedTreeData
-        ElMessage.success(`加载表成功，共 ${result.data.length} 个表`)
-        
-        // 触发表选择事件
-        if (props.onTableSelect) {
-          props.onTableSelect(data)
-        }
-        if (emit) {
-          emit('table-selected', data)
-        }
+        let list = result.data[data.type] || []
+        data.children = list.map(item => ({
+          id: `${data.type}_${data.database}_${item}`,
+          label: item,
+          icon: 'Document',
+          type: 'object',
+          database: data.database,
+          objectType: data.type,
+          name: item
+        }))
+        treeRef.value.updateKeyChildren(data.id, data.children)
+        ElMessage.success(`加载 ${data.label} 成功，共 ${list.length} 个`)
       }
-    } catch (error) {
-      console.error('加载表失败:', error)
-      ElMessage.error('加载表失败: ' + (error.message || '未知错误'))
+    } catch (e) {
+      ElMessage.error('加载失败: ' + e.message)
     } finally {
       loading.value = false
     }
-  } else if (data.type === 'table') {
-    // 触发表选择事件
+  } else if (data.type === 'object') {
+    // 点击具体对象（表/视图/函数）
     if (props.onTableSelect) {
       props.onTableSelect(data)
     }
-    if (emit) {
-      emit('table-selected', data)
-    }
+    emit('table-selected', data)
   }
 }
 
@@ -169,11 +188,10 @@ const handleConnectionSuccess = (connectionConfig) => {
 // 加载数据库列表
 const loadDatabases = async () => {
   if (!currentConnection.value) return
-  
+
   try {
     loading.value = true
-    const result = await databaseApi.getDatabases(currentConnection.value)
-    
+    const result = await mockDatabaseApi.getDatabases(currentConnection.value)
     if (result.success) {
       treeData.value = buildTreeData(result.data)
       ElMessage.success('连接成功，数据库列表已加载')
@@ -217,6 +235,7 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
+  max-height: calc(100vh - 120px); /* 减去顶部按钮和间距 */
 }
 
 .tree-node {
