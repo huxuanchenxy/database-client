@@ -27,15 +27,16 @@
         </div>
       </div>
 
-      <!-- <div class="sql-editor-wrapper">
+      <div class="sql-editor-wrapper">
         <VueMonacoEditor
           v-model:value="sqlCode"
           language="sql"
-          theme="vs-dark"
-          height="200px"
+          theme="vs"
+          height="50vh"
           class="editor"
+          :options="{ minimap: { enabled: false } }"
         />
-      </div> -->
+      </div>
 
     </div>
 
