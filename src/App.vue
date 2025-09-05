@@ -37,10 +37,12 @@
           <el-container direction="vertical">
             <!-- SQL编辑器 -->
             <el-aside class="sql-aside">
-              <SqlEditor
-                :connection="currentConnection"
-                @execute="handleExecuteSql"
-              />
+                  <h2>Monaco SQL 编辑器 Demo</h2>
+                  <SqlEditor />
+                  <div class="preview">
+                    <h3>当前 SQL 内容:</h3>
+                    <pre>{{ sqlCode }}</pre>
+                  </div>
             </el-aside>
 
             <!-- 结果区域 -->
@@ -78,6 +80,7 @@ import SqlEditor from './components/SqlEditor.vue'
 import ResultArea from './components/ResultArea.vue'
 import ConnectionConfig from './components/ConnectionConfig.vue'
 
+const sqlCode = ref('')
 // 响应式数据
 const showConnectionDialog = ref(false)
 const currentConnection = ref(null)
@@ -309,5 +312,12 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+.preview {
+  margin-top: 20px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background: #fafafa;
 }
 </style>
