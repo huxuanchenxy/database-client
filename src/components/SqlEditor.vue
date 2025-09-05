@@ -1,13 +1,52 @@
 <template>
-  <div class="sql-editor-wrapper">
-    <VueMonacoEditor
-      v-model:value="sqlCode"
-      language="sql"
-      theme="vs-dark"
-      height="200px"
-      class="editor"
-    />
-  </div>
+    <div class="sql-editor">
+      <div class="editor-header">
+        <div class="editor-toolbar">
+          <el-button
+            type="primary"
+            @click="executeSql"
+            :loading="executing"
+            :icon="VideoPlay"  
+          >
+            执行
+          </el-button>
+          
+          <el-button
+            @click="executeSelected"
+            :loading="executing"
+            :disabled="selectedSql === ''"
+            :icon="VideoPause"  
+          >
+            执行选中
+          </el-button>
+          
+          <el-button
+            @click="clearSql"
+            :icon="Delete"
+          >
+            清空
+          </el-button>
+          
+        </div>
+        
+        <div class="editor-info">
+          <span v-if="executing">执行中...</span>
+          <span v-else-if="queryTime > 0">上次执行: {{ queryTime }}ms</span>
+        </div>
+      </div>
+
+      <!-- <div class="sql-editor-wrapper">
+        <VueMonacoEditor
+          v-model:value="sqlCode"
+          language="sql"
+          theme="vs-dark"
+          height="200px"
+          class="editor"
+        />
+      </div> -->
+
+    </div>
+
 </template>
 
 <script setup>
