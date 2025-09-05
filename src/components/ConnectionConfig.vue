@@ -111,12 +111,12 @@ const saving = ref(false)
 const formRef = ref()
 
 const connectionForm = reactive({
-  name: '',
-  host: 'localhost',
+  name: '10.89.34.9',
+  host: '10.89.34.9',
   port: 5432,
-  database: '',
-  username: '',
-  password: '',
+  database: 'seis',
+  username: 'seis',
+  password: 'seis',
   dbType: 'mysql'
 })
 
@@ -146,12 +146,12 @@ const handleClose = () => {
 const resetForm = () => {
   formRef.value?.resetFields()
   Object.assign(connectionForm, {
-    name: '',
-    host: 'localhost',
+    name: '10.89.34.9',
+    host: '10.89.34.9',
     port: 5432,
-    database: '',
-    username: '',
-    password: '',
+    database: 'seis',
+    username: 'seis',
+    password: 'seis',
     dbType: 'mysql'
   })
 }
@@ -162,13 +162,18 @@ const handleTestConnection = async () => {
   try {
     await formRef.value.validate()
     testing.value = true
+    let parm = {
+         dbName:connectionForm.database,
+         dbHost:connectionForm.host + ":" + connectionForm.port,
+         user:connectionForm.username,
+		     password:connectionForm.password,
+    }
+    const result = await databaseApi.testConnection(parm)
     
-    const result = await databaseApi.testConnection(connectionForm)
-    
-    if (result.success) {
+    if (result.code === 200) {
       ElMessage.success('连接测试成功！')
     } else {
-      ElMessage.error(result.message || '连接测试失败')
+      ElMessage.error(result.message + ":" + result.data)
     }
   } catch (error) {
     console.error('验证失败:', error)
@@ -185,17 +190,22 @@ const handleSaveConnection = async () => {
     saving.value = true
     
     // const result = await databaseApi.saveConnection(connectionForm)
-    const result = {}
-    result.success = true
-    if (result.success) {
-      ElMessage.success('连接配置保存成功！')
+    let parm = {
+         dbName:connectionForm.database,
+         dbHost:connectionForm.host + ":" + connectionForm.port,
+         user:connectionForm.username,
+		     password:connectionForm.password,
+    }
+    const result = await databaseApi.testConnection(parm)
+    if (result.code === 200) {
+      ElMessage.success('连接成功！')
       emit('connection-success', connectionForm)
       handleClose()
     } else {
-      ElMessage.error(result.message || '保存失败')
+      ElMessage.error(result.message + ":" + result.data)
     }
   } catch (error) {
-    console.error('保存失败:', error)
+    console.error('连接失败:', error)
   } finally {
     saving.value = false
   }

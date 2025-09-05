@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // 后端API地址，根据实际情况修改
+  baseURL: 'http://10.89.33.97:9080', 
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
@@ -12,7 +12,7 @@ const api = axios.create({
 // 请求拦截器
 api.interceptors.request.use(
   config => {
-    console.log('发送请求:', config)
+    // console.log('发送请求:', config)
     return config
   },
   error => {
@@ -35,7 +35,7 @@ api.interceptors.response.use(
 export const databaseApi = {
   // 测试连接
   testConnection: (connectionConfig) => {
-    return api.post('/connection/test', connectionConfig)
+    return api.post('/seisdb/getconn', connectionConfig)
   },
 
   // 保存连接配置

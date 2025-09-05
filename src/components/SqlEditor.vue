@@ -11,21 +11,13 @@
             执行
           </el-button>
           
-          <el-button
-            @click="executeSelected"
-            :loading="executing"
-            :disabled="selectedSql === ''"
-            :icon="VideoPause"  
-          >
-            执行选中
-          </el-button>
           
-          <el-button
+          <!-- <el-button
             @click="clearSql"
             :icon="Delete"
           >
             清空
-          </el-button>
+          </el-button> -->
           
         </div>
         
