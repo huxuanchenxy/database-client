@@ -2,8 +2,8 @@ import axios from 'axios'
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: 'http://10.89.33.97:9080', 
-  timeout: 30000,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT),
   headers: {
     'Content-Type': 'application/json'
   }
@@ -26,7 +26,7 @@ api.interceptors.response.use(
     return response.data
   },
   error => {
-    console.error('API错误:', error)
+    console.error('API错误:', error,import.meta.env.VITE_API_BASE_URL)
     return Promise.reject(error)
   }
 )
