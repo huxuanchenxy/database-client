@@ -6,63 +6,60 @@
           <el-tab-pane label="结果" name="results">
             <template #label>
               <span>
-                结果 
-                <el-badge v-if="resultSet && resultSet.rows && resultSet.rows.length > 0" 
-                          :value="resultSet.rows.length" 
-                          class="item" />
+                结果
+                <!-- <el-badge
+                  v-if="resultSet.rows.length > 0"
+                  :value="resultSet.rows.length"
+                  class="item"
+                /> -->
               </span>
             </template>
           </el-tab-pane>
-          
+
           <el-tab-pane label="消息" name="messages">
             <template #label>
               <span>
                 消息
-                <el-badge v-if="messageCount > 0" 
-                          :value="messageCount" 
-                          class="item" />
+                <!-- <el-badge
+                  v-if="messageCount > 0"
+                  :value="messageCount"
+                  class="item"
+                /> -->
               </span>
             </template>
           </el-tab-pane>
-          
+
           <!-- <el-tab-pane label="历史" name="history">
             <template #label>
               <span>
                 历史
-                <el-badge v-if="historyCount > 0" 
-                          :value="historyCount" 
-                          class="item" />
+                <el-badge
+                  v-if="historyCount > 0"
+                  :value="historyCount"
+                  class="item"
+                />
               </span>
             </template>
           </el-tab-pane> -->
         </el-tabs>
       </div>
-      
-      <!-- <div class="result-actions" v-if="activeTab === 'results' && resultSet">
-        <el-button
-          size="small"
-          @click="exportResults"
-          :icon="Download"
-          :disabled="resultSet.rows.length === 0"
-        >
-          导出
-        </el-button>
-      </div> -->
     </div>
 
     <div class="result-content">
-      <!-- 结果标签页 -->
+      <!-- 结果面板 -->
       <div v-show="activeTab === 'results'" class="results-tab">
         <div v-if="executing" class="executing">
           <el-icon class="is-loading"><Loading /></el-icon>
           <span>执行中...</span>
         </div>
-        
-        <div v-else-if="resultSet && resultSet.rows && resultSet.rows.length > 0" class="table-results">
-          <!-- 表格头部信息 -->
-          <div class="result-info" v-if="resultSet.executionTime">
+
+        <div
+          v-else-if="resultSet.rows.length > 0"
+          class="table-results"
+        >
+          <div class="result-info">
             <el-tag size="small" type="info">
-              影响行数: {{ resultSet.affectedRows || 0 }}
+              影响行数: {{ resultSet.affectedRows }}
             </el-tag>
             <el-tag size="small" type="success">
               查询时间: {{ resultSet.executionTime }}ms
@@ -71,37 +68,22 @@
               返回行数: {{ resultSet.rows.length }}
             </el-tag>
           </div>
-          
-          <!-- 数据表格 -->
-          <el-table
-            :data="resultSet.rows"
-            stripe
-            border
-            max-height="400"
-            v-loading="loading"
-          >
-            <el-table-column
-              v-for="(column, index) in resultSet.columns"
-              :key="index"
-              :prop="column"
-              :label="column"
-              min-width="120"
-              show-overflow-tooltip
+
+          <!-- ✅ vxe-grid 自适应高度 -->
+          <div class="grid-wrapper">
+            <vxe-grid
+              border
+              stripe
+              width="100%"
+              height="100%"
+              :data="resultSet.rows"
+              :columns="gridColumns"
             />
-          </el-table>
-          
-          <!-- 分页（如果需要） -->
-          <div v-if="resultSet.rows.length > 0" class="pagination-info">
-            共 {{ resultSet.rows.length }} 条记录
           </div>
-        </div>
-        
-        <div v-else-if="executed && (!resultSet || (resultSet.rows && resultSet.rows.length === 0))" class="no-results">
-          <el-empty description="暂无数据返回" />
         </div>
       </div>
 
-      <!-- 消息标签页 -->
+      <!-- 消息面板 -->
       <div v-show="activeTab === 'messages'" class="messages-tab">
         <el-scrollbar height="100%">
           <div v-if="messages.length === 0" class="no-messages">
@@ -126,7 +108,7 @@
         </el-scrollbar>
       </div>
 
-      <!-- 历史标签页 -->
+      <!-- 历史面板 -->
       <div v-show="activeTab === 'history'" class="history-tab">
         <HistoryPanel />
       </div>
@@ -136,110 +118,60 @@
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Download, Loading } from '@element-plus/icons-vue'
+import { Loading } from '@element-plus/icons-vue'
 import HistoryPanel from './HistoryPanel.vue'
 
-const props = defineProps({
-  resultSet: Object,
-  executing: Boolean,
-  executed: Boolean,
-  executionTime: Number,
-  affectedRows: Number,
-  messages: {
-    type: Array,
-    default: () => []
-  },
-  history: {
-    type: Array,
-    default: () => []
-  }
+// mock 结果集
+const resultSet = reactive({
+  columns: ['id', 'name', 'age'],
+  rows: [
+    { id: 1, name: 'Tom', age: 18 },
+    { id: 2, name: 'Jerry', age: 20 },
+    { id: 3, name: 'Alice', age: 22 }
+  ],
+  executionTime: 120,
+  affectedRows: 3
 })
 
-const emit = defineEmits(['export-results'])
+// vxe-grid 列定义
+const gridColumns = ref(
+  resultSet.columns.map(col => ({
+    field: col,
+    title: col,
+    minWidth: 120,
+    showOverflow: true
+  }))
+)
 
+// mock 消息
+const messages = ref([
+  { type: 'success', content: '执行成功', timestamp: Date.now() },
+  { type: 'info', content: '查询完成', timestamp: Date.now() }
+])
+
+// mock 历史
+const history = ref([
+  { sql: 'SELECT * FROM users;', time: Date.now() },
+  { sql: 'DELETE FROM users WHERE id=1;', time: Date.now() }
+])
+
+const executing = ref(false)
 const activeTab = ref('results')
 
 // 统计数据
-const messageCount = computed(() => props.messages.filter(m => m.type !== 'success').length)
-const historyCount = computed(() => props.history.length)
+const messageCount = computed(() => messages.value.filter(m => m.type !== 'success').length)
+const historyCount = computed(() => history.value.length)
 
-const executing = ref(false)
-const loading = ref(false)
-
-// 结果数据
-const resultSet = reactive({
-  columns: [],
-  rows: [],
-  executionTime: 0,
-  affectedRows: 0
-})
-
-// 导出结果
-const exportResults = () => {
-  if (!props.resultSet || !props.resultSet.rows || props.resultSet.rows.length === 0) {
-    ElMessage.warning('没有数据可导出')
-    return
-  }
-  
-  emit('export-results', props.resultSet)
-  ElMessage.success('导出功能开发中...')
-}
-
-// 获取消息标签类型
+// 工具方法
 const getMessageTagType = (type) => {
-  const types = {
-    error: 'danger',
-    warning: 'warning',
-    success: 'success',
-    info: 'info'
-  }
+  const types = { error: 'danger', warning: 'warning', success: 'success', info: 'info' }
   return types[type] || 'info'
 }
-
-// 获取消息类型标签
 const getMessageTypeLabel = (type) => {
-  const labels = {
-    error: '错误',
-    warning: '警告',
-    success: '成功',
-    info: '信息'
-  }
+  const labels = { error: '错误', warning: '警告', success: '成功', info: '信息' }
   return labels[type] || '信息'
 }
-
-// 格式化时间
-const formatTime = (timestamp) => {
-  if (!timestamp) return ''
-  return new Date(timestamp).toLocaleString()
-}
-
-// 初始化结果数据
-const initResultSet = () => {
-  resultSet.columns = []
-  resultSet.rows = []
-  resultSet.executionTime = 0
-  resultSet.affectedRows = 0
-}
-
-// 监听props变化
-const updateResultSet = () => {
-  if (props.resultSet) {
-    resultSet.columns = props.resultSet.columns || []
-    resultSet.rows = props.resultSet.rows || []
-    resultSet.executionTime = props.executionTime || 0
-    resultSet.affectedRows = props.affectedRows || 0
-  }
-}
-
-// 监听props
-if (props.resultSet) {
-  updateResultSet()
-}
-
-// 监听props.resultSet变化
-// 注意：由于Vue3的响应式限制，这里使用watch或者在父组件中直接更新resultSet对象
-// 为了简化，我们在父组件中直接操作resultSet对象
+const formatTime = (timestamp) => new Date(timestamp).toLocaleString()
 </script>
 
 <style scoped>
@@ -263,37 +195,32 @@ if (props.resultSet) {
   flex: 1;
 }
 
-.result-actions {
-  display: flex;
-  gap: 8px;
-}
-
 .result-content {
   flex: 1;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
+/* ✅ 让结果面板能占满 */
 .results-tab {
   flex: 1;
-  overflow: auto;
-  padding: 15px;
-}
-
-.executing {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 40px;
-  color: #409eff;
+  flex-direction: column;
+  padding: 15px;
+  overflow: hidden;
 }
 
 .table-results {
-  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+/* ✅ 表格容器撑开高度 */
+.grid-wrapper {
+  flex: 1;
+  min-height: 300px;
 }
 
 .result-info {
@@ -303,81 +230,10 @@ if (props.resultSet) {
   flex-wrap: wrap;
 }
 
-.pagination-info {
-  margin-top: 10px;
-  text-align: right;
-  color: #666;
-  font-size: 12px;
-}
-
 .no-results {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.messages-tab {
-  flex: 1;
-  height: 100%;
-}
-
-.no-messages {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.message-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.message-item:last-child {
-  border-bottom: none;
-}
-
-.message-content {
-  flex: 1;
-}
-
-.message-text {
-  margin-bottom: 4px;
-  word-break: break-word;
-}
-
-.message-time {
-  font-size: 11px;
-  color: #999;
-}
-
-.history-tab {
-  flex: 1;
-  height: 100%;
-  overflow: hidden;
-}
-
-.item {
-  margin-left: 4px;
-}
-
-:deep(.el-tabs__header) {
-  margin: 0 0 10px 0;
-}
-
-:deep(.el-tabs__content) {
-  height: calc(100% - 40px);
-}
-
-:deep(.el-table) {
-  font-size: 13px;
-}
-
-:deep(.el-table th) {
-  background-color: #f5f7fa;
 }
 </style>

@@ -194,6 +194,7 @@ const loadDatabases = async () => {
     const result = await mockDatabaseApi.getDatabases(currentConnection.value)
     if (result.success) {
       treeData.value = buildTreeData(result.data)
+      console.log('数据库列表:', result.data)
       ElMessage.success('连接成功，数据库列表已加载')
     } else {
       ElMessage.error('加载数据库列表失败: ' + result.message)
