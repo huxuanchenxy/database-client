@@ -18,7 +18,7 @@
 
     <el-divider />
 
-    <el-tree
+    <!-- <el-tree
       ref="treeRef"
       :data="treeData"
       :props="treeProps"
@@ -36,7 +36,9 @@
           <span>{{ node.label }}</span>
         </span>
       </template>
-    </el-tree>
+    </el-tree> -->
+  <el-tree :data="treeData" default-expand-all >
+  </el-tree>
 
     <!-- 连接配置对话框 -->
     <ConnectionConfig
@@ -65,7 +67,7 @@ const emit = defineEmits(['database-selected', 'table-selected'])
 const showConnectionDialog = ref(false)
 const treeRef = ref()
 const currentConnection = ref(null)
-const treeData = ref([])
+// const treeData = ref([])
 const loading = ref(false)
 
 // 模拟数据库API
@@ -86,7 +88,7 @@ const mockDatabaseApi = {
     await new Promise(resolve => setTimeout(resolve, 300))
 
     const dbMock = {
-      test_db: {
+      seis: {
         tables: ['users', 'orders', 'products'],
         views: ['active_users', 'order_summary'],
         procedures: ['sp_update_order', 'sp_recalc_stock'],
@@ -120,7 +122,7 @@ const treeProps = {
 
 // 构建树形数据（数据库 -> [表、视图、存储过程、函数]）
 const buildTreeData = (data) => {
-  // console.log('数据:', data)
+  console.log('数据:', data)
   const tree = []
   let tmpdb = []
   tmpdb.push(data.dbName)
@@ -137,8 +139,8 @@ const buildTreeData = (data) => {
         database: db,
         connection: currentConnection.value,
         children: [
-          { id: `db_${db}_tables`, label: '表', type: 'tables', icon: 'Folder', database: db, children: [] },
-          { id: `db_${db}_views`, label: '视图', type: 'views', icon: 'Folder', database: db, children: [] },
+          { id: `db_${db}_tables`, label: '表', type: 'tables', icon: 'Folder', database: db, children: data.tableList },
+          { id: `db_${db}_views`, label: '视图', type: 'views', icon: 'Folder', database: db, children: data.viewList },
           { id: `db_${db}_procs`, label: '存储过程', type: 'procedures', icon: 'Folder', database: db, children: [] },
           { id: `db_${db}_funcs`, label: '函数', type: 'functions', icon: 'Folder', database: db, children: [] }
         ]
@@ -151,6 +153,8 @@ const buildTreeData = (data) => {
 
 // 点击节点加载子项
 const handleNodeClick = async (data) => {
+  console.log('点击节点:', data)
+  console.log('treeData.value:', treeData.value)
   if (['tables', 'views', 'procedures', 'functions'].includes(data.type)) {
     try {
       loading.value = true
@@ -159,9 +163,11 @@ const handleNodeClick = async (data) => {
       const result = await mockDatabaseApi.getDatabaseObjects({
         database: data.database
       })
+      console.log('result:', result)
 
       if (result.success) {
         let list = result.data[data.type] || []
+        console.log('list:', list)
         data.children = list.map(item => ({
           id: `${data.type}_${data.database}_${item}`,
           label: item,
@@ -171,9 +177,25 @@ const handleNodeClick = async (data) => {
           objectType: data.type,
           name: item
         }))
+        console.log('data.children:', data.children)
         treeRef.value.updateKeyChildren(data.id, data.children)
         ElMessage.success(`加载 ${data.label} 成功，共 ${list.length} 个`)
       }
+      // if (result.success) {
+      //   let list = result.data[data.type] || []
+      //   console.log('list:', list)
+      //   data.children = list.map(item => ({
+      //     id: `${data.type}_${data.database}_${item}`,
+      //     label: item,
+      //     icon: 'Document',
+      //     type: 'object',
+      //     database: data.database,
+      //     objectType: data.type,
+      //     name: item
+      //   }))
+      //   treeRef.value.updateKeyChildren(data.id, data.children)
+      //   ElMessage.success(`加载 ${data.label} 成功，共 ${list.length} 个`)
+      // }
     } catch (e) {
       ElMessage.error('加载失败: ' + e.message)
     } finally {
@@ -198,26 +220,25 @@ const handleConnectionSuccess = (connectionConfig) => {
 const loadDatabases = async () => {
 
   //todo: 获取连接信息如果失败则把connStore.conn变null
-  console.log('connStore.conn',connStore.conn)
+  // console.log('connStore.conn',connStore.conn)
   currentConnection.value = connStore.conn
   // console.log('当前连接:', currentConnection.value)
   // if (!currentConnection.value) return
   if (!connStore.conn) return
 
   try {
-    loading.value = true
-    const result = await databaseApi.getDatabases(connStore.conn)
-    console.log('数据库列表:', result)
-    if (result.code === 200) {
-      treeData.value = buildTreeData(result.data)
-      // console.log('数据库列表:', result.data)
-      ElMessage.success('连接成功，数据库列表已加载')
-    } else {
-      ElMessage.error('加载数据库列表失败: ' + result.message)
-    }
-  } catch (error) {
-    console.error('加载数据库失败:', error)
-    ElMessage.error('加载数据库失败: ' + (error.message || '未知错误'))
+  const res = await databaseApi.getDatabases(connStore.conn)
+  console.log('res',res)
+  // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
+  if(res.code === 200) {
+    // treeData.value = buildTree(res.data
+    let tmpdb = []
+    tmpdb.push(res.data.dbName)
+    let dbdata = { databases: tmpdb, tableList: res.data.tableList, viewList: res.data.viewList }
+    treeData.value = buildTree(dbdata)
+  }
+  } catch (e) {
+    console.error(e)
   } finally {
     loading.value = false
   }
@@ -227,6 +248,30 @@ onMounted(() => {
   // 组件挂载时的初始化逻辑
   loadDatabases()
 })
+
+/* 1. 先给空数组，树第一次渲染不会报错 */
+const treeData = ref([])
+
+/* 2. 把后端数据 -> el-tree 结构 */
+function buildTree({ databases, tableList, viewList }) {
+  return [
+    {
+      label: databases[0],
+      children: [
+        {
+          label: '表',
+          children: tableList.map(t => ({ label: t.tableName }))
+        },
+        {
+          label: '视图',
+          children: viewList.map(v => ({ label: v.tableName }))
+        }
+      ]
+    }
+  ]
+}
+
+
 </script>
 
 <style scoped>
