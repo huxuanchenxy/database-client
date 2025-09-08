@@ -7,11 +7,6 @@
             <template #label>
               <span>
                 结果
-                <!-- <el-badge
-                  v-if="resultSet.rows.length > 0"
-                  :value="resultSet.rows.length"
-                  class="item"
-                /> -->
               </span>
             </template>
           </el-tab-pane>
@@ -20,27 +15,9 @@
             <template #label>
               <span>
                 消息
-                <!-- <el-badge
-                  v-if="messageCount > 0"
-                  :value="messageCount"
-                  class="item"
-                /> -->
               </span>
             </template>
           </el-tab-pane>
-
-          <!-- <el-tab-pane label="历史" name="history">
-            <template #label>
-              <span>
-                历史
-                <el-badge
-                  v-if="historyCount > 0"
-                  :value="historyCount"
-                  class="item"
-                />
-              </span>
-            </template>
-          </el-tab-pane> -->
         </el-tabs>
       </div>
     </div>
@@ -74,8 +51,6 @@
             <vxe-grid
               border
               stripe
-              width="100%"
-              height="100%"
               :data="resultSet.rows"
               :columns="gridColumns"
             />
@@ -179,16 +154,18 @@ const formatTime = (timestamp) => new Date(timestamp).toLocaleString()
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #fff;
+  background-color: #f5f7fa; 
+  font-family: 'Helvetica', 'Arial', sans-serif;
 }
 
 .result-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
+  padding: 12px 20px;
   border-bottom: 1px solid #e4e7ed;
-  background-color: #fafafa;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .result-tabs {
@@ -207,27 +184,43 @@ const formatTime = (timestamp) => new Date(timestamp).toLocaleString()
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 15px;
-  overflow: hidden;
+  gap: 12px;
 }
 
 .table-results {
   flex: 1;
   display: flex;
   flex-direction: column;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 
 /* ✅ 表格容器撑开高度 */
 .grid-wrapper {
   flex: 1;
   min-height: 300px;
+  padding: 8px;
 }
 
 .result-info {
   margin-bottom: 10px;
   display: flex;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
+}
+
+/* 执行中状态 */
+.executing {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #409EFF;
+  gap: 8px;
 }
 
 .no-results {
@@ -235,5 +228,39 @@ const formatTime = (timestamp) => new Date(timestamp).toLocaleString()
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #909399;
+}
+
+/* 消息面板 */
+.messages-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #ebeef5;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  transition: background 0.2s;
+}
+.message-item:hover {
+  background-color: #f0f4f9;
+}
+.message-content {
+  flex: 1;
+}
+.message-text {
+  font-size: 14px;
+  color: #606266;
+}
+.message-time {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 2px;
 }
 </style>

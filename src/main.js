@@ -3,17 +3,26 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
-
-// vxe-table 依赖
+import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+// vxe-table
 import 'xe-utils'
 import VXETable from 'vxe-table'
-import 'vxe-table/styles/cssvar.scss'   // ✅ 4.x 用这个
+import 'vxe-table/styles/cssvar.scss'
 
 const app = createApp(App)
 
+/* 1️⃣ 创建 pinia 实例 */
+const pinia = createPinia()
+/* 2️⃣ 装持久化插件 */
+pinia.use(piniaPluginPersistedstate)
+/* 3️⃣ 再把同一个实例挂到应用 */
+app.use(pinia)
+
 app.use(ElementPlus)
 app.use(VXETable)
-// 注册所有图标
+
+/* 注册图标 */
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }

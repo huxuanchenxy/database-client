@@ -11,7 +11,7 @@
 
       <div v-if="currentConnection" class="connection-info">
         <el-tag type="info">
-          已连接: {{ currentConnection.name }}
+          已连接: {{ currentConnection.dbHost }}
         </el-tag>
       </div>
     </div>
@@ -51,7 +51,10 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import ConnectionConfig from './ConnectionConfig.vue'
-// import { databaseApi } from '../api/api'
+import { databaseApi } from '../api/api'
+import { useConnStore } from '@/stores/conn'
+
+const connStore = useConnStore()
 const props = defineProps({
   onDatabaseSelect: Function,
   onTableSelect: Function
@@ -117,10 +120,15 @@ const treeProps = {
 
 // 构建树形数据（数据库 -> [表、视图、存储过程、函数]）
 const buildTreeData = (data) => {
+  // console.log('数据:', data)
   const tree = []
-
+  let tmpdb = []
+  tmpdb.push(data.dbName)
+  data.databases = tmpdb //特殊结构
+  // console.log('data.database', data.database.length)
   if (data.databases && data.databases.length > 0) {
     data.databases.forEach(db => {
+      // console.log('db:', db)
       tree.push({
         id: `db_${db}`,
         label: db,
@@ -137,6 +145,7 @@ const buildTreeData = (data) => {
       })
     })
   }
+  // console.log('tree:', tree)
   return tree
 }
 
@@ -187,14 +196,21 @@ const handleConnectionSuccess = (connectionConfig) => {
 
 // 加载数据库列表
 const loadDatabases = async () => {
-  if (!currentConnection.value) return
+
+  //todo: 获取连接信息如果失败则把connStore.conn变null
+  console.log('connStore.conn',connStore.conn)
+  currentConnection.value = connStore.conn
+  // console.log('当前连接:', currentConnection.value)
+  // if (!currentConnection.value) return
+  if (!connStore.conn) return
 
   try {
     loading.value = true
-    const result = await mockDatabaseApi.getDatabases(currentConnection.value)
-    if (result.success) {
+    const result = await databaseApi.getDatabases(connStore.conn)
+    console.log('数据库列表:', result)
+    if (result.code === 200) {
       treeData.value = buildTreeData(result.data)
-      console.log('数据库列表:', result.data)
+      // console.log('数据库列表:', result.data)
       ElMessage.success('连接成功，数据库列表已加载')
     } else {
       ElMessage.error('加载数据库列表失败: ' + result.message)
@@ -209,6 +225,7 @@ const loadDatabases = async () => {
 
 onMounted(() => {
   // 组件挂载时的初始化逻辑
+  loadDatabases()
 })
 </script>
 

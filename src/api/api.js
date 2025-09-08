@@ -45,7 +45,7 @@ export const databaseApi = {
 
   // 获取数据库列表
   getDatabases: (connectionConfig) => {
-    return api.post('/database/list', connectionConfig)
+    return api.post('/seisdb/gettblist', connectionConfig)
   },
 
   // 获取表列表

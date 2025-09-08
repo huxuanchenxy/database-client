@@ -98,7 +98,15 @@
 import { ref, reactive, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { databaseApi } from '../api/api'
+import { useConnStore } from '@/stores/conn'
+import { storeToRefs } from 'pinia'
 
+const connStore = useConnStore()
+// 保持响应式
+const { conn } = storeToRefs(connStore)
+// action 可直接解构
+
+const { updateConn, reset } = connStore
 const props = defineProps({
   modelValue: Boolean
 })
@@ -199,6 +207,11 @@ const handleSaveConnection = async () => {
     const result = await databaseApi.testConnection(parm)
     if (result.code === 200) {
       ElMessage.success('连接成功！')
+      updateConn({ dbHost: connectionForm.host + ":" + connectionForm.port,
+        dbName: connectionForm.database,
+        user: connectionForm.username,
+        password: connectionForm.password
+       })
       emit('connection-success', connectionForm)
       handleClose()
     } else {
