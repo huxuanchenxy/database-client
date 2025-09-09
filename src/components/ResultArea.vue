@@ -58,6 +58,7 @@
                   stripe
                   height="99%"
                   size="mini"
+                  highlight-hover-row
                   auto-resize>
                 </vxe-grid>
 
@@ -135,7 +136,7 @@ const loadResult = async (parm) => {
   try {
     // const res = await databaseApi.getdata(parm)   // ← 你的接口
     // 假定后端返回格式：
-    let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'}], executionTime:88, affectedRows:2 }
+    let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
     resultSet.columns = res.columns || []
     resultSet.rows    = res.data || []
     resultSet.executionTime = res.executionTime || 0
