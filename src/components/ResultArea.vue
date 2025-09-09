@@ -57,6 +57,7 @@
                   border
                   stripe
                   height="99%"
+                  size="mini"
                   auto-resize>
                 </vxe-grid>
 
