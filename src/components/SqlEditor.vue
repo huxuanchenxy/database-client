@@ -45,16 +45,31 @@
 <script setup>
 import { ref } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
+import { useSqlStore } from '@/stores/sqlStore'
 
 const sqlCode = ref('SELECT * FROM users;')
 const isDarkTheme = ref(true)
-
+const sqlStore = useSqlStore()
 const toggleTheme = () => {
   isDarkTheme.value = !isDarkTheme.value
 }
 
 const clearSql = () => {
   sqlCode.value = ''
+}
+
+function executeSql() {
+  const sqlText = sqlCode.value   // 保持原始字符串
+
+  // 模拟 SQL 执行结果
+  const result = {
+    columns: ['id', 'name'],
+    rows: [
+      [1, 'Alice'],
+      [2, 'Bob']
+    ]
+  }
+  sqlStore.setResult(sqlText, result)
 }
 </script>
 

@@ -100,12 +100,27 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, nextTick,onMounted } from 'vue'
+import { ref, reactive, computed, nextTick,onMounted,watch  } from 'vue'
 import { VXETable } from 'vxe-table'
 import { databaseApi } from '@/api/api.js'
 import { Loading } from '@element-plus/icons-vue'
 import HistoryPanel from './HistoryPanel.vue'
 
+
+import { useSqlStore } from '@/stores/sqlStore'
+
+const sqlStore = useSqlStore()
+
+const localData = ref({ sql: '', result: null })
+
+watch(
+  () => sqlStore.data,
+  (newVal) => {
+    console.log('SQL 执行更新:', newVal)
+    localData.value = newVal
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   loadResult({ sql: 'select * from user' })
