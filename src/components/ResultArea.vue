@@ -34,18 +34,6 @@
           v-else-if="resultSet.rows.length > 0"
           class="table-results"
         >
-          <div class="result-info">
-            <el-tag size="small" type="info">
-              影响行数: {{ resultSet.affectedRows }}
-            </el-tag>
-            <el-tag size="small" type="success">
-              查询时间: {{ resultSet.executionTime }}ms
-            </el-tag>
-            <el-tag size="small" type="warning">
-              返回行数: {{ resultSet.rows.length }}
-            </el-tag>
-          </div>
-
           <!-- ✅ vxe-grid 自适应高度 -->
           <div class="grid-wrapper">
                 <vxe-grid
@@ -68,7 +56,18 @@
 
       <!-- 消息面板 -->
       <div v-show="activeTab === 'messages'" class="messages-tab">
-        <el-scrollbar height="100%">
+          <div class="result-info">
+            <el-tag size="small" type="info">
+              影响行数: {{ resultSet.affectedRows }}
+            </el-tag>
+            <el-tag size="small" type="success">
+              查询时间: {{ resultSet.executionTime }}ms
+            </el-tag>
+            <el-tag size="small" type="warning">
+              返回行数: {{ resultSet.rows.length }}
+            </el-tag>
+          </div>
+        <!-- <el-scrollbar height="100%">
           <div v-if="messages.length === 0" class="no-messages">
             <el-empty description="暂无消息" />
           </div>
@@ -88,7 +87,7 @@
               </div>
             </div>
           </div>
-        </el-scrollbar>
+        </el-scrollbar> -->
       </div>
 
       <!-- 历史面板 -->
