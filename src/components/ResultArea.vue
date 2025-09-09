@@ -48,12 +48,18 @@
 
           <!-- ✅ vxe-grid 自适应高度 -->
           <div class="grid-wrapper">
-            <vxe-grid
-              border
-              stripe
-              :data="resultSet.rows"
-              :columns="gridColumns"
-            />
+                <vxe-grid
+                  v-if="resultSet.columns.length"
+                  ref="xGrid"
+                  :data="resultSet.rows"
+                  :columns="gridColumns"
+                  :edit-config="{ trigger: 'click', mode: 'row', showStatus: true }"
+                  border
+                  stripe
+                  height="auto"
+                  auto-resize>
+                </vxe-grid>
+
           </div>
         </div>
       </div>
@@ -92,32 +98,57 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, nextTick,onMounted } from 'vue'
+import { VXETable } from 'vxe-table'
+import { databaseApi } from '@/api/api.js'
 import { Loading } from '@element-plus/icons-vue'
 import HistoryPanel from './HistoryPanel.vue'
 
-// mock 结果集
+
+onMounted(() => {
+  loadResult({ sql: 'select * from user' })
+})
+/* ==========  2. 响应式结果集  ========== */
 const resultSet = reactive({
-  columns: ['id', 'name', 'age'],
-  rows: [
-    { id: 1, name: 'Tom', age: 18 },
-    { id: 2, name: 'Jerry', age: 20 },
-    { id: 3, name: 'Alice', age: 22 }
-  ],
-  executionTime: 120,
-  affectedRows: 3
+  columns: [],          // 动态列元数据
+  rows: [],             // 真正数据
+  executionTime: 0,
+  affectedRows: 0
 })
 
-// vxe-grid 列定义
-const gridColumns = ref(
+/* ==========  3. 把后端字段转成 vxe-columns  ========== */
+const gridColumns = computed(() =>
   resultSet.columns.map(col => ({
     field: col,
-    title: col,
+    title: col.toUpperCase(),
     minWidth: 120,
-    showOverflow: true
+    editRender: { name: 'input' }   // 如果想整表可编辑就留着
   }))
 )
 
+/* ==========  4. 加载数据  ========== */
+// 父组件可以调用 loadResult({ sql: 'select * from user' })
+const loadResult = async (parm) => {
+  executing.value = true
+  try {
+    // const res = await databaseApi.getdata(parm)   // ← 你的接口
+    // 假定后端返回格式：
+    let res = { columns:['id','name'], data:[{id:1,name:'a'},{id:2,name:'b'}], executionTime:88, affectedRows:2 }
+    resultSet.columns = res.columns || []
+    resultSet.rows    = res.data || []
+    resultSet.executionTime = res.executionTime || 0
+    resultSet.affectedRows  = res.affectedRows || 0
+    // await nextTick()
+    // VXETable.modal.message({ content: '查询完成', status: 'success' })
+  } catch (e) {
+    // VXETable.modal.message({ content: e.message || '查询失败', status: 'error' })
+  } finally {
+    executing.value = false
+  }
+}
+
+/* ==========  5. 暴露给父组件  ========== */
+defineExpose({ loadResult })
 // mock 消息
 const messages = ref([
   { type: 'success', content: '执行成功', timestamp: Date.now() },
@@ -132,6 +163,8 @@ const history = ref([
 
 const executing = ref(false)
 const activeTab = ref('results')
+
+// console.log('activeTab', activeTab.value)
 
 // 统计数据
 const messageCount = computed(() => messages.value.filter(m => m.type !== 'success').length)
@@ -203,6 +236,7 @@ const formatTime = (timestamp) => new Date(timestamp).toLocaleString()
   flex: 1;
   min-height: 300px;
   padding: 8px;
+  overflow-y: auto;
 }
 
 .result-info {
@@ -262,5 +296,9 @@ const formatTime = (timestamp) => new Date(timestamp).toLocaleString()
   font-size: 12px;
   color: #909399;
   margin-top: 2px;
+}
+
+.vxe-table--empty-block {
+  display: none !important;
 }
 </style>

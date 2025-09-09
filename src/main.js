@@ -5,10 +5,8 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
-// vxe-table
-import 'xe-utils'
+import 'vxe-table/lib/style.css'
 import VXETable from 'vxe-table'
-import 'vxe-table/styles/cssvar.scss'
 
 const app = createApp(App)
 
