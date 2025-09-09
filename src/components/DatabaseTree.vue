@@ -49,14 +49,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted,watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import ConnectionConfig from './ConnectionConfig.vue'
 import { databaseApi } from '../api/api'
 import { useConnStore } from '@/stores/conn'
 
+
+import { useSqlStore } from '@/stores/sqlStore'
 const connStore = useConnStore()
+const sqlStore = useSqlStore()
+
+const localData = ref({ sql: '', result: null })
+
+
+
 const props = defineProps({
   onDatabaseSelect: Function,
   onTableSelect: Function
@@ -271,7 +279,15 @@ function buildTree({ databases, tableList, viewList }) {
   ]
 }
 
-
+watch(
+  () => sqlStore.data,
+  (newVal) => {
+    console.log('树:', newVal)
+    localData.value = newVal
+    loadDatabases()
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>

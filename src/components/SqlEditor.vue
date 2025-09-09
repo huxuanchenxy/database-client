@@ -46,6 +46,10 @@
 import { ref } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import { useSqlStore } from '@/stores/sqlStore'
+import { databaseApi } from '@/api/api.js'
+import { useConnStore } from '@/stores/conn'
+
+const connStore = useConnStore()
 
 const sqlCode = ref('SELECT * FROM users;')
 const isDarkTheme = ref(true)
@@ -70,6 +74,20 @@ function executeSql() {
     ]
   }
   sqlStore.setResult(sqlText, result)
+  executeSqlWithText(sqlText)
+}
+
+const currentConnection = ref(null)
+const executeSqlWithText = async (sqlText) => {
+  currentConnection.value = connStore.conn
+  // console.log('currentConnection',currentConnection.value)
+  let parm = {
+        ...currentConnection.value,
+        oprationString: sqlText,
+  }
+  // console.log('parm', parm)
+  const res = await databaseApi.executeSqlWithText(parm)
+  // console.log('res',res)
 }
 </script>
 
