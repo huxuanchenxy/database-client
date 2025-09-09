@@ -52,11 +52,11 @@
                   v-if="resultSet.columns.length"
                   ref="xGrid"
                   :data="resultSet.rows"
-                  :columns="gridColumns"
+                  :columns="gridColumns"          
                   :edit-config="{ trigger: 'click', mode: 'row', showStatus: true }"
                   border
                   stripe
-                  height="auto"
+                  height="99%"
                   auto-resize>
                 </vxe-grid>
 
@@ -120,11 +120,12 @@ const resultSet = reactive({
 const gridColumns = computed(() =>
   resultSet.columns.map(col => ({
     field: col,
-    title: col.toUpperCase(),
-    minWidth: 120,
+    title: col,
+    minWidth: 100,
     editRender: { name: 'input' }   // 如果想整表可编辑就留着
   }))
 )
+
 
 /* ==========  4. 加载数据  ========== */
 // 父组件可以调用 loadResult({ sql: 'select * from user' })
@@ -133,7 +134,7 @@ const loadResult = async (parm) => {
   try {
     // const res = await databaseApi.getdata(parm)   // ← 你的接口
     // 假定后端返回格式：
-    let res = { columns:['id','name'], data:[{id:1,name:'a'},{id:2,name:'b'}], executionTime:88, affectedRows:2 }
+    let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'}], executionTime:88, affectedRows:2 }
     resultSet.columns = res.columns || []
     resultSet.rows    = res.data || []
     resultSet.executionTime = res.executionTime || 0
@@ -183,122 +184,11 @@ const formatTime = (timestamp) => new Date(timestamp).toLocaleString()
 </script>
 
 <style scoped>
-.result-area {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: #f5f7fa; 
-  font-family: 'Helvetica', 'Arial', sans-serif;
-}
-
-.result-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 20px;
-  border-bottom: 1px solid #e4e7ed;
-  background-color: #ffffff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.result-tabs {
-  flex: 1;
-}
-
-.result-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ✅ 让结果面板能占满 */
-.results-tab {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.table-results {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #e4e7ed;
-  border-radius: 6px;
-  background-color: #fff;
-  padding: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-}
-
-/* ✅ 表格容器撑开高度 */
 .grid-wrapper {
   flex: 1;
-  min-height: 300px;
+  min-height: 420px;
   padding: 8px;
   overflow-y: auto;
 }
 
-.result-info {
-  margin-bottom: 10px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* 执行中状态 */
-.executing {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  color: #409EFF;
-  gap: 8px;
-}
-
-.no-results {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #909399;
-}
-
-/* 消息面板 */
-.messages-tab {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.message-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 10px;
-  border-bottom: 1px solid #ebeef5;
-  border-radius: 4px;
-  background-color: #f9f9f9;
-  transition: background 0.2s;
-}
-.message-item:hover {
-  background-color: #f0f4f9;
-}
-.message-content {
-  flex: 1;
-}
-.message-text {
-  font-size: 14px;
-  color: #606266;
-}
-.message-time {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 2px;
-}
-
-.vxe-table--empty-block {
-  display: none !important;
-}
 </style>
