@@ -104,25 +104,18 @@ import { VXETable } from 'vxe-table'
 import { databaseApi } from '@/api/api.js'
 import { Loading } from '@element-plus/icons-vue'
 import HistoryPanel from './HistoryPanel.vue'
-
+import { useConnStore } from '@/stores/conn'
 
 import { useSqlStore } from '@/stores/sqlStore'
 
 const sqlStore = useSqlStore()
-
+const connStore = useConnStore()
 const localData = ref({ sql: '', result: null })
 
-watch(
-  () => sqlStore.data,
-  (newVal) => {
-    console.log('SQL 执行更新:', newVal)
-    localData.value = newVal
-  },
-  { immediate: true }
-)
+
 
 onMounted(() => {
-  loadResult({ sql: 'select * from user' })
+  // loadResult({ sql: 'select * from user' })
 })
 /* ==========  2. 响应式结果集  ========== */
 const resultSet = reactive({
@@ -145,17 +138,33 @@ const gridColumns = computed(() =>
 
 /* ==========  4. 加载数据  ========== */
 // 父组件可以调用 loadResult({ sql: 'select * from user' })
-const loadResult = async (parm) => {
+const loadResult = async (sqlText) => {
   executing.value = true
   try {
-    // const res = await databaseApi.getdata(parm)   // ← 你的接口
+    // const res = await databaseApi.getdata(parm)   // ← 接口
     // 假定后端返回格式：
-    let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
-    console.log('table res',res)
-    resultSet.columns = res.columns || []
-    resultSet.rows    = res.data || []
-    resultSet.executionTime = res.executionTime || 0
-    resultSet.affectedRows  = res.affectedRows || 0
+  // console.log('currentConnection',currentConnection.value)
+    let parm = {
+          ...connStore.conn,
+          oprationString: sqlText.sql,
+    }
+    const res = await databaseApi.executeSqlWithText(parm)
+    
+    if(res.code === 200){
+      // ElMessage.success('执行成功')
+      // let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
+      console.log('table res',res)
+      // ['employee_id', 'name', 'email', 'hire_date', 'department_id']
+      resultSet.columns = res.data.columns || []
+      const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
+      resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : [emptyRow]
+      console.log('resultSet',resultSet)
+      // resultSet.executionTime = res.executionTime || 0
+      resultSet.affectedRows  =  0
+    }else{
+      ElMessage.error('执行失败 失败原因:' + res.message)
+    }
+    
     // await nextTick()
     // VXETable.modal.message({ content: '查询完成', status: 'success' })
   } catch (e) {
@@ -181,6 +190,17 @@ const history = ref([
 
 const executing = ref(false)
 const activeTab = ref('results')
+
+
+watch(
+  () => sqlStore.data,
+  (newVal) => {
+    console.log('ResultArea watch new data:', newVal)
+    localData.value = newVal
+    loadResult(newVal)
+  },
+  { immediate: true }
+)
 
 // console.log('activeTab', activeTab.value)
 
