@@ -154,7 +154,7 @@ const loadResult = async (sqlText) => {
                   oprationString: cleanedSql,
         }
         const res = await databaseApi.executeSqlWithText(parm)
-        console.log('resultarea  databaseApi.executeSqlWithText',res)
+        // console.log('resultarea  databaseApi.executeSqlWithText',res)
         if(res.code === 200){
           // ElMessage.success('执行成功')
           // let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
@@ -170,7 +170,7 @@ const loadResult = async (sqlText) => {
           }
           //通知树更新
           treeStore.triggerRefresh()
-          console.log('treeStore.triggerRefresh()执行完毕')
+          // console.log('treeStore.triggerRefresh()执行完毕')
         }else{
           ElMessage.error('执行失败 失败原因:' + res.message)
         }                                   
@@ -207,7 +207,7 @@ const activeTab = ref('results')
 watch(
   () => sqlStore.data,
   (newVal) => {
-    console.log('ResultArea watch new data:', newVal)
+    // console.log('ResultArea watch new data:', newVal)
     localData.value = newVal
     loadResult(newVal)
   },
