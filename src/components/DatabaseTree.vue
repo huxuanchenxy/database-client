@@ -47,7 +47,7 @@
   <div
     v-if="menu.show"
     class="context-menu"
-    :style="{ left: menu.left + 'px', top: menu.top + 'px' }"
+    :style="{ width: menu.width + 'px', height: menu.height + 'px', left: menu.left + 'px', top: menu.top + 'px' }"
     @mouseleave="menu.show = false"
   >
     <div class="item" @click="handleCreate('table')" v-if="menu.type === 'table'">
@@ -186,25 +186,29 @@ const menu = reactive({
 show: false,
 left: 0,
 top: 0,
-type: null
+type: null,
+height:38,
+width:100,
 })
 
 
 // 节点右键事件
 function onContextMenu(event, data, node) {
-  event.preventDefault()
-  menu.show = true
-  menu.left = event.clientX
-  menu.top = event.clientY
-
-console.log('data:', data)
-  if (data.type === 'table') {
-  menu.type = 'table'
-  } else if (data.type === 'view') {
-  menu.type = 'view'
-  } else {
-  menu.type = null
-  }
+    event.preventDefault(); // 阻止默认右键菜单
+    
+    // 使用鼠标事件的实际坐标
+    menu.left = event.clientX;
+    menu.top = event.clientY - 50;
+    menu.show = true;
+    
+    if (data.type === 'table') {
+        menu.type = 'table';
+    } else if (data.type === 'view') {
+        menu.type = 'view';
+    } else {
+        menu.type = null;
+        menu.show = false;
+    }
 }
 
 // 点击空白处关闭菜单
@@ -267,7 +271,7 @@ background: #dbd8d8;
 border: 1px solid #ebe8e8;
 box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 z-index: 9999;
-min-width: 120px;
+min-width: 100px;
 }
 
 
