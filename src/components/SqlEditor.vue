@@ -48,6 +48,7 @@ import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import { useSqlStore } from '@/stores/sqlStore'
 import { databaseApi } from '@/api/api.js'
 import { useConnStore } from '@/stores/conn'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const connStore = useConnStore()
 
@@ -64,7 +65,10 @@ const clearSql = () => {
 
 const executeSql = async() => {
   const sqlText = sqlCode.value   // 保持原始字符串
-
+  if(!sqlText){
+    ElMessage.error('sql不能为空')
+    return
+  }
   // 模拟 SQL 执行结果
   const result = {
     columns: ['id', 'name'],

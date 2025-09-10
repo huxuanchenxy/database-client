@@ -236,7 +236,6 @@ const loadDatabases = async () => {
 
   try {
   const res = await databaseApi.getDatabases(connStore.conn)
-  console.log('res11',res)
   // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
   if(res.code === 200) {
     // treeData.value = buildTree(res.data
