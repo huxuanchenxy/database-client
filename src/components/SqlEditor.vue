@@ -92,6 +92,12 @@ const executeSqlWithText = async (sqlText) => {
   // console.log('parm', parm)
   const res = await databaseApi.executeSqlWithText(parm)
   console.log('res',res)
+  if(res.code === 200){
+    ElMessage.success('执行成功')
+  }else{
+    ElMessage.error('执行失败 失败原因:' + res.message)
+  }
+
 }
 </script>
 

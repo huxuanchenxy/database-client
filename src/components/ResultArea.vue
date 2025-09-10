@@ -11,13 +11,13 @@
             </template>
           </el-tab-pane>
 
-          <el-tab-pane label="消息" name="messages">
+          <!-- <el-tab-pane label="消息" name="messages">
             <template #label>
               <span>
                 消息
               </span>
             </template>
-          </el-tab-pane>
+          </el-tab-pane> -->
         </el-tabs>
       </div>
     </div>
@@ -151,6 +151,7 @@ const loadResult = async (parm) => {
     // const res = await databaseApi.getdata(parm)   // ← 你的接口
     // 假定后端返回格式：
     let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
+    console.log('table res',res)
     resultSet.columns = res.columns || []
     resultSet.rows    = res.data || []
     resultSet.executionTime = res.executionTime || 0
