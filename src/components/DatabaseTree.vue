@@ -37,8 +37,26 @@
         </span>
       </template>
     </el-tree> -->
-  <el-tree :data="treeData" default-expand-all >
+  <el-tree :data="treeData"
+   default-expand-all
+   highlight-current
+   @node-contextmenu="onContextMenu" >
   </el-tree>
+
+    <!-- 右键菜单 -->
+  <div
+    v-if="menu.show"
+    class="context-menu"
+    :style="{ left: menu.left + 'px', top: menu.top + 'px' }"
+    @mouseleave="menu.show = false"
+  >
+    <div class="item" @click="handleCreate('table')" v-if="menu.type === 'table'">
+      新建表
+    </div>
+    <div class="item" @click="handleCreate('view')" v-if="menu.type === 'view'">
+      新建视图
+    </div>
+  </div>
 
     <!-- 连接配置对话框 -->
     <ConnectionConfig
@@ -49,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted,watch } from 'vue'
+import { ref, onMounted,watch,reactive  } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import ConnectionConfig from './ConnectionConfig.vue'
@@ -80,144 +98,10 @@ const currentConnection = ref(null)
 // const treeData = ref([])
 const loading = ref(false)
 
-// 模拟数据库API
-const mockDatabaseApi = {
-  // 模拟获取数据库列表
-  getDatabases: async (connectionConfig) => {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    return {
-      success: true,
-      data: {
-        databases: ['test_db', 'user_management', 'order_system']
-      }
-    }
-  },
-
-  // 模拟获取数据库对象 (表、视图、存储过程、函数)
-  getDatabaseObjects: async ({ database }) => {
-    await new Promise(resolve => setTimeout(resolve, 300))
-
-    const dbMock = {
-      seis: {
-        tables: ['users', 'orders', 'products'],
-        views: ['active_users', 'order_summary'],
-        procedures: ['sp_update_order', 'sp_recalc_stock'],
-        functions: ['fn_get_discount', 'fn_format_date']
-      },
-      user_management: {
-        tables: ['users', 'roles', 'permissions'],
-        views: ['user_roles_view'],
-        procedures: ['sp_add_user', 'sp_delete_user'],
-        functions: ['fn_user_count']
-      },
-      order_system: {
-        tables: ['orders', 'order_items', 'customers'],
-        views: ['order_summary_view'],
-        procedures: ['sp_create_order', 'sp_cancel_order'],
-        functions: ['fn_order_total']
-      }
-    }
-
-    return {
-      success: true,
-      data: dbMock[database] || { tables: [], views: [], procedures: [], functions: [] }
-    }
-  }
-}
 
 const treeProps = {
   children: 'children',
   label: 'label'
-}
-
-// 构建树形数据（数据库 -> [表、视图、存储过程、函数]）
-const buildTreeData = (data) => {
-  console.log('数据:', data)
-  const tree = []
-  let tmpdb = []
-  tmpdb.push(data.dbName)
-  data.databases = tmpdb //特殊结构
-  // console.log('data.database', data.database.length)
-  if (data.databases && data.databases.length > 0) {
-    data.databases.forEach(db => {
-      // console.log('db:', db)
-      tree.push({
-        id: `db_${db}`,
-        label: db,
-        icon: 'Database',
-        type: 'database',
-        database: db,
-        connection: currentConnection.value,
-        children: [
-          { id: `db_${db}_tables`, label: '表', type: 'tables', icon: 'Folder', database: db, children: data.tableList },
-          { id: `db_${db}_views`, label: '视图', type: 'views', icon: 'Folder', database: db, children: data.viewList },
-          { id: `db_${db}_procs`, label: '存储过程', type: 'procedures', icon: 'Folder', database: db, children: [] },
-          { id: `db_${db}_funcs`, label: '函数', type: 'functions', icon: 'Folder', database: db, children: [] }
-        ]
-      })
-    })
-  }
-  // console.log('tree:', tree)
-  return tree
-}
-
-// 点击节点加载子项
-const handleNodeClick = async (data) => {
-  console.log('点击节点:', data)
-  console.log('treeData.value:', treeData.value)
-  if (['tables', 'views', 'procedures', 'functions'].includes(data.type)) {
-    try {
-      loading.value = true
-      ElMessage.info(`正在加载 ${data.label}...`)
-
-      const result = await mockDatabaseApi.getDatabaseObjects({
-        database: data.database
-      })
-      console.log('result:', result)
-
-      if (result.success) {
-        let list = result.data[data.type] || []
-        console.log('list:', list)
-        data.children = list.map(item => ({
-          id: `${data.type}_${data.database}_${item}`,
-          label: item,
-          icon: 'Document',
-          type: 'object',
-          database: data.database,
-          objectType: data.type,
-          name: item
-        }))
-        console.log('data.children:', data.children)
-        treeRef.value.updateKeyChildren(data.id, data.children)
-        ElMessage.success(`加载 ${data.label} 成功，共 ${list.length} 个`)
-      }
-      // if (result.success) {
-      //   let list = result.data[data.type] || []
-      //   console.log('list:', list)
-      //   data.children = list.map(item => ({
-      //     id: `${data.type}_${data.database}_${item}`,
-      //     label: item,
-      //     icon: 'Document',
-      //     type: 'object',
-      //     database: data.database,
-      //     objectType: data.type,
-      //     name: item
-      //   }))
-      //   treeRef.value.updateKeyChildren(data.id, data.children)
-      //   ElMessage.success(`加载 ${data.label} 成功，共 ${list.length} 个`)
-      // }
-    } catch (e) {
-      ElMessage.error('加载失败: ' + e.message)
-    } finally {
-      loading.value = false
-    }
-  } else if (data.type === 'object') {
-    // 点击具体对象（表/视图/函数）
-    if (props.onTableSelect) {
-      props.onTableSelect(data)
-    }
-    emit('table-selected', data)
-  }
 }
 
 // 处理连接成功
@@ -270,10 +154,12 @@ function buildTree({ databases, tableList, viewList }) {
       children: [
         {
           label: '表',
+          type: 'table',
           children: tableList.map(t => ({ label: t.tableName }))
         },
         {
           label: '视图',
+          type: 'view',
           children: viewList.map(v => ({ label: v.tableName }))
         }
       ]
@@ -292,6 +178,48 @@ watch(
 defineExpose({
   loadDatabases
 })
+
+
+/* --------------------- 右键菜单 --------------------- */
+// 右键菜单状态
+const menu = reactive({
+show: false,
+left: 0,
+top: 0,
+type: null
+})
+
+
+// 节点右键事件
+function onContextMenu(event, data, node) {
+  event.preventDefault()
+  menu.show = true
+  menu.left = event.clientX
+  menu.top = event.clientY
+
+console.log('data:', data)
+  if (data.type === 'table') {
+  menu.type = 'table'
+  } else if (data.type === 'view') {
+  menu.type = 'view'
+  } else {
+  menu.type = null
+  }
+}
+
+// 点击空白处关闭菜单
+document.addEventListener('click', () => (menu.show = false))
+
+/* --------------------- 业务动作 --------------------- */
+function handleCreate(type) {
+  menu.show = false
+  if (type === 'table') {
+    console.log('新建表逻辑')
+  } else {
+    console.log('新建视图逻辑')
+  }
+}
+
 </script>
 
 <style scoped>
@@ -327,12 +255,29 @@ defineExpose({
   gap: 6px;
 }
 
-:deep(.el-tree-node__content) {
-  height: 32px;
-  padding: 2px 0;
+
+.database-tree {
+position: relative;
 }
 
-:deep(.el-tree-node__content:hover) {
-  background-color: #f5f7fa;
+
+.context-menu {
+position: absolute;
+background: #dbd8d8;
+border: 1px solid #ebe8e8;
+box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+z-index: 9999;
+min-width: 120px;
+}
+
+
+.context-menu .item {
+padding: 8px 12px;
+cursor: pointer;
+}
+
+
+.context-menu .item:hover {
+background: #f5f5f5;
 }
 </style>
