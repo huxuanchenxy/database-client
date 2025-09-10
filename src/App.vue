@@ -37,7 +37,7 @@
           <el-container direction="vertical">
             <!-- SQL编辑器 -->
             <el-aside class="sql-aside">
-                  <h2>SQL 编辑器</h2>
+                  <h2>SQL 命令行</h2>
                   <SqlEditor />
             </el-aside>
 

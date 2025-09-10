@@ -144,9 +144,11 @@ const loadResult = async (sqlText) => {
     // const res = await databaseApi.getdata(parm)   // ← 接口
     // 假定后端返回格式：
   // console.log('currentConnection',currentConnection.value)
+  const cleanedSql = sqlText.sql.replace(/\r\n/g, ' ');
+
     let parm = {
           ...connStore.conn,
-          oprationString: sqlText.sql,
+          oprationString: cleanedSql,
     }
     const res = await databaseApi.executeSqlWithText(parm)
     
