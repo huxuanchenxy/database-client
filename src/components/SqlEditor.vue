@@ -51,7 +51,7 @@ import { useConnStore } from '@/stores/conn'
 
 const connStore = useConnStore()
 
-const sqlCode = ref('SELECT * FROM users;')
+const sqlCode = ref('')
 const isDarkTheme = ref(true)
 const sqlStore = useSqlStore()
 const toggleTheme = () => {
@@ -62,7 +62,7 @@ const clearSql = () => {
   sqlCode.value = ''
 }
 
-function executeSql() {
+const executeSql = async() => {
   const sqlText = sqlCode.value   // 保持原始字符串
 
   // 模拟 SQL 执行结果
@@ -73,8 +73,8 @@ function executeSql() {
       [2, 'Bob']
     ]
   }
+  await executeSqlWithText(sqlText)
   sqlStore.setResult(sqlText, result)
-  executeSqlWithText(sqlText)
 }
 
 const currentConnection = ref(null)

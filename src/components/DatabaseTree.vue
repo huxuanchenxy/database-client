@@ -230,13 +230,13 @@ const loadDatabases = async () => {
   //todo: 获取连接信息如果失败则把connStore.conn变null
   // console.log('connStore.conn',connStore.conn)
   currentConnection.value = connStore.conn
-  // console.log('当前连接:', currentConnection.value)
+  
   // if (!currentConnection.value) return
   if (!connStore.conn) return
 
   try {
   const res = await databaseApi.getDatabases(connStore.conn)
-  //console.log('res',res)
+  console.log('res11',res)
   // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
   if(res.code === 200) {
     // treeData.value = buildTree(res.data
