@@ -71,13 +71,8 @@ const executeSql = async() => {
   }
   // 模拟 SQL 执行结果
   const result = {
-    columns: ['id', 'name'],
-    rows: [
-      [1, 'Alice'],
-      [2, 'Bob']
-    ]
   }
-  await executeSqlWithText(sqlText)
+  // await executeSqlWithText(sqlText)
   sqlStore.setResult(sqlText, result)
 }
 

@@ -105,13 +105,15 @@ import { databaseApi } from '@/api/api.js'
 import { Loading } from '@element-plus/icons-vue'
 import HistoryPanel from './HistoryPanel.vue'
 import { useConnStore } from '@/stores/conn'
-
 import { useSqlStore } from '@/stores/sqlStore'
+import { useTreeStore } from '@/stores/treeStore'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const sqlStore = useSqlStore()
 const connStore = useConnStore()
+const treeStore = useTreeStore()
 const localData = ref({ sql: '', result: null })
-
+const emit = defineEmits(['calltree'])
 
 
 onMounted(() => {
@@ -144,28 +146,36 @@ const loadResult = async (sqlText) => {
     // const res = await databaseApi.getdata(parm)   // ← 接口
     // 假定后端返回格式：
   // console.log('currentConnection',currentConnection.value)
-  const cleanedSql = sqlText.sql.replace(/\r\n/g, ' ');
-
-    let parm = {
-          ...connStore.conn,
-          oprationString: cleanedSql,
+    const cleanedSql = sqlText.sql.replace(/\r\n/g, ' ');
+    if(cleanedSql)
+    {
+        let parm = {
+                  ...connStore.conn,
+                  oprationString: cleanedSql,
+        }
+        const res = await databaseApi.executeSqlWithText(parm)
+        console.log('resultarea  databaseApi.executeSqlWithText',res)
+        if(res.code === 200){
+          // ElMessage.success('执行成功')
+          // let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
+          
+          // ['employee_id', 'name', 'email', 'hire_date', 'department_id']
+          try{//有可能是insert语句这里没有data返回
+            resultSet.columns = res.data.columns || []
+            const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
+            resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : [emptyRow]
+            resultSet.affectedRows  =  0
+          }catch(e){
+            console.log('执行失败 错误信息:' + e.message)
+          }
+          //通知树更新
+          treeStore.triggerRefresh()
+          console.log('treeStore.triggerRefresh()执行完毕')
+        }else{
+          ElMessage.error('执行失败 失败原因:' + res.message)
+        }                                   
     }
-    const res = await databaseApi.executeSqlWithText(parm)
     
-    if(res.code === 200){
-      // ElMessage.success('执行成功')
-      // let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
-      console.log('table res',res)
-      // ['employee_id', 'name', 'email', 'hire_date', 'department_id']
-      resultSet.columns = res.data.columns || []
-      const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
-      resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : [emptyRow]
-      console.log('resultSet',resultSet)
-      // resultSet.executionTime = res.executionTime || 0
-      resultSet.affectedRows  =  0
-    }else{
-      ElMessage.error('执行失败 失败原因:' + res.message)
-    }
     
     // await nextTick()
     // VXETable.modal.message({ content: '查询完成', status: 'success' })

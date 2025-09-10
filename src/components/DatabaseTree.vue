@@ -58,8 +58,10 @@ import { useConnStore } from '@/stores/conn'
 
 
 import { useSqlStore } from '@/stores/sqlStore'
+import { useTreeStore } from '@/stores/treeStore'
 const connStore = useConnStore()
 const sqlStore = useSqlStore()
+const treeStore = useTreeStore()
 
 const localData = ref({ sql: '', result: null })
 
@@ -228,7 +230,7 @@ const handleConnectionSuccess = (connectionConfig) => {
 const loadDatabases = async () => {
 
   //todo: 获取连接信息如果失败则把connStore.conn变null
-  // console.log('connStore.conn',connStore.conn)
+  console.log('loadDatabases connStore.conn',connStore.conn)
   currentConnection.value = connStore.conn
   
   // if (!currentConnection.value) return
@@ -239,6 +241,7 @@ const loadDatabases = async () => {
   // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
   if(res.code === 200) {
     // treeData.value = buildTree(res.data
+    console.log('tree res.data:', res.data)
     let tmpdb = []
     tmpdb.push(res.data.dbName)
     let dbdata = { databases: tmpdb, tableList: res.data.tableList, viewList: res.data.viewList }
@@ -279,14 +282,16 @@ function buildTree({ databases, tableList, viewList }) {
 }
 
 watch(
-  () => sqlStore.data,
-  (newVal) => {
-    console.log('树:', newVal)
-    localData.value = newVal
-    loadDatabases()
-  },
-  { immediate: true }
+  () => treeStore.refreshTrigger,
+  () => {
+    console.log('进tree了')
+    loadDatabases() // ✅ 触发刷新
+  }
 )
+
+defineExpose({
+  loadDatabases
+})
 </script>
 
 <style scoped>

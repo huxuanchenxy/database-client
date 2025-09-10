@@ -28,6 +28,7 @@
           <DatabaseTree
             :on-database-select="handleDatabaseSelect"
             :on-table-select="handleTableSelect"
+            ref="DatabaseTreeRef"
           />
         </el-aside>
 
@@ -52,6 +53,7 @@
                 :messages="messages"
                 :history="history"
                 @export-results="handleExportResults"
+                @calltree="handleCallTree"
               />
             </el-main>
           </el-container>
@@ -75,6 +77,13 @@ import DatabaseTree from './components/DatabaseTree.vue'
 import SqlEditor from './components/SqlEditor.vue'
 import ResultArea from './components/ResultArea.vue'
 import ConnectionConfig from './components/ConnectionConfig.vue'
+
+const DatabaseTreeRef = ref(null)
+
+const handleCallTree = () => {
+  console.log('查看调用树')
+  DatabaseTreeRef.value?.loadDatabases()
+}
 
 const sqlCode = ref('')
 // 响应式数据
