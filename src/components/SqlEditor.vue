@@ -91,7 +91,7 @@ const executeSqlWithText = async (sqlText) => {
   }
   // console.log('parm', parm)
   const res = await databaseApi.executeSqlWithText(parm)
-  // console.log('res',res)
+  console.log('res',res)
 }
 </script>
 

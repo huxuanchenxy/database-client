@@ -62,7 +62,7 @@ export const databaseApi = {
   },
   // 执行SQL
   executeSqlWithText: (parms) => {
-    return api.post('/seisdb/createtablestr', parms)
+    return api.post('/seisdb/exec', parms)
   },
 
   // 获取历史记录
