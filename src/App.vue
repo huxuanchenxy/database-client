@@ -6,7 +6,7 @@
         <div class="header-content">
           <div class="app-title">
             <el-icon><Database /></el-icon>
-            <span>SESI数据库客户端</span>
+            <span>SEIS数据库客户端</span>
           </div>
           <div class="header-actions">
             <!-- <el-button
@@ -202,7 +202,7 @@ const handleExportResults = (resultSet) => {
 
 
 // 组件挂载时的初始化
-console.log('SESI数据库客户端已启动')
+console.log('SEIS数据库客户端已启动')
 </script>
 
 <style>
