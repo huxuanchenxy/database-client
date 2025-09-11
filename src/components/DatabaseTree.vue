@@ -75,7 +75,7 @@
 
 <script setup>
 import { ref, onMounted,watch,reactive  } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage,ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import ConnectionConfig from './ConnectionConfig.vue'
 import { databaseApi } from '../api/api'
@@ -201,11 +201,11 @@ height:38,
 width:80,
 })
 
-
+const currentNode = ref(null)
 // 节点右键事件
 function onContextMenu(event, data, node) {
     event.preventDefault(); // 阻止默认右键菜单
-    
+    currentNode.value = node;
     // 使用鼠标事件的实际坐标
     menu.left = event.clientX;
     menu.top = event.clientY - 50;
@@ -219,7 +219,7 @@ function onContextMenu(event, data, node) {
         menu.type = 'altertable';
     } else {
         menu.type = null;
-        // menu.show = false;
+        menu.show = false;
     }
 }
 
@@ -230,7 +230,7 @@ document.addEventListener('click', () => (menu.show = false))
 function handleCreate(type) {
   menu.show = false
   if (type === 'table') {
-    console.log('新建表逻辑')
+    // console.log('新建表逻辑')
     createTable()
   } else if (type === 'view') {
     console.log('新建视图逻辑')
@@ -241,8 +241,8 @@ function handleCreate(type) {
     console.log('打开表逻辑')
     // alterTable();
   }else if(type === 'droptable'){
-    console.log('删除表逻辑')
-    // alterTable();
+    // console.log('删除表逻辑')
+    dropTable();
   }
 
 }
@@ -258,6 +258,41 @@ function createTable() {
 
 function alterTable() {
   designer.value.openDialog() 
+}
+
+
+const dropTable = async()=> {
+  try {
+    let currrenttable = currentNode.value.data.label
+    await ElMessageBox.confirm(
+      '确定要删除这张表 ('+ currrenttable+') 吗？此操作不可恢复！',
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    // console.log('执行删除表逻辑')
+    
+    let sql = `DROP TABLE ${currrenttable}`
+    const parm = {
+      ...connStore.conn,
+      oprationString: sql, // 确保 cleanedSql 是 DROP TABLE xxx
+    }
+    // console.log('parm:', parm)
+    const res = await databaseApi.executeSqlWithText(parm)
+
+    if (res.code === 200) {
+      ElMessage.success('删除表成功')
+      await loadDatabases() // 刷新树
+    } else {
+      ElMessage.error('删除失败：' + res.message)
+    }
+  } catch {
+    // ✅ 用户点击“取消”
+    console.log('取消删除')
+  }
 }
 
 function editTable() {
