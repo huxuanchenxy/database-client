@@ -53,6 +53,9 @@
     <div class="item" @click="handleCreate('table')" v-if="menu.type === 'table'">
       新建表
     </div>
+    <div class="item" @click="handleCreate('altertable')" v-if="menu.type === 'altertable'">
+      修改表
+    </div>
     <div class="item" @click="handleCreate('view')" v-if="menu.type === 'view'">
       新建视图
     </div>
@@ -160,7 +163,7 @@ function buildTree({ databases, tableList, viewList }) {
         {
           label: '表',
           type: 'table',
-          children: tableList.map(t => ({ label: t.tableName }))
+          children: tableList.map(t => ({ label: t.tableName,type: 'altertable' }))
         },
         {
           label: '视图',
@@ -210,6 +213,8 @@ function onContextMenu(event, data, node) {
         menu.type = 'table';
     } else if (data.type === 'view') {
         menu.type = 'view';
+    } else if (data.type === 'altertable') {
+        menu.type = 'altertable';
     } else {
         menu.type = null;
         menu.show = false;
@@ -225,9 +230,13 @@ function handleCreate(type) {
   if (type === 'table') {
     console.log('新建表逻辑')
     createTable()
-  } else {
+  } else if (type === 'view') {
     console.log('新建视图逻辑')
+  }else if(type === 'altertable'){
+    console.log('修改表结构逻辑')
+    alterTable();
   }
+
 }
 
 
@@ -237,6 +246,10 @@ const designer = ref(null)
 // 3. 调用暴露出来的方法
 function createTable() {
   designer.value.openDialog() // 不传参 = 新建
+}
+
+function alterTable() {
+  designer.value.openDialog() 
 }
 
 function editTable() {
