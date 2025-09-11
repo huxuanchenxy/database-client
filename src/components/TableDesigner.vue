@@ -107,7 +107,7 @@ const openDialog = (initial = null) => {
       comment: '',
       fields: []
     }
-    addField()
+    // addField()
   }
   visible.value = true
 }
