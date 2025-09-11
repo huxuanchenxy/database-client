@@ -315,20 +315,11 @@ position: relative;
 
 .context-menu {
 position: absolute;
-/* background: #cf2020; */
-/* border: 1px solid #ebe8e8; */
-/* box-shadow: 0 2px 6px rgba(0,0,0,0.15); */
 z-index: 9999;
 }
 
 
-/* .context-menu .item {
-padding: 8px 10px;
-cursor: pointer;
-} */
-
 .context-menu .item {
-  /* padding: 8px 12px; */
   cursor: pointer;
   background: #f0e9e9;
   font-size: 14px;
@@ -339,10 +330,6 @@ cursor: pointer;
   text-align: center;
 }
 
-
-/* .context-menu .item:hover {
-background: #f5f5f5;
-} */
 
 .context-menu .item:hover {
   background-color: #f0f0f0;
