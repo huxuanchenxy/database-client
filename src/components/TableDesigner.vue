@@ -10,9 +10,9 @@
       <el-form-item label="表名">
         <el-input v-model="table.name" placeholder="表名（如：user）" />
       </el-form-item>
-      <el-form-item label="注释">
+      <!-- <el-form-item label="注释">
         <el-input v-model="table.comment" placeholder="表注释" />
-      </el-form-item>
+      </el-form-item> -->
     </el-form>
 
     <el-divider>字段列表</el-divider>

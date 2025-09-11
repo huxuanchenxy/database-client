@@ -34,6 +34,34 @@
           
           class="table-results"
         >
+        <!-- 工具栏 -->
+        <div class="grid-toolbar">
+          <el-button v-if="resultSet.columns.length > 0"
+            type="primary"
+            size="mini"
+            icon="el-icon-plus"
+            :disabled="addLocked"
+            @click="handleAdd"
+          >新增一行</el-button>
+
+          <!-- 新增-确认 -->
+          <el-button
+            v-if="addLocked"
+            type="success"
+            size="mini"
+            icon="el-icon-check"
+            @click="handleConfirmInsert"
+          >确认新增</el-button>
+
+          <!-- 编辑-确认 -->
+          <el-button
+            v-if="changedRowKeys.size"
+            type="warning"
+            size="mini"
+            icon="el-icon-check"
+            @click="handleConfirmUpdate"
+          >提交修改</el-button>
+        </div>
           <!-- ✅ vxe-grid 自适应高度 -->
           <div class="grid-wrapper">
                 <vxe-grid
@@ -108,6 +136,7 @@ import { useConnStore } from '@/stores/conn'
 import { useSqlStore } from '@/stores/sqlStore'
 import { useTreeStore } from '@/stores/treeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { parse } from 'sql-parser-cst'
 
 const sqlStore = useSqlStore()
 const connStore = useConnStore()
@@ -230,6 +259,117 @@ const getMessageTypeLabel = (type) => {
   return labels[type] || '信息'
 }
 const formatTime = (timestamp) => new Date(timestamp).toLocaleString()
+
+const xGrid = ref()
+/* ===== 新增/编辑 状态 ===== */
+const addLocked = ref(false)          // 是否正在新增
+const changedRowKeys = ref(new Set()) // 被修改过的行主键集合
+
+/* ===== 主键字段名（让后端返回，或你自己配置） ===== */
+const pkField = computed(() => {
+  /* 约定：后端把主键放在 columns 第一个，或者你自己写死 'id' */
+  return resultSet.columns[0] || 'id'
+})
+
+/* ===== 工具函数：把一行转成 where 条件 ===== */
+function rowToWhere(row) {
+  return ` \`${pkField.value}\` = ${formatValue(row[pkField.value])} `
+}
+
+/* ===== 工具函数：值转 SQL 字面量 ===== */
+function formatValue(v) {
+  if (v === null || v === undefined) return 'NULL'
+  if (typeof v === 'string') return `'${v.replace(/'/g, "\\'")}'`
+  return v
+}
+
+/* ========== 1. 点击“新增一行” ========== */
+function handleAdd() {
+  if (addLocked.value) return
+  addLocked.value = true
+  const empty = Object.fromEntries(resultSet.columns.map(k => [k, '']))
+  resultSet.rows.unshift(empty)        // 插到最前面
+  nextTick(() => {
+    const grid = xGrid.value
+    grid.setActiveRow(resultSet.rows[0]) // 自动进入编辑
+  })
+
+}
+
+/* ========== 2. 确认新增 -> 拼 INSERT -> 调接口 ========== */
+async function handleConfirmInsert() {
+  const row = resultSet.rows[0]
+  const fields = []
+  const values = []
+  resultSet.columns.forEach(col => {
+    fields.push(`\`${col}\``)
+    values.push(formatValue(row[col]))
+  })
+  let cursql = sqlStore.data.sql
+  let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
+  const sql = `INSERT INTO ` + tablename + ` (${fields.join(',')}) VALUES (${values.join(',')})`
+  try {
+    const res = await databaseApi.executeSqlWithText({
+      ...connStore.conn,
+      oprationString: sql
+    })
+    if (res.code === 200) {
+      ElMessage.success('新增成功')
+      addLocked.value = false
+      await reloadQuery() // 重新查一遍
+    } else {
+      ElMessage.error('新增失败：' + res.message)
+    }
+  } catch (e) {
+    ElMessage.error('新增异常：' + e.message)
+  }
+}
+
+/* ========== 3. 行编辑完成时记录被改动的主键 ========== */
+function handleEditClosed({ row }) {
+  const key = row[pkField.value]
+  if (key !== undefined && key !== '') {
+    changedRowKeys.value.add(key)
+  }
+}
+
+/* ========== 4. 提交修改 -> 拼 UPDATE -> 调接口 ========== */
+async function handleConfirmUpdate() {
+  const grid = xGrid.value
+  const fullData = grid.getTableData().fullData
+  const promises = []
+  changedRowKeys.value.forEach(key => {
+    const row = fullData.find(r => r[pkField.value] === key)
+    if (!row) return
+    const setList = []
+    resultSet.columns.forEach(col => {
+      setList.push(`\`${col}\` = ${formatValue(row[col])}`)
+    })
+    const sql = `UPDATE \`your_table\` SET ${setList.join(',')} WHERE ${rowToWhere(row)}`
+    promises.push(
+      databaseApi
+        .executeSqlWithText({ ...connStore.conn, oprationString: sql })
+        .then(res => {
+          if (res.code !== 200) throw new Error(res.message)
+        })
+    )
+  })
+  try {
+    await Promise.all(promises)
+    ElMessage.success('修改已提交')
+    changedRowKeys.value.clear()
+    await reloadQuery() // 刷新
+  } catch (e) {
+    ElMessage.error('提交失败：' + e.message)
+  }
+}
+
+/* ========== 5. 重新执行最开始的查询语句 ========== */
+async function reloadQuery() {
+  // 把最初查数据的 SQL 再执行一遍即可
+  // 这里偷懒直接调用你原来的 loadResult，需要把 sqlText 存起来
+  await loadResult(sqlStore.data.sql) // 自己在外层缓存一下
+}
 </script>
 
 <style scoped>

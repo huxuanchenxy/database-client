@@ -299,7 +299,7 @@ const dropTable = async()=> {
 const selectTable = async()=> {
   let currrenttable = currentNode.value.data.label
   let sql = ' SELECT * FROM ' + currrenttable + ' LIMIT 1000000 ;'
-  sqlStore.setResult(sql, {})
+  sqlStore.setResult(sql, currrenttable)
 }
 
 function editTable() {
