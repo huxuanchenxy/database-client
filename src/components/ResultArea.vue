@@ -31,13 +31,13 @@
         </div>
 
         <div
-          v-else-if="resultSet.rows.length > 0"
+          
           class="table-results"
         >
           <!-- ✅ vxe-grid 自适应高度 -->
           <div class="grid-wrapper">
                 <vxe-grid
-                  v-if="resultSet.columns.length"
+                  
                   ref="xGrid"
                   :data="resultSet.rows"
                   :columns="gridColumns"          
@@ -163,7 +163,7 @@ const loadResult = async (sqlText) => {
           try{//有可能是insert语句这里没有data返回
             resultSet.columns = res.data.columns || []
             const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
-            resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : [emptyRow]
+            resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
             resultSet.affectedRows  =  0
           }catch(e){
             console.log('执行失败 错误信息:' + e.message)
