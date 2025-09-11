@@ -171,7 +171,7 @@ const save = async () => {
       treeStore.triggerRefresh()
     }
     else {
-      ElMessage.error('创建表失败')
+      ElMessage.error('创建表失败:' + res.message)
     }
 
 }

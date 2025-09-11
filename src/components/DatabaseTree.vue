@@ -239,7 +239,7 @@ function handleCreate(type) {
     alterTable();
   }else if(type === 'selecttable'){
     console.log('打开表逻辑')
-    // alterTable();
+    selectTable();
   }else if(type === 'droptable'){
     // console.log('删除表逻辑')
     dropTable();
@@ -293,6 +293,13 @@ const dropTable = async()=> {
     // ✅ 用户点击“取消”
     console.log('取消删除')
   }
+}
+
+
+const selectTable = async()=> {
+  let currrenttable = currentNode.value.data.label
+  let sql = ' SELECT * FROM ' + currrenttable + ' LIMIT 1000000 ;'
+  sqlStore.setResult(sql, {})
 }
 
 function editTable() {
