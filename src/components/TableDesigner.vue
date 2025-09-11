@@ -1,0 +1,161 @@
+<template>
+  <el-dialog
+    v-model="visible"
+    title="表结构设计器"
+    width="80%"
+    top="5vh"
+    :close-on-click-modal="false"
+  >
+    <el-form :model="table" label-width="80px">
+      <el-form-item label="表名">
+        <el-input v-model="table.name" placeholder="表名（如：user）" />
+      </el-form-item>
+      <el-form-item label="注释">
+        <el-input v-model="table.comment" placeholder="表注释" />
+      </el-form-item>
+    </el-form>
+
+    <el-divider>字段列表</el-divider>
+
+    <el-table :data="table.fields" border size="small" style="width: 100%">
+      <el-table-column label="字段名" width="140">
+        <template #default="{ row }">
+          <el-input v-model="row.name" size="small" />
+        </template>
+      </el-table-column>
+
+      <el-table-column label="类型" width="120">
+        <template #default="{ row }">
+          <el-select v-model="row.type" size="small">
+            <el-option label="bigint" value="bigint" />
+            <el-option label="int" value="int" />
+            <el-option label="varchar" value="varchar" />
+            <el-option label="datetime" value="datetime" />
+            <el-option label="text" value="text" />
+          </el-select>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="长度" width="90">
+        <template #default="{ row }">
+          <el-input v-model="row.length" size="small" />
+        </template>
+      </el-table-column>
+
+      <el-table-column label="非 null" width="80">
+        <template #default="{ row }">
+          <el-checkbox v-model="row.notNull" />
+        </template>
+      </el-table-column>
+
+      <el-table-column label="主键" width="80">
+        <template #default="{ row }">
+          <el-checkbox v-model="row.primary" />
+        </template>
+      </el-table-column>
+
+      <el-table-column label="注释">
+        <template #default="{ row }">
+          <el-input v-model="row.comment" size="small" />
+        </template>
+      </el-table-column>
+
+      <el-table-column label="操作" width="100">
+        <template #default="{ $index }">
+          <el-button type="text" @click="removeField($index)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <div style="margin-top: 10px">
+      <el-button type="primary" size="small" @click="addField">+ 添加字段</el-button>
+    </div>
+
+    <el-divider>SQL 预览</el-divider>
+
+    <el-input
+      type="textarea"
+      :rows="8"
+      :model-value="sqlPreview"
+      readonly
+    />
+
+    <template #footer>
+      <el-button @click="visible = false">取消</el-button>
+      <el-button type="primary" @click="save">保存</el-button>
+    </template>
+  </el-dialog>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+
+const visible = ref(false)
+
+const table = ref({
+  name: '',
+  comment: '',
+  fields: []
+})
+
+const openDialog = (initial = null) => {
+  if (initial) {
+    table.value = JSON.parse(JSON.stringify(initial))
+  } else {
+    table.value = {
+      name: '',
+      comment: '',
+      fields: []
+    }
+    addField()
+  }
+  visible.value = true
+}
+
+const addField = () => {
+  table.value.fields.push({
+    name: '',
+    type: 'varchar',
+    length: '50',
+    notNull: false,
+    primary: false,
+    comment: ''
+  })
+}
+
+const removeField = (index) => {
+  table.value.fields.splice(index, 1)
+}
+
+const sqlPreview = computed(() => {
+  const { name, comment, fields } = table.value
+  if (!name || !fields.length) return '-- 请输入表名并添加字段'
+
+  const lines = fields.map(f => {
+    const parts = [`\`${f.name}\``]
+    let type = f.type
+    if (f.length && ['varchar', 'int', 'bigint'].includes(f.type)) {
+      type += `(${f.length})`
+    }
+    parts.push(type)
+    if (f.notNull) parts.push('NOT NULL')
+    if (f.primary) parts.push('PRIMARY KEY')
+    if (f.comment) parts.push(`COMMENT '${f.comment}'`)
+    return '  ' + parts.join(' ')
+  })
+
+  let sql = `CREATE TABLE \`${name}\` (\n`
+  sql += lines.join(',\n')
+  sql += '\n);'
+  if (comment) sql += `\nALTER TABLE \`${name}\` COMMENT='${comment}';`
+  return sql
+})
+
+const save = () => {
+  console.log('保存表结构：', table.value)
+  console.log('生成 SQL：', sqlPreview.value)
+  visible.value = false
+}
+
+defineExpose({ openDialog })
+</script>

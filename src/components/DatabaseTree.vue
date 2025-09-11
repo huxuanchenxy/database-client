@@ -64,6 +64,8 @@
       @connection-success="handleConnectionSuccess"
     />
   </div>
+
+   <TableDesigner ref="designer" />
 </template>
 
 <script setup>
@@ -77,6 +79,7 @@ import { useConnStore } from '@/stores/conn'
 
 import { useSqlStore } from '@/stores/sqlStore'
 import { useTreeStore } from '@/stores/treeStore'
+import TableDesigner from '@/components/TableDesigner.vue'
 const connStore = useConnStore()
 const sqlStore = useSqlStore()
 const treeStore = useTreeStore()
@@ -133,6 +136,8 @@ const loadDatabases = async () => {
   }
   } catch (e) {
     console.error(e)
+    currentConnection.value = null
+    ElMessage.error('连接失败:'+e)
   } finally {
     loading.value = false
   }
@@ -219,11 +224,33 @@ function handleCreate(type) {
   menu.show = false
   if (type === 'table') {
     console.log('新建表逻辑')
+    createTable()
   } else {
     console.log('新建视图逻辑')
   }
 }
 
+
+// 2. 拿到子组件实例
+const designer = ref(null)
+
+// 3. 调用暴露出来的方法
+function createTable() {
+  designer.value.openDialog() // 不传参 = 新建
+}
+
+function editTable() {
+  // 模拟“后端”查到的旧结构
+  const oldTable = {
+    name: 'user',
+    comment: '用户表',
+    fields: [
+      { name: 'id', type: 'bigint', length: '0', notNull: true, primary: true, comment: '主键' },
+      { name: 'username', type: 'varchar', length: '50', notNull: true, primary: false, comment: '账号' }
+    ]
+  }
+  designer.value.openDialog(oldTable) // 传参 = 修改
+}
 </script>
 
 <style scoped>
