@@ -58,7 +58,7 @@
         <div class="item" @click="handleCreate('selecttable')">打开表</div>
         <div class="item" @click="handleCreate('droptable')">删除表</div>
     </div>
-    <div class="item" @click="handleCreate('view')" v-if="menu.type === 'view'">
+    <div class="item" @click="handleCreate('view')" v-if="menu.type === 'view111'">
       新建视图
     </div>
   </div>

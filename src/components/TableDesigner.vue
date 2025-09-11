@@ -89,7 +89,12 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-
+import { useConnStore } from '@/stores/conn'
+import { databaseApi } from '@/api/api'
+import { useTreeStore } from '@/stores/treeStore'
+import { ElMessage,ElMessageBox } from 'element-plus'
+const treeStore = useTreeStore()
+const connStore = useConnStore()
 const visible = ref(false)
 
 const table = ref({
@@ -132,7 +137,7 @@ const sqlPreview = computed(() => {
   if (!name || !fields.length) return '-- 请输入表名并添加字段'
 
   const lines = fields.map(f => {
-    const parts = [`\`${f.name}\``]
+    const parts = [f.name]          // ← 反引号已去掉
     let type = f.type
     if (f.length && ['varchar', 'int', 'bigint'].includes(f.type)) {
       type += `(${f.length})`
@@ -144,17 +149,31 @@ const sqlPreview = computed(() => {
     return '  ' + parts.join(' ')
   })
 
-  let sql = `CREATE TABLE \`${name}\` (\n`
+  let sql = `CREATE TABLE ${name} (\n`  // ← 表名反引号已去掉
   sql += lines.join(',\n')
   sql += '\n);'
-  if (comment) sql += `\nALTER TABLE \`${name}\` COMMENT='${comment}';`
+  if (comment) sql += `\nALTER TABLE ${name} COMMENT='${comment}';`  // ← 同样去掉
   return sql
 })
 
-const save = () => {
-  console.log('保存表结构：', table.value)
-  console.log('生成 SQL：', sqlPreview.value)
+const save = async () => {
+//   console.log('保存表结构：', table.value)
+//   console.log('生成 SQL：', sqlPreview.value)
   visible.value = false
+    const parm = {
+      ...connStore.conn,
+      oprationString: sqlPreview.value, 
+    }
+    
+    const res = await databaseApi.executeSqlWithText(parm)
+    if(res.code === 200) {
+      ElMessage.success('创建表成功')
+      treeStore.triggerRefresh()
+    }
+    else {
+      ElMessage.error('创建表失败')
+    }
+
 }
 
 defineExpose({ openDialog })
