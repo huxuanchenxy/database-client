@@ -53,8 +53,10 @@
     <div class="item" @click="handleCreate('table')" v-if="menu.type === 'table'">
       新建表
     </div>
-    <div class="item" @click="handleCreate('altertable')" v-if="menu.type === 'altertable'">
-      修改表
+    <div class="item"  v-if="menu.type === 'altertable'">
+        <div class="item" @click="handleCreate('altertable')">修改表</div>
+        <div class="item" @click="handleCreate('selecttable')">打开表</div>
+        <div class="item" @click="handleCreate('droptable')">删除表</div>
     </div>
     <div class="item" @click="handleCreate('view')" v-if="menu.type === 'view'">
       新建视图
@@ -196,7 +198,7 @@ left: 0,
 top: 0,
 type: null,
 height:38,
-width:100,
+width:80,
 })
 
 
@@ -217,7 +219,7 @@ function onContextMenu(event, data, node) {
         menu.type = 'altertable';
     } else {
         menu.type = null;
-        menu.show = false;
+        // menu.show = false;
     }
 }
 
@@ -235,6 +237,12 @@ function handleCreate(type) {
   }else if(type === 'altertable'){
     console.log('修改表结构逻辑')
     alterTable();
+  }else if(type === 'selecttable'){
+    console.log('打开表逻辑')
+    // alterTable();
+  }else if(type === 'droptable'){
+    console.log('删除表逻辑')
+    // alterTable();
   }
 
 }
@@ -307,21 +315,40 @@ position: relative;
 
 .context-menu {
 position: absolute;
-background: #dbd8d8;
-border: 1px solid #ebe8e8;
-box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+/* background: #cf2020; */
+/* border: 1px solid #ebe8e8; */
+/* box-shadow: 0 2px 6px rgba(0,0,0,0.15); */
 z-index: 9999;
-min-width: 100px;
 }
 
+
+/* .context-menu .item {
+padding: 8px 10px;
+cursor: pointer;
+} */
 
 .context-menu .item {
-padding: 8px 12px;
-cursor: pointer;
+  /* padding: 8px 12px; */
+  cursor: pointer;
+  background: #f0e9e9;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
 }
 
 
-.context-menu .item:hover {
+/* .context-menu .item:hover {
 background: #f5f5f5;
+} */
+
+.context-menu .item:hover {
+  background-color: #f0f0f0;
+}
+
+.context-menu .item:last-child {
+  border-bottom: none;
 }
 </style>
