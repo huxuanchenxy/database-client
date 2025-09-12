@@ -185,11 +185,12 @@ const loadResult = async (sqlText) => {
         const res = await databaseApi.executeSqlWithText(parm)
         // console.log('resultarea  databaseApi.executeSqlWithText',res)
         if(res.code === 200){
-          // ElMessage.success('执行成功')
+          
           // let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
           
           // ['employee_id', 'name', 'email', 'hire_date', 'department_id']
           try{//有可能是insert语句这里没有data返回
+            ElMessage.success(res.message)
             resultSet.columns = res.data.columns || []
             const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
@@ -315,7 +316,7 @@ async function handleConfirmInsert() {
       ...connStore.conn,
       oprationString: sql
     })
-    console.log('res222',res)
+    // console.log('res222',res)
     if (res.code === 200) {
       ElMessage.success('新增成功')
       addLocked.value = false
