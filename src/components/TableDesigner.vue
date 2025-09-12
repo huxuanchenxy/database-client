@@ -129,7 +129,7 @@ const openDialog = async (initialTableName = null) => {
     if (res.code !== 200) return ElMessage.error('获取表信息失败')
     const fields = res.data.fields.map(f => {
       const { type, length } = parseDataType(f.data_type)
-      return { ...f, type, length }
+      return { ...f, type, length,old_name: f.column_name }
     })
         // 2. 先填充当前编辑态
     table.value = { name: initialTableName, comment: '', fields }
@@ -162,8 +162,8 @@ const removeField = async (idx) => {
 
 /* ---------- SQL 预览 ---------- */
 const sqlPreview = computed(() => {
-//   if (!isDisabled.value) return buildCreateSql(table.value)      // 新建
-//   return buildAlterSql(oldTable.value, table.value)                    // 修改
+  if (!isDisabled.value) return buildCreateSql(table.value)      // 新建
+  return buildAlterSql(oldTable.value, table.value)                    // 修改
 })
 
 /* ---------- 生成 CREATE TABLE ---------- */
@@ -183,61 +183,89 @@ function buildCreateSql(t) {
   return `CREATE TABLE ${quoteId(t.name)} (\n${cols.join(',\n')}\n);`
 }
 
-/* ---------- 生成 ALTER TABLE ---------- */
+/* ---------- 生成 ALTER TABLE（PostgreSQL 版） ---------- */
 function buildAlterSql(old, curr) {
-    // console.log('buildAlterSql old',old)//为空
-    // console.log('buildAlterSql curr',curr)
   if (!old || !curr) return ''
   const alterList = []
   const oldMap = Object.fromEntries(old.fields.map(f => [f.column_name, f]))
   const currMap = Object.fromEntries(curr.fields.map(f => [f.column_name, f]))
 
-  // 1. 删除的列
+  /* 1. 删除的列（先跳过那些被重命名的） */
   old.fields.forEach(of => {
+    const renamed = curr.fields.find(cf => cf.old_name === of.column_name && cf.column_name !== of.column_name)
+    if (renamed) {
+      // 有对应重命名，不做 DROP
+      return
+    }
     if (!currMap[of.column_name]) {
       alterList.push(`ALTER TABLE ${quoteId(curr.name)} DROP COLUMN ${quoteId(of.column_name)};`)
     }
   })
 
-  // 2. 新增列
+  /* 2. 新增 / 修改 的列 */
   curr.fields.forEach(cf => {
-    if (!oldMap[cf.column_name]) {
+    const of = oldMap[cf.old_name || cf.column_name]
+
+    /* 2.1 列名变更 → RENAME */
+    if (cf.old_name && cf.old_name !== cf.column_name) {
+      alterList.push(
+        `ALTER TABLE ${quoteId(curr.name)} RENAME COLUMN ${quoteId(cf.old_name)} TO ${quoteId(cf.column_name)};`
+      )
+    }
+
+    if (!of) {
+      /* 2.2 全新列 */
       let line = `ADD COLUMN ${quoteId(cf.column_name)} ${buildDataType(cf)}`
       if (cf.is_not_null) line += ' NOT NULL'
       alterList.push(`ALTER TABLE ${quoteId(curr.name)} ${line};`)
-      // 主键/注释额外语句
-      if (cf.comment) alterList.push(`COMMENT ON COLUMN ${quoteId(curr.name)}.${quoteId(cf.column_name)} IS ${escapeStr(cf.comment)};`)
+      if (cf.comment) {
+        alterList.push(`COMMENT ON COLUMN ${quoteId(curr.name)}.${quoteId(cf.column_name)} IS ${escapeStr(cf.comment)};`)
+      }
       return
     }
 
-    // 3. 修改列（类型、长度、可空性、注释、主键）
-    const of = oldMap[cf.column_name]
-    // 3.1 类型/长度
+    /* 2.3 类型 / 长度 */
     if (of.type !== cf.type || of.length !== cf.length) {
-      alterList.push(`ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} TYPE ${buildDataType(cf)};`)
+      alterList.push(
+        `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} TYPE ${buildDataType(cf)};`
+      )
     }
-    // 3.2 非 null
+
+    /* 2.4 可空性 */
     if (of.is_not_null !== cf.is_not_null) {
       const setDrop = cf.is_not_null ? 'SET NOT NULL' : 'DROP NOT NULL'
-      alterList.push(`ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} ${setDrop};`)
+      alterList.push(
+        `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} ${setDrop};`
+      )
     }
-    // 3.3 注释
+
+    /* 2.5 注释 */
     if (of.comment !== cf.comment) {
-      alterList.push(`COMMENT ON COLUMN ${quoteId(curr.name)}.${quoteId(cf.column_name)} IS ${escapeStr(cf.comment || '')};`)
+      alterList.push(
+        `COMMENT ON COLUMN ${quoteId(curr.name)}.${quoteId(cf.column_name)} IS ${escapeStr(cf.comment || '')};`
+      )
     }
-    // 3.4 主键变化（先暴力全部删再全部加，最简单）
   })
 
-  // 4. 主键变更（整表维度）
+  /* 3. 主键变更 */
   const oldPks = old.fields.filter(f => f.ispk).map(f => f.column_name).sort()
   const currPks = curr.fields.filter(f => f.ispk).map(f => f.column_name).sort()
   if (oldPks.join() !== currPks.join()) {
-    if (oldPks.length) alterList.push(`ALTER TABLE ${quoteId(curr.name)} DROP CONSTRAINT IF EXISTS ${quoteId(curr.name + '_pkey')};`)
-    if (currPks.length) alterList.push(`ALTER TABLE ${quoteId(curr.name)} ADD PRIMARY KEY (${currPks.map(quoteId).join(',')});`)
+    if (oldPks.length) {
+      alterList.push(
+        `ALTER TABLE ${quoteId(curr.name)} DROP CONSTRAINT IF EXISTS ${quoteId(curr.name + '_pkey')};`
+      )
+    }
+    if (currPks.length) {
+      alterList.push(
+        `ALTER TABLE ${quoteId(curr.name)} ADD PRIMARY KEY (${currPks.map(quoteId).join(',')});`
+      )
+    }
   }
 
   return alterList.length ? alterList.join('\n') : '-- 暂无改动'
 }
+
 
 /* ---------- 工具函数 ---------- */
 function parseDataType(dt) {
@@ -270,7 +298,8 @@ const save = async () => {
     
     const res = await databaseApi.executeSqlWithText(parm)
     if(res.code === 200) {
-      ElMessage.success('创建表成功')
+      let msg =   isDisabled.value ? '修改表成功' : '新建表成功'
+      ElMessage.success(msg)
       treeStore.triggerRefresh()
     }
     else {
