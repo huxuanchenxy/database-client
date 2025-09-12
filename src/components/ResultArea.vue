@@ -302,17 +302,20 @@ async function handleConfirmInsert() {
   const fields = []
   const values = []
   resultSet.columns.forEach(col => {
-    fields.push(`\`${col}\``)
+    // fields.push(`\`${col}\``)
+    fields.push(col)
     values.push(formatValue(row[col]))
   })
   let cursql = sqlStore.data.sql
   let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
-  const sql = `INSERT INTO ` + tablename + ` (${fields.join(',')}) VALUES (${values.join(',')})`
+  const sql = "INSERT INTO " + tablename + " ( " + fields.join(',') + " ) VALUES ( " + values.join(',') + ")"
+  console.log('sql',sql)
   try {
     const res = await databaseApi.executeSqlWithText({
       ...connStore.conn,
       oprationString: sql
     })
+    console.log('res222',res)
     if (res.code === 200) {
       ElMessage.success('新增成功')
       addLocked.value = false
