@@ -36,13 +36,13 @@
         >
         <!-- 工具栏 -->
         <div class="grid-toolbar">
-          <el-button v-if="resultSet.columns.length > 0"
+          <!-- <el-button v-if="resultSet.columns.length > 0"
             type="primary"
             size="mini"
             icon="el-icon-plus"
             :disabled="addLocked"
             @click="handleAdd"
-          >新增一行</el-button>
+          >新增一行</el-button> -->
 
           <!-- 新增-确认 -->
           <el-button
