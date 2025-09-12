@@ -76,7 +76,7 @@
     <el-input
       type="textarea"
       :rows="8"
-      :model-value="sqlPreview"
+      :model-value="oldTable ? alterPreview : sqlPreview"
       readonly
     />
 
@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed,watch } from 'vue'
 import { useConnStore } from '@/stores/conn'
 import { databaseApi } from '@/api/api'
 import { useTreeStore } from '@/stores/treeStore'
@@ -110,35 +110,128 @@ function parseDataType(dt) {
   if (!m) return { type: dt, length: null }
   return { type: m[1].toLowerCase(), length: m[2] ?? null }
 }
+
+/* 1. 标志位 */
+const touched = ref(false)
+
+/* 2. 监听字段变化 */
+watch(
+  () => table.value.fields,
+  () => { touched.value = true },
+  { deep: true }
+)
+
+/* 1. 存一份原始字段名数组 */
+const oldFieldNames = ref([])
+const oldTable = ref(null) 
+/* 实时 ALTER 预览 */
+const alterPreview = computed(() => {
+  if (!oldTable.value) return ''          // 新建表模式
+  if (!touched.value) return ''           // <<<<< 刚打开，用户啥都没动
+  const alters = diffAlterTable()
+  return alters.length ? alters.join('\n') : '-- 结构无变化'
+})
 const openDialog = async (initial = null) => {
-    
+  visible.value = true
+  touched.value = false
   if (initial) {
     isDisabled.value = true
-    let res = await databaseApi.getTableInfo({
+    const res = await databaseApi.getTableInfo({
       ...connStore.conn,
       oprationString: initial
     })
-    console.log('初始数据：', res)
-    // table.value = JSON.parse(JSON.stringify(initial))
-    table.value.fields = []
-    table.value.name = initial
-    if(res.code === 200)
-    {
-        table.value.fields = res.data.fields.map(f => {
-            const { type, length } = parseDataType(f.data_type)
-            return { ...f, type, length }   // 新增两个字段
-        })
-    }
+    if (res.code !== 200) return ElMessage.error('获取表信息失败')
+
+    const fields = res.data.fields.map(f => {
+      const { type, length } = parseDataType(f.data_type)
+      return { ...f, type, length }
+    })
+
+    /* 关键：同时给 table 和 oldTable 赋值 */
+    table.value = { name: initial, comment: '', fields }
+    oldTable.value = JSON.parse(JSON.stringify(table.value))   // <<<<< 就加这一句
+    oldFieldNames.value = fields.map(f => f.column_name)
+
   } else {
     isDisabled.value = false
-    table.value = {
-      name: '',
-      comment: '',
-      fields: []
-    }
-    // addField()
+    table.value = { name: '', comment: '', fields: [] }
+    oldTable.value = null   // 新建表模式
+    oldFieldNames.value = []
   }
-  visible.value = true
+}
+
+/* 2. 比对函数：返回 rename 映射  { 旧名: 新名 } */
+function detectRenames () {
+  const rename = {}
+  const newNames = table.value.fields.map(f => f.column_name)
+  oldFieldNames.value.forEach((old, idx) => {
+    const nw = newNames[idx]
+    if (nw && nw !== old) rename[old] = nw
+  })
+  return rename
+}
+
+/* 3. 生成 ALTER 语句（在 save 里调用）*/
+function diffAlterTable () {
+  const alters = []
+  const tn = table.value.name
+  /* 只拿有效字段做对比 */
+  const validFields = table.value.fields.filter(f => f.column_name.trim())
+
+  const oldMap = Object.fromEntries(
+    oldTable.value.fields.map(f => [f.column_name, f])
+  )
+
+  /* 重命名检测 */
+  const rename = detectRenames()
+
+  /* 1. 重命名 */
+  for (const [oldName, newName] of Object.entries(rename)) {
+    alters.push(`ALTER TABLE ${tn} RENAME COLUMN ${oldName} TO ${newName};`)
+    delete oldMap[oldName]
+  }
+
+  /* 2. 删除字段（剩下的旧字段）*/
+  for (const oldName of Object.keys(oldMap)) {
+    alters.push(`ALTER TABLE ${tn} DROP COLUMN ${oldName};`)
+  }
+
+  /* 3. 新增字段（validFields 比旧表多出的部分）*/
+  const addCount = validFields.length - oldFieldNames.value.length
+  if (addCount > 0) {
+    for (let i = oldFieldNames.value.length; i < validFields.length; i++) {
+      alters.push(`ALTER TABLE ${tn} ADD COLUMN ${colDef(validFields[i])};`)
+    }
+  }
+
+  /* 4. 改类型/可空/主键（只比对 validFields）*/
+  validFields.forEach(f => {
+    const srcName = Object.entries(rename).find(([, n]) => n === f.column_name)?.[0] || f.column_name
+    const o = oldTable.value.fields.find(v => v.column_name === srcName)
+    if (!o) return   // 新增字段已处理
+
+    /* 类型 */
+    if (o.type !== f.type || o.length !== f.length) {
+      let nt = f.type
+      if (f.length && ['varchar', 'int', 'bigint'].includes(f.type)) nt += `(${f.length})`
+      alters.push(`ALTER TABLE ${tn} ALTER COLUMN ${f.column_name} TYPE ${nt} USING ${f.column_name}::${nt};`)
+    }
+    /* 可空 */
+    if (o.is_not_null !== f.is_not_null) {
+      alters.push(
+        f.is_not_null
+          ? `ALTER TABLE ${tn} ALTER COLUMN ${f.column_name} SET NOT NULL;`
+          : `ALTER TABLE ${tn} ALTER COLUMN ${f.column_name} DROP NOT NULL;`
+      )
+    }
+    /* 主键 */
+    if (o.ispk !== f.ispk) {
+      if (o.ispk) alters.push(`ALTER TABLE ${tn} DROP CONSTRAINT ${tn}_pkey;`)
+      if (f.ispk) alters.push(`ALTER TABLE ${tn} ADD PRIMARY KEY (${f.column_name});`)
+    }
+  })
+
+  return alters
 }
 
 const addField = () => {
@@ -176,7 +269,7 @@ const sqlPreview = computed(() => {
   let sql = `CREATE TABLE ${name} (\n`  // ← 表名反引号已去掉
   sql += lines.join(',\n')
   sql += '\n);'
-  if (comment) sql += `\nALTER TABLE ${name} COMMENT='${comment}';`  // ← 同样去掉
+//   if (comment) sql += `\nALTER TABLE ${name} COMMENT='${comment}';`  // ← 同样去掉
   return sql
 })
 

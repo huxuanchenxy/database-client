@@ -129,16 +129,20 @@ const loadDatabases = async () => {
   if (!connStore.conn) return
 
   try {
-  const res = await databaseApi.getDatabases(connStore.conn)
+    const res = await databaseApi.getDatabases(connStore.conn)
   // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
-  if(res.code === 200) {
-    // treeData.value = buildTree(res.data
-    // console.log('tree res.data:', res.data)
-    let tmpdb = []
-    tmpdb.push(res.data.dbName)
-    let dbdata = { databases: tmpdb, tableList: res.data.tableList, viewList: res.data.viewList }
-    treeData.value = buildTree(dbdata)
-  }
+    if(res.code === 200) {
+      // treeData.value = buildTree(res.data
+      // console.log('tree res.data:', res.data)
+      let tmpdb = []
+      tmpdb.push(res.data.dbName)
+      let dbdata = { databases: tmpdb, tableList: res.data.tableList, viewList: res.data.viewList }
+      treeData.value = buildTree(dbdata)
+    }else
+    {
+      currentConnection.value = null
+      ElMessage.error('获取数据库列表失败:'+res.message)
+    }
   } catch (e) {
     console.error(e)
     currentConnection.value = null
