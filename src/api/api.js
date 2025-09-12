@@ -48,9 +48,9 @@ export const databaseApi = {
     return api.post('/seisdb/gettblist', connectionConfig)
   },
 
-  // 获取表列表
-  getTables: (connectionConfig) => {
-    return api.post('/table/list', connectionConfig)
+  // 获取表结构
+  getTableInfo: (parms) => {
+    return api.post('/seisdb/gettableinfo', parms)
   },
 
   // 执行SQL

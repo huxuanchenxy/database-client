@@ -235,10 +235,10 @@ function handleCreate(type) {
   } else if (type === 'view') {
     console.log('新建视图逻辑')
   }else if(type === 'altertable'){
-    console.log('修改表结构逻辑')
+    // console.log('修改表结构逻辑')
     alterTable();
   }else if(type === 'selecttable'){
-    console.log('打开表逻辑')
+    // console.log('打开表逻辑')
     selectTable();
   }else if(type === 'droptable'){
     // console.log('删除表逻辑')
@@ -257,7 +257,8 @@ function createTable() {
 }
 
 function alterTable() {
-  designer.value.openDialog() 
+  let currrenttable = currentNode.value.data.label
+  designer.value.openDialog(currrenttable) 
 }
 
 

@@ -8,7 +8,7 @@
   >
     <el-form :model="table" label-width="80px">
       <el-form-item label="表名">
-        <el-input v-model="table.name" placeholder="表名（如：user）" />
+        <el-input v-model="table.name" placeholder="表名（如：user）" :disabled="isDisabled" />
       </el-form-item>
       <!-- <el-form-item label="注释">
         <el-input v-model="table.comment" placeholder="表注释" />
@@ -20,17 +20,17 @@
     <el-table :data="table.fields" border size="small" style="width: 100%">
       <el-table-column label="字段名" width="140">
         <template #default="{ row }">
-          <el-input v-model="row.name" size="small" />
+          <el-input v-model="row.column_name" size="small" />
         </template>
       </el-table-column>
 
       <el-table-column label="类型" width="120">
         <template #default="{ row }">
           <el-select v-model="row.type" size="small">
-            <el-option label="bigint" value="bigint" />
-            <el-option label="int" value="int" />
+            <el-option label="integer" value="integer" />
             <el-option label="varchar" value="varchar" />
-            <el-option label="datetime" value="datetime" />
+            <el-option label="date" value="date" />
+            <el-option label="time" value="time" />
             <el-option label="text" value="text" />
           </el-select>
         </template>
@@ -44,13 +44,13 @@
 
       <el-table-column label="非 null" width="80">
         <template #default="{ row }">
-          <el-checkbox v-model="row.notNull" />
+          <el-checkbox v-model="row.is_not_null" />
         </template>
       </el-table-column>
 
       <el-table-column label="主键" width="80">
         <template #default="{ row }">
-          <el-checkbox v-model="row.primary" />
+          <el-checkbox v-model="row.ispk" />
         </template>
       </el-table-column>
 
@@ -103,10 +103,34 @@ const table = ref({
   fields: []
 })
 
-const openDialog = (initial = null) => {
+const isDisabled = ref(false)
+
+function parseDataType(dt) {
+  const m = dt.match(/^(\w+)(?:\((.+)\))?$/)
+  if (!m) return { type: dt, length: null }
+  return { type: m[1].toLowerCase(), length: m[2] ?? null }
+}
+const openDialog = async (initial = null) => {
+    
   if (initial) {
-    table.value = JSON.parse(JSON.stringify(initial))
+    isDisabled.value = true
+    let res = await databaseApi.getTableInfo({
+      ...connStore.conn,
+      oprationString: initial
+    })
+    console.log('初始数据：', res)
+    // table.value = JSON.parse(JSON.stringify(initial))
+    table.value.fields = []
+    table.value.name = initial
+    if(res.code === 200)
+    {
+        table.value.fields = res.data.fields.map(f => {
+            const { type, length } = parseDataType(f.data_type)
+            return { ...f, type, length }   // 新增两个字段
+        })
+    }
   } else {
+    isDisabled.value = false
     table.value = {
       name: '',
       comment: '',
@@ -119,11 +143,11 @@ const openDialog = (initial = null) => {
 
 const addField = () => {
   table.value.fields.push({
-    name: '',
-    type: 'varchar',
-    length: '50',
-    notNull: false,
-    primary: false,
+    column_name: '',
+    type: '',
+    length: '',
+    is_not_null: false,
+    ispk: false,
     comment: ''
   })
 }
@@ -137,14 +161,14 @@ const sqlPreview = computed(() => {
   if (!name || !fields.length) return '-- 请输入表名并添加字段'
 
   const lines = fields.map(f => {
-    const parts = [f.name]          // ← 反引号已去掉
+    const parts = [f.column_name]          // ← 反引号已去掉
     let type = f.type
     if (f.length && ['varchar', 'int', 'bigint'].includes(f.type)) {
       type += `(${f.length})`
     }
     parts.push(type)
-    if (f.notNull) parts.push('NOT NULL')
-    if (f.primary) parts.push('PRIMARY KEY')
+    if (f.is_not_null) parts.push('NOT NULL')
+    if (f.ispk) parts.push('PRIMARY KEY')
     if (f.comment) parts.push(`COMMENT '${f.comment}'`)
     return '  ' + parts.join(' ')
   })
