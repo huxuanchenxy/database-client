@@ -36,6 +36,8 @@
         >
         <!-- 工具栏 -->
         <div class="grid-toolbar">
+          
+           <div class="btn-box">
           <el-button v-if="resultSet.columns.length > 0"
             type="primary"
             size="mini"
@@ -52,6 +54,13 @@
             icon="el-icon-check"
             @click="handleConfirmInsert"
           >确认新增</el-button>
+                    <el-button
+            v-if="addLocked"
+            type="success"
+            size="mini"
+            icon="el-icon-check"
+            @click="handleCancelInsert"
+          >取消新增</el-button>
 
           <!-- 编辑-确认 -->
           <el-button
@@ -61,6 +70,8 @@
             icon="el-icon-check"
             @click="handleConfirmUpdate"
           >提交修改</el-button>
+          </div>
+          <span clss="table-name">{{tableName}}</span>
         </div>
           <!-- ✅ vxe-grid 自适应高度 -->
           <div class="grid-wrapper">
@@ -144,7 +155,11 @@ const treeStore = useTreeStore()
 const localData = ref({ sql: '', result: null })
 const emit = defineEmits(['calltree'])
 
-
+const tableName = computed(() => {
+  let cursql = sqlStore.data.sql
+  let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
+  return tablename;
+});
 onMounted(() => {
   // loadResult({ sql: 'select * from user' })
 })
@@ -174,8 +189,10 @@ const loadResult = async (sqlText) => {
   try {
     // const res = await databaseApi.getdata(parm)   // ← 接口
     // 假定后端返回格式：
-  // console.log('currentConnection',currentConnection.value)
-    const cleanedSql = sqlText.sql.replace(/\r\n/g, ' ');
+  console.log('loadResult',sqlText)
+
+    const cleanedSql = sqlText.sql ? sqlText.sql.replace(/\r\n/g, ' '): sqlText.replace(/\r\n/g, ' ');
+    // console.log('cleanedSql',cleanedSql)
     if(cleanedSql)
     {
         let parm = {
@@ -195,6 +212,8 @@ const loadResult = async (sqlText) => {
             const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
             resultSet.affectedRows  =  0
+
+            // console.log('resultSet',resultSet)
           }catch(e){
             console.log('执行失败 错误信息:' + e.message)
           }
@@ -329,6 +348,16 @@ async function handleConfirmInsert() {
   }
 }
 
+
+async function handleCancelInsert() {
+  try {
+      await reloadQuery() // 重新查一遍
+      addLocked.value = false
+  } catch (e) {
+    ElMessage.error('加载异常：' + e.message)
+  }
+}
+
 /* ========== 3. 行编辑完成时记录被改动的主键 ========== */
 function handleEditClosed({ row }) {
   const key = row[pkField.value]
@@ -384,4 +413,20 @@ async function reloadQuery() {
   overflow-y: auto;
 }
 
+.grid-toolbar {
+  display: flex;
+  align-items: center;   /* 垂直居中 */
+}
+
+/* 按钮组占满左侧剩余空间，把表名顶到最右 */
+.btn-box {
+  margin-right: auto;
+}
+
+/* 表名本身不需要额外样式就能贴在右边 */
+.table-name {
+  /* 可选：微调与按钮间距 */
+  margin-left: auto;   /* 关键：顶到最右 */
+  padding-right: 12px; /* 右边留空，不需要 position */
+}
 </style>
