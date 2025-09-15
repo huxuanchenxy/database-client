@@ -90,12 +90,12 @@
                   <template #action_slot="{ row }">
                   <!-- 未编辑状态 -->
                   <template v-if="!row.__editing && addLocked === false">
-                    <el-button type="primary" size="mini" @click="startEdit(row)">
+                    <!-- <el-button type="primary" size="mini" @click="startEdit(row)">
                       编辑
                     </el-button>
                     <el-button type="primary" size="mini" @click="startDelete(row)">
                       删除
-                    </el-button>
+                    </el-button> -->
                   </template>
 
                   <!-- 编辑中状态 -->
