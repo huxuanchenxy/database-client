@@ -484,6 +484,7 @@ function startEdit(row) {
 
 
 async function startDelete(row) {
+  curID.value = formatValue(row[pkField.value]) 
     await ElMessageBox.confirm(
       '确定要删除这行数据吗？此操作不可恢复！',
       '删除确认',
@@ -493,6 +494,29 @@ async function startDelete(row) {
         type: 'warning',
       }
     )
+    console.log('row',row)
+    try {
+
+    const sql = `DELETE FROM ${tableName.value}  WHERE ${rowToWherev2(row)}`
+
+    /* 2. 调接口 */
+    const res = await databaseApi.executeSqlWithText({
+      ...connStore.conn,
+      oprationString: sql
+    })
+    if (res.code === 200) {
+      ElMessage.success('已删除')
+      xGrid.value.clearActived()   // 退出编辑
+      row.__editing = false
+      await reloadQuery()          // 可选：重新拉一遍最新数据
+    } else {
+      ElMessage.error('删除失败：' + res.message)
+    }
+  } catch (e) {
+    ElMessage.error('删除异常：' + e.message)
+  } finally {
+    row.__saving = false
+  }
 }
 
 /* 确认保存 */
