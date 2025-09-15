@@ -63,31 +63,59 @@
           >取消新增</el-button>
 
           <!-- 编辑-确认 -->
-          <el-button
+          <!-- <el-button
             v-if="changedRowKeys.size"
             type="warning"
             size="mini"
             icon="el-icon-check"
             @click="handleConfirmUpdate"
-          >提交修改</el-button>
+          >提交修改</el-button> -->
           </div>
           <span clss="table-name">{{tableName}}</span>
         </div>
           <!-- ✅ vxe-grid 自适应高度 -->
           <div class="grid-wrapper">
                 <vxe-grid
-                  
-                  ref="xGrid"
-                  :data="resultSet.rows"
-                  :columns="gridColumns"          
-                  :edit-config="{ trigger: 'click', mode: 'row', showStatus: true }"
-                  border
-                  stripe
-                  height="99%"
-                  size="mini"
-                  highlight-hover-row
-                  auto-resize>
-                </vxe-grid>
+                ref="xGrid"
+                :data="resultSet.rows"
+                :columns="gridColumns"
+                :edit-config="{ trigger: 'manual', mode: 'row', showStatus: true }"
+                border
+                stripe
+                height="99%"
+                size="mini"
+                highlight-hover-row
+                auto-resize>
+
+                  <template #action_slot="{ row }">
+                  <!-- 未编辑状态 -->
+                  <template v-if="!row.__editing && addLocked === false">
+                    <el-button type="primary" size="mini" @click="startEdit(row)">
+                      编辑
+                    </el-button>
+                    <el-button type="primary" size="mini" @click="startDelete(row)">
+                      删除
+                    </el-button>
+                  </template>
+
+                  <!-- 编辑中状态 -->
+                  <template v-else>
+                    <el-button v-if="addLocked === false"
+                      type="success"
+                      size="mini"
+                      :loading="row.__saving"
+                      @click="confirmEdit(row)">
+                      确认
+                    </el-button>
+                    <el-button v-if="addLocked === false"
+                      type="info"
+                      size="mini"
+                      @click="cancelEdit(row)">
+                      取消
+                    </el-button>
+                  </template>
+                </template>
+              </vxe-grid>
 
           </div>
         </div>
@@ -148,6 +176,7 @@ import { useSqlStore } from '@/stores/sqlStore'
 import { useTreeStore } from '@/stores/treeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { parse } from 'sql-parser-cst'
+import { add } from 'xe-utils'
 
 const sqlStore = useSqlStore()
 const connStore = useConnStore()
@@ -172,14 +201,25 @@ const resultSet = reactive({
 })
 
 /* ==========  3. 把后端字段转成 vxe-columns  ========== */
-const gridColumns = computed(() =>
-  resultSet.columns.map(col => ({
+const gridColumns = computed(() => {
+  const cols = resultSet.columns.map(col => ({
     field: col,
     title: col,
     minWidth: 100,
-    editRender: { name: 'input' }   // 如果想整表可编辑就留着
+    editRender: { name: 'input' , immediate: true}
   }))
-)
+
+  // 操作列
+  cols.push({
+    field: 'action',
+    title: '操作',
+    width: 90,
+    fixed: 'right',
+    slots: { default: 'action_slot' }
+  })
+
+  return cols
+})
 
 
 /* ==========  4. 加载数据  ========== */
@@ -189,7 +229,7 @@ const loadResult = async (sqlText) => {
   try {
     // const res = await databaseApi.getdata(parm)   // ← 接口
     // 假定后端返回格式：
-  console.log('loadResult',sqlText)
+  // console.log('loadResult',sqlText)
 
     const cleanedSql = sqlText.sql ? sqlText.sql.replace(/\r\n/g, ' '): sqlText.replace(/\r\n/g, ' ');
     // console.log('cleanedSql',cleanedSql)
@@ -207,7 +247,7 @@ const loadResult = async (sqlText) => {
           
           // ['employee_id', 'name', 'email', 'hire_date', 'department_id']
           try{//有可能是insert语句这里没有data返回
-            ElMessage.success(res.message)
+            // ElMessage.success(res.message)
             resultSet.columns = res.data.columns || []
             const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
@@ -287,13 +327,17 @@ const changedRowKeys = ref(new Set()) // 被修改过的行主键集合
 
 /* ===== 主键字段名（让后端返回，或你自己配置） ===== */
 const pkField = computed(() => {
-  /* 约定：后端把主键放在 columns 第一个，或者你自己写死 'id' */
+  /* 约定TODO：后端把主键放在 columns 第一个，或者你自己写死 'id' */
   return resultSet.columns[0] || 'id'
 })
 
 /* ===== 工具函数：把一行转成 where 条件 ===== */
 function rowToWhere(row) {
-  return ` \`${pkField.value}\` = ${formatValue(row[pkField.value])} `
+  return ` ${pkField.value} = ${formatValue(row[pkField.value])} `
+}
+
+function rowToWherev2(row) {
+  return ` ${pkField.value} = ${curID.value} `
 }
 
 /* ===== 工具函数：值转 SQL 字面量 ===== */
@@ -348,6 +392,11 @@ async function handleConfirmInsert() {
   }
 }
 
+/* 取消编辑：不保存，直接退出 */
+function cancelEdit(row) {
+  xGrid.value.clearActived() // 退出编辑状态
+  row.__editing = false      // 按钮恢复“编辑”
+}
 
 async function handleCancelInsert() {
   try {
@@ -358,11 +407,39 @@ async function handleCancelInsert() {
   }
 }
 
+const curID = ref('')
+function handleCellClick({ row, column }) {
+  // const grid = xGrid.value
+  // grid.setActiveRow(row, column.property)
+  curID.value = formatValue(row[pkField.value]) //保存修改前的主键的值
+  // console.log('curID',curID.value)
+}
 /* ========== 3. 行编辑完成时记录被改动的主键 ========== */
-function handleEditClosed({ row }) {
+async function handleEditClosed({ row }) {
+  if (addLocked.value) return //新增模式不进更新
   const key = row[pkField.value]
-  if (key !== undefined && key !== '') {
-    changedRowKeys.value.add(key)
+  if (!row) return
+  const setList = []
+  resultSet.columns.forEach(col => {
+    setList.push(`${col} = ${formatValue(row[col])}`)
+  })
+  console.log('setList',setList)
+  const sql = "UPDATE " + tableName.value + " SET " + setList.join(',') + " WHERE " + rowToWherev2(row) + ";"
+  try {
+    const res = await databaseApi.executeSqlWithText({
+      ...connStore.conn,
+      oprationString: sql
+    })
+    // console.log('res222',res)
+    if (res.code === 200) {
+      ElMessage.success('更新成功')
+      addLocked.value = false
+      await reloadQuery() 
+    } else {
+      ElMessage.error('更新失败：' + res.message)
+    }
+  } catch (e) {
+    ElMessage.error('更新异常：' + e.message)
   }
 }
 
@@ -394,6 +471,58 @@ async function handleConfirmUpdate() {
     await reloadQuery() // 刷新
   } catch (e) {
     ElMessage.error('提交失败：' + e.message)
+  }
+}
+
+/* 进入编辑 */
+function startEdit(row) {
+  const grid = xGrid.value
+  grid.setActiveRow(row)    
+  curID.value = formatValue(row[pkField.value])       // 让该行进入编辑
+  row.__editing = true            // 控制按钮显示
+}
+
+
+async function startDelete(row) {
+    await ElMessageBox.confirm(
+      '确定要删除这行数据吗？此操作不可恢复！',
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+}
+
+/* 确认保存 */
+async function confirmEdit(row) {
+  row.__saving = true
+  try {
+    const setList = []
+    resultSet.columns.forEach(col => {
+      setList.push(`${col} = ${formatValue(row[col])}`) // 这里就是用户编辑后的值
+    })
+    console.log('setList',setList)
+    const sql = `UPDATE ${tableName.value} SET ${setList.join(',')} WHERE ${rowToWherev2(row)}`
+
+    /* 2. 调接口 */
+    const res = await databaseApi.executeSqlWithText({
+      ...connStore.conn,
+      oprationString: sql
+    })
+    if (res.code === 200) {
+      ElMessage.success('已更新')
+      xGrid.value.clearActived()   // 退出编辑
+      row.__editing = false
+      await reloadQuery()          // 可选：重新拉一遍最新数据
+    } else {
+      ElMessage.error('更新失败：' + res.message)
+    }
+  } catch (e) {
+    ElMessage.error('更新异常：' + e.message)
+  } finally {
+    row.__saving = false
   }
 }
 
