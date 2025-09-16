@@ -130,10 +130,11 @@ const openDialog = async (initialTableName = null) => {
       ...connStore.conn,
       oprationString: initialTableName
     })
+    console.log('表结构',res)
     if (res.code !== 200) return ElMessage.error('获取表信息失败')
     const fields = res.data.fields.map(f => {
       const { type, length } = parseDataType(f.data_type)
-      return { ...f, type, length,old_name: f.column_name }
+      return { ...f, type, length,old_name: f.column_name,isSerial:f.isauto }
     })
         // 2. 先填充当前编辑态
     table.value = { name: initialTableName, comment: '', fields }
@@ -141,7 +142,7 @@ const openDialog = async (initialTableName = null) => {
     // 3. 等 DOM 更新完再缓存“旧结构”，保证 oldTable 只写一次
     await nextTick()
     oldTable.value = JSON.parse(JSON.stringify(table.value))
-    console.log('oldTable111',oldTable.value)
+    // console.log('oldTable111',oldTable.value)
   } else {
     /* ---------- 新建模式 ---------- */
     isDisabled.value = false
@@ -167,8 +168,8 @@ const removeField = async (idx) => {
 
 /* ---------- SQL 预览 ---------- */
 const sqlPreview = computed(() => {
-  // if (!isDisabled.value) return buildCreateSql(table.value)      // 新建
-  // return buildAlterSql(oldTable.value, table.value)                    // 修改
+  if (!isDisabled.value) return buildCreateSql(table.value)      // 新建
+  return buildAlterSql(oldTable.value, table.value)                    // 修改
 })
 
 /* ---------- 生成 CREATE TABLE ---------- */
@@ -246,18 +247,21 @@ function buildAlterSql(old, curr) {
     /* 2.3 类型 / 长度 / serial 变化 备用 */ 
     const oldIsSerial = of.isSerial || false
     const currIsSerial = cf.isSerial || false
-    if (oldIsSerial !== currIsSerial) {
-      // 只能先加新列再drop旧列，因为PG不允许alter到serial
+
+    if (oldIsSerial && !currIsSerial) {
+      /* ✅ 取消自增：serial -> integer，去掉默认值（序列） */
+      alterList.push(
+        `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} TYPE integer;`,
+        `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} DROP DEFAULT;`
+      )
+    } else if (!oldIsSerial && currIsSerial) {
+      /* ✅ 新增自增：integer -> serial，需要新建列搬运数据 */
       const tmpName = cf.column_name + '_new_' + Date.now()
       alterList.push(
         `ALTER TABLE ${quoteId(curr.name)} ADD COLUMN ${quoteId(tmpName)} serial;`,
         `UPDATE ${quoteId(curr.name)} SET ${quoteId(tmpName)} = ${quoteId(cf.column_name)};`,
         `ALTER TABLE ${quoteId(curr.name)} DROP COLUMN ${quoteId(cf.column_name)};`,
         `ALTER TABLE ${quoteId(curr.name)} RENAME COLUMN ${quoteId(tmpName)} TO ${quoteId(cf.column_name)};`
-      )
-    } else if (of.type !== cf.type || of.length !== cf.length) {
-      alterList.push(
-        `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} TYPE ${buildDataType(cf)};`
       )
     }
 
@@ -278,11 +282,11 @@ function buildAlterSql(old, curr) {
   })
 
   /* 3. 主键变更 */
-  // const oldPks = old.fields.filter(f => f.ispk).map(f => f.column_name).sort()
-  // const currPks = curr.fields.filter(f => f.ispk).map(f => f.column_name).sort()
+const oldPks = old.fields.filter(f => f.ispk).map(f => f.column_name).sort()
+const currPks = curr.fields.filter(f => f.ispk).map(f => f.column_name).sort()
     /* 3. 主键变更 备用 */
-  const oldPks = old.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
-  const currPks = curr.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
+  // const oldPks = old.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
+  // const currPks = curr.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
   if (oldPks.join() !== currPks.join()) {
     if (oldPks.length) {
       alterList.push(

@@ -41,7 +41,6 @@
           <el-button v-if="resultSet.columns.length > 0"
             type="primary"
             size="mini"
-            icon="el-icon-plus"
             :disabled="addLocked"
             @click="handleAdd"
           >新增一行</el-button>
@@ -51,14 +50,12 @@
             v-if="addLocked"
             type="success"
             size="mini"
-            icon="el-icon-check"
             @click="handleConfirmInsert"
           >确认新增</el-button>
                     <el-button
             v-if="addLocked"
             type="success"
             size="mini"
-            icon="el-icon-check"
             @click="handleCancelInsert"
           >取消新增</el-button>
 
@@ -608,12 +605,20 @@ async function reloadQuery() {
 
 .grid-toolbar {
   display: flex;
-  align-items: center;   /* 垂直居中 */
+  align-items: center;
+  padding-left: 0 !important;   /* 关键 */
 }
 
 /* 按钮组占满左侧剩余空间，把表名顶到最右 */
 .btn-box {
-  margin-right: auto;
+  display: inline-flex;   /* 让按钮在一行 */
+  flex-wrap: nowrap;      /* 坚决不换行 */
+  gap: 6px;               /* 按钮间距，不喜欢可改成 4px 或 8px */
+  margin-right: auto;     /* 继续把表名顶到最右 */
+}
+.btn-box .el-button {
+  white-space: nowrap;
+  flex-shrink: 0;         /* 不让按钮被压缩到换行 */
 }
 
 /* 表名本身不需要额外样式就能贴在右边 */
