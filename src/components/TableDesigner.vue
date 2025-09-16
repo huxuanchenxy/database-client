@@ -53,7 +53,11 @@
           <el-checkbox v-model="row.ispk" />
         </template>
       </el-table-column>
-
+      <el-table-column label="自增" width="70">
+        <template #default="{ row }">
+            <el-checkbox v-model="row.isSerial" :disabled="row.type!=='integer'" />
+        </template>
+      </el-table-column>
       <el-table-column label="注释">
         <template #default="{ row }">
           <el-input v-model="row.comment" size="small" />
@@ -152,6 +156,7 @@ const addField = () => {
     length: '',
     is_not_null: false,
     ispk: false,
+    isSerial: false,
     comment: ''
   })
 }
@@ -231,6 +236,24 @@ function buildAlterSql(old, curr) {
       )
     }
 
+    /* 2.3 类型 / 长度 / serial 变化 备用 */ 
+    // const oldIsSerial = of.isSerial || false
+    // const currIsSerial = cf.isSerial || false
+    // if (oldIsSerial !== currIsSerial) {
+    //   // 只能先加新列再drop旧列，因为PG不允许alter到serial
+    //   const tmpName = cf.column_name + '_new_' + Date.now()
+    //   alterList.push(
+    //     `ALTER TABLE ${quoteId(curr.name)} ADD COLUMN ${quoteId(tmpName)} serial;`,
+    //     `UPDATE ${quoteId(curr.name)} SET ${quoteId(tmpName)} = ${quoteId(cf.column_name)};`,
+    //     `ALTER TABLE ${quoteId(curr.name)} DROP COLUMN ${quoteId(cf.column_name)};`,
+    //     `ALTER TABLE ${quoteId(curr.name)} RENAME COLUMN ${quoteId(tmpName)} TO ${quoteId(cf.column_name)};`
+    //   )
+    // } else if (of.type !== cf.type || of.length !== cf.length) {
+    //   alterList.push(
+    //     `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} TYPE ${buildDataType(cf)};`
+    //   )
+    // }
+
     /* 2.4 可空性 */
     if (of.is_not_null !== cf.is_not_null) {
       const setDrop = cf.is_not_null ? 'SET NOT NULL' : 'DROP NOT NULL'
@@ -262,21 +285,38 @@ function buildAlterSql(old, curr) {
       )
     }
   }
+  /* 3. 主键变更 备用 */
+  // const oldPks = old.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
+  // const currPks = curr.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
 
   return alterList.length ? alterList.join('\n') : '-- 暂无改动'
 }
 
 
 /* ---------- 工具函数 ---------- */
+// function parseDataType(dt) {
+//   // 把后端返回的 data_type 拆成 { type, length }
+//   // 例：character varying(120) => varchar, 120
+//   const m = dt.match(/^(\w+(?:\s+\w+)*)(?:\((\d+)\))?$/)
+//   let t = m ? m[1].replace(/\s+/g, ' ') : dt
+//   if (t === 'character varying') t = 'varchar'
+//   return { type: t, length: m && m[2] ? m[2] : '' }
+// }
 function parseDataType(dt) {
-  // 把后端返回的 data_type 拆成 { type, length }
-  // 例：character varying(120) => varchar, 120
-  const m = dt.match(/^(\w+(?:\s+\w+)*)(?:\((\d+)\))?$/)
+  const m = dt.match(/^(\w+(?:\s+\w+)*)(?:\((\d+)\))?$/i)
   let t = m ? m[1].replace(/\s+/g, ' ') : dt
   if (t === 'character varying') t = 'varchar'
-  return { type: t, length: m && m[2] ? m[2] : '' }
+  if (t === 'serial' || t === 'bigserial') {
+    return { type: 'integer', length: '', isSerial: true }
+  }
+  return { type: t, length: m && m[2] ? m[2] : '', isSerial: false }
 }
+// function buildDataType(f) {
+//   if (f.type === 'varchar' && f.length) return `varchar(${f.length})`
+//   return f.type
+// }
 function buildDataType(f) {
+  if (f.isSerial) return 'serial'
   if (f.type === 'varchar' && f.length) return `varchar(${f.length})`
   return f.type
 }

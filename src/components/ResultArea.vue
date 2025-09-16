@@ -197,7 +197,9 @@ const resultSet = reactive({
   columns: [],          // 动态列元数据
   rows: [],             // 真正数据
   executionTime: 0,
-  affectedRows: 0
+  affectedRows: 0,
+  //哪个是自增列
+  colSerial: '',
 })
 
 /* ==========  3. 把后端字段转成 vxe-columns  ========== */
@@ -242,12 +244,24 @@ const loadResult = async (sqlText) => {
         const res = await databaseApi.executeSqlWithText(parm)
         // console.log('resultarea  databaseApi.executeSqlWithText',res)
         if(res.code === 200){
-          
+          if(!res.data)
+          {
+            ElMessage.success('执行成功')
+          }
           // let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
           
           // ['employee_id', 'name', 'email', 'hire_date', 'department_id']
           try{//有可能是insert语句这里没有data返回
             // ElMessage.success(res.message)
+                //拿表结构获取哪个是自增列
+                const res2 = await databaseApi.getTableInfo({
+                  ...connStore.conn,
+                  oprationString: tableName.value
+                })
+                if(res2.code === 200)
+                {
+                    resultSet.colSerial = 'id';//TODO根据实际情况改
+                }
             resultSet.columns = res.data.columns || []
             const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
@@ -261,6 +275,7 @@ const loadResult = async (sqlText) => {
           treeStore.triggerRefresh()
           // console.log('treeStore.triggerRefresh()执行完毕')
         }else{
+          addLocked.value = false
           ElMessage.error('执行失败 失败原因:' + res.message)
         }                                   
     }
@@ -379,12 +394,18 @@ async function handleConfirmInsert() {
   const values = []
   resultSet.columns.forEach(col => {
     // fields.push(`\`${col}\``)
-    fields.push(col)
-    values.push(formatValue(row[col]))
+    console.log('row[col]',row[col])
+    console.log('formatValue(row[col])',formatValue(row[col]))
+    if(col == resultSet.colSerial && row[col] == '')
+    {}else
+    {
+      fields.push(col)
+      values.push(formatValue(row[col]))
+    }
   })
   let cursql = sqlStore.data.sql
   let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
-  const sql = "INSERT INTO " + tablename + " ( " + fields.join(',') + " ) VALUES ( " + values.join(',') + ")"
+  const sql = " INSERT INTO " + tablename + " ( " + fields.join(',') + " ) VALUES ( " + values.join(',') + ") ;"
   // console.log('sql',sql)
   try {
     const res = await databaseApi.executeSqlWithText({
@@ -394,13 +415,14 @@ async function handleConfirmInsert() {
     // console.log('res222',res)
     if (res.code === 200) {
       ElMessage.success('新增成功')
-      addLocked.value = false
-      await reloadQuery() // 重新查一遍
     } else {
       ElMessage.error('新增失败：' + res.message)
     }
   } catch (e) {
     ElMessage.error('新增异常：' + e.message)
+  }finally {
+    addLocked.value = false
+    await reloadQuery() // 重新查一遍
   }
 }
 
