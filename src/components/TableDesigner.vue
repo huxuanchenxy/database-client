@@ -8,7 +8,7 @@
   >
     <el-form :model="table" label-width="80px">
       <el-form-item label="表名">
-        <el-input v-model="table.name" placeholder="表名（如：user）" :disabled="isDisabled" />
+        <el-input v-model="table.name" placeholder="表名（如：user）" />
       </el-form-item>
       <!-- <el-form-item label="注释">
         <el-input v-model="table.comment" placeholder="表注释" />
@@ -195,6 +195,13 @@ function buildAlterSql(old, curr) {
   const oldMap = Object.fromEntries(old.fields.map(f => [f.column_name, f]))
   const currMap = Object.fromEntries(curr.fields.map(f => [f.column_name, f]))
 
+
+  /* 0. 表名变更（优先级最高） */
+  if (old.name !== curr.name) {
+    alterList.push(
+      `ALTER TABLE ${quoteId(old.name)} RENAME TO ${quoteId(curr.name)};`
+    )
+  }
   /* 1. 删除的列（先跳过那些被重命名的） */
   old.fields.forEach(of => {
     const renamed = curr.fields.find(cf => cf.old_name === of.column_name && cf.column_name !== of.column_name)
@@ -230,29 +237,29 @@ function buildAlterSql(old, curr) {
     }
 
     /* 2.3 类型 / 长度 */
-    if (of.type !== cf.type || of.length !== cf.length) {
-      alterList.push(
-        `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} TYPE ${buildDataType(cf)};`
-      )
-    }
-
-    /* 2.3 类型 / 长度 / serial 变化 备用 */ 
-    // const oldIsSerial = of.isSerial || false
-    // const currIsSerial = cf.isSerial || false
-    // if (oldIsSerial !== currIsSerial) {
-    //   // 只能先加新列再drop旧列，因为PG不允许alter到serial
-    //   const tmpName = cf.column_name + '_new_' + Date.now()
-    //   alterList.push(
-    //     `ALTER TABLE ${quoteId(curr.name)} ADD COLUMN ${quoteId(tmpName)} serial;`,
-    //     `UPDATE ${quoteId(curr.name)} SET ${quoteId(tmpName)} = ${quoteId(cf.column_name)};`,
-    //     `ALTER TABLE ${quoteId(curr.name)} DROP COLUMN ${quoteId(cf.column_name)};`,
-    //     `ALTER TABLE ${quoteId(curr.name)} RENAME COLUMN ${quoteId(tmpName)} TO ${quoteId(cf.column_name)};`
-    //   )
-    // } else if (of.type !== cf.type || of.length !== cf.length) {
+    // if (of.type !== cf.type || of.length !== cf.length) {
     //   alterList.push(
     //     `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} TYPE ${buildDataType(cf)};`
     //   )
     // }
+
+    /* 2.3 类型 / 长度 / serial 变化 备用 */ 
+    const oldIsSerial = of.isSerial || false
+    const currIsSerial = cf.isSerial || false
+    if (oldIsSerial !== currIsSerial) {
+      // 只能先加新列再drop旧列，因为PG不允许alter到serial
+      const tmpName = cf.column_name + '_new_' + Date.now()
+      alterList.push(
+        `ALTER TABLE ${quoteId(curr.name)} ADD COLUMN ${quoteId(tmpName)} serial;`,
+        `UPDATE ${quoteId(curr.name)} SET ${quoteId(tmpName)} = ${quoteId(cf.column_name)};`,
+        `ALTER TABLE ${quoteId(curr.name)} DROP COLUMN ${quoteId(cf.column_name)};`,
+        `ALTER TABLE ${quoteId(curr.name)} RENAME COLUMN ${quoteId(tmpName)} TO ${quoteId(cf.column_name)};`
+      )
+    } else if (of.type !== cf.type || of.length !== cf.length) {
+      alterList.push(
+        `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} TYPE ${buildDataType(cf)};`
+      )
+    }
 
     /* 2.4 可空性 */
     if (of.is_not_null !== cf.is_not_null) {
@@ -271,8 +278,11 @@ function buildAlterSql(old, curr) {
   })
 
   /* 3. 主键变更 */
-  const oldPks = old.fields.filter(f => f.ispk).map(f => f.column_name).sort()
-  const currPks = curr.fields.filter(f => f.ispk).map(f => f.column_name).sort()
+  // const oldPks = old.fields.filter(f => f.ispk).map(f => f.column_name).sort()
+  // const currPks = curr.fields.filter(f => f.ispk).map(f => f.column_name).sort()
+    /* 3. 主键变更 备用 */
+  const oldPks = old.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
+  const currPks = curr.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
   if (oldPks.join() !== currPks.join()) {
     if (oldPks.length) {
       alterList.push(
@@ -285,9 +295,7 @@ function buildAlterSql(old, curr) {
       )
     }
   }
-  /* 3. 主键变更 备用 */
-  // const oldPks = old.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
-  // const currPks = curr.fields.filter(f => f.ispk && !f.isSerial).map(f => f.column_name).sort()
+
 
   return alterList.length ? alterList.join('\n') : '-- 暂无改动'
 }

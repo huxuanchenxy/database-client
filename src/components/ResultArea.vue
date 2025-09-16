@@ -258,16 +258,22 @@ const loadResult = async (sqlText) => {
                   ...connStore.conn,
                   oprationString: tableName.value
                 })
+                console.log('res2',res2)
                 if(res2.code === 200)
                 {
-                    resultSet.colSerial = 'id';//TODO根据实际情况改
+                  let fields = res2.data.fields
+                  // 2. 过滤出 isauto = true 的字段
+                  let autoColumns = fields.filter(f => f.isauto)
+                  // 3. 只拿 column_name
+                  let autoColumnNames = autoColumns.map(f => f.column_name)
+                  resultSet.colSerial = autoColumnNames[0];
                 }
             resultSet.columns = res.data.columns || []
             const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
             resultSet.affectedRows  =  0
 
-            // console.log('resultSet',resultSet)
+            console.log('resultSet',resultSet)
           }catch(e){
             console.log('执行失败 错误信息:' + e.message)
           }
