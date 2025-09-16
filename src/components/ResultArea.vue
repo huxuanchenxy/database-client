@@ -212,7 +212,7 @@ const gridColumns = computed(() => {
   cols.push({
     field: 'action',
     title: '操作',
-    width: 90,
+    width: 110,
     fixed: 'right',
     slots: { default: 'action_slot' }
   })
@@ -626,5 +626,11 @@ async function reloadQuery() {
   /* 可选：微调与按钮间距 */
   margin-left: auto;   /* 关键：顶到最右 */
   padding-right: 12px; /* 右边留空，不需要 position */
+}
+
+.el-button--mini {
+  height: 20px !important;
+  padding: 0 6px !important;
+  font-size: 13px !important;
 }
 </style>
