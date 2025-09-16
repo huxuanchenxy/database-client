@@ -90,12 +90,12 @@
                   <template #action_slot="{ row }">
                   <!-- 未编辑状态 -->
                   <template v-if="!row.__editing && addLocked === false">
-                    <!-- <el-button type="primary" size="mini" @click="startEdit(row)">
+                    <el-button type="primary" size="mini" @click="startEdit(row)">
                       编辑
                     </el-button>
                     <el-button type="primary" size="mini" @click="startDelete(row)">
                       删除
-                    </el-button> -->
+                    </el-button>
                   </template>
 
                   <!-- 编辑中状态 -->
@@ -340,6 +340,18 @@ function rowToWherev2(row) {
   return ` ${pkField.value} = ${curID.value} `
 }
 
+function rowToWherev3(row) {
+  const setList = []
+  setList.push(` ${pkField.value} = ${curID.value} `)
+  resultSet.columns.forEach(col => {
+    if (col != pkField.value)
+    {
+      setList.push(`${col} = ${formatValue(row[col])}`)
+    }
+  })
+  return setList
+}
+
 /* ===== 工具函数：值转 SQL 字面量 ===== */
 function formatValue(v) {
   if (v === null || v === undefined) return 'NULL'
@@ -373,7 +385,7 @@ async function handleConfirmInsert() {
   let cursql = sqlStore.data.sql
   let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
   const sql = "INSERT INTO " + tablename + " ( " + fields.join(',') + " ) VALUES ( " + values.join(',') + ")"
-  console.log('sql',sql)
+  // console.log('sql',sql)
   try {
     const res = await databaseApi.executeSqlWithText({
       ...connStore.conn,
@@ -494,10 +506,10 @@ async function startDelete(row) {
         type: 'warning',
       }
     )
-    console.log('row',row)
+    // console.log('row',row)
     try {
 
-    const sql = `DELETE FROM ${tableName.value}  WHERE ${rowToWherev2(row)}`
+    const sql = `DELETE FROM ${tableName.value}  WHERE ${rowToWherev3(row).join(' AND ')}`
 
     /* 2. 调接口 */
     const res = await databaseApi.executeSqlWithText({
@@ -527,7 +539,7 @@ async function confirmEdit(row) {
     resultSet.columns.forEach(col => {
       setList.push(`${col} = ${formatValue(row[col])}`) // 这里就是用户编辑后的值
     })
-    console.log('setList',setList)
+    // console.log('setList',setList)
     const sql = `UPDATE ${tableName.value} SET ${setList.join(',')} WHERE ${rowToWherev2(row)}`
 
     /* 2. 调接口 */
