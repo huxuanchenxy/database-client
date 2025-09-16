@@ -606,7 +606,7 @@ async function reloadQuery() {
 .grid-toolbar {
   display: flex;
   align-items: center;
-  padding-left: 0 !important;   /* 关键 */
+  padding: 0 30px;
 }
 
 /* 按钮组占满左侧剩余空间，把表名顶到最右 */
