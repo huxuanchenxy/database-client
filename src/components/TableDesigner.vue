@@ -50,7 +50,9 @@
 
       <el-table-column label="主键" width="80">
         <template #default="{ row }">
-          <el-checkbox v-model="row.ispk" />
+          <el-checkbox v-model="row.ispk"
+          @change="() => setPrimaryKey(row)"
+          />
         </template>
       </el-table-column>
       <el-table-column label="自增" width="70">
@@ -132,7 +134,7 @@ const openDialog = async (initialTableName = null) => {
       ...connStore.conn,
       oprationString: initialTableName
     })
-    console.log('表结构',res)
+    // console.log('表结构',res)
     if (res.code !== 200) return ElMessage.error('获取表信息失败')
     const fields = res.data.fields.map(f => {
       const { type, length } = parseDataType(f.data_type)
@@ -292,7 +294,7 @@ function buildAlterSql(old, curr) {
     /* 2.5 注释 */
     if (of.comment !== cf.comment) {
       alterList.push(
-        `COMMENT ON COLUMN ${quoteId(curr.name)}.${quoteId(cf.column_name)} IS ${escapeStr(cf.comment || '')};`
+        `COMMENT ON COLUMN ${(curr.name)}.${(cf.column_name)} IS ${escapeStr(cf.comment || '')};`
       )
     }
   })
@@ -377,5 +379,11 @@ const save = async () => {
 
 }
 
+function setPrimaryKey(row) {
+  // 清除所有
+  table.value.fields.forEach(r => { r.ispk = false })
+  // 给当前行设置
+  row.ispk = true
+}
 defineExpose({ openDialog })
 </script>

@@ -72,7 +72,7 @@
         </div>
           <!-- ✅ vxe-grid 自适应高度 -->
           <div class="grid-wrapper">
-                <vxe-grid
+              <vxe-grid
                 ref="xGrid"
                 :data="resultSet.rows"
                 :columns="gridColumns"
@@ -255,7 +255,7 @@ const loadResult = async (sqlText) => {
                   ...connStore.conn,
                   oprationString: tableName.value
                 })
-                console.log('res2',res2)
+                // console.log('res2',res2)
                 if(res2.code === 200)
                 {
                   let fields = res2.data.fields
@@ -270,7 +270,7 @@ const loadResult = async (sqlText) => {
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
             resultSet.affectedRows  =  0
 
-            console.log('resultSet',resultSet)
+            // console.log('resultSet',resultSet)
           }catch(e){
             console.log('执行失败 错误信息:' + e.message)
           }
@@ -397,8 +397,8 @@ async function handleConfirmInsert() {
   const values = []
   resultSet.columns.forEach(col => {
     // fields.push(`\`${col}\``)
-    console.log('row[col]',row[col])
-    console.log('formatValue(row[col])',formatValue(row[col]))
+    // console.log('row[col]',row[col])
+    // console.log('formatValue(row[col])',formatValue(row[col]))
     if(col == resultSet.colSerial && row[col] == '')
     {}else
     {
@@ -460,7 +460,7 @@ async function handleEditClosed({ row }) {
   resultSet.columns.forEach(col => {
     setList.push(`${col} = ${formatValue(row[col])}`)
   })
-  console.log('setList',setList)
+  // console.log('setList',setList)
   const sql = "UPDATE " + tableName.value + " SET " + setList.join(',') + " WHERE " + rowToWherev2(row) + ";"
   try {
     const res = await databaseApi.executeSqlWithText({
