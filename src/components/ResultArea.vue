@@ -190,9 +190,6 @@ const tableName = computed(() => {
   let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
   return tablename;
 });
-onMounted(() => {
-  // loadResult({ sql: 'select * from user' })
-})
 /* ==========  2. 响应式结果集  ========== */
 const resultSet = reactive({
   columns: [],          // 动态列元数据
@@ -265,6 +262,8 @@ const loadResult = async (sqlText) => {
     if (reschk.code === 500)
     {
       ElMessage.error('失败：' + reschk.message)
+      currentSql.value = ''
+      resultSet.value = null
       return
     }
     // console.log('cleanedSql',cleanedSql)
@@ -455,7 +454,7 @@ async function handleConfirmInsert() {
   let cursql = sqlStore.data.sql
   let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
   const sql = " INSERT INTO " + tablename + " ( " + fields.join(',') + " ) VALUES ( " + values.join(',') + ") ;"
-  // console.log('sql',sql)
+  console.log('sql',sql)
   try {
     const res = await databaseApi.executeSqlWithText({
       ...connStore.conn,
@@ -491,71 +490,7 @@ async function handleCancelInsert() {
 }
 
 const curID = ref('')
-function handleCellClick({ row, column }) {
-  // const grid = xGrid.value
-  // grid.setActiveRow(row, column.property)
-  curID.value = formatValue(row[pkField.value]) //保存修改前的主键的值
-  // console.log('curID',curID.value)
-}
-/* ========== 3. 行编辑完成时记录被改动的主键 ========== */
-async function handleEditClosed({ row }) {
-  if (addLocked.value) return //新增模式不进更新
-  const key = row[pkField.value]
-  if (!row) return
-  const setList = []
-  resultSet.columns.forEach(col => {
-    setList.push(`${col} = ${formatValue(row[col])}`)
-  })
-  // console.log('setList',setList)
-  const sql = "UPDATE " + tableName.value + " SET " + setList.join(',') + " WHERE " + rowToWherev2(row) + ";"
-  try {
-    const res = await databaseApi.executeSqlWithText({
-      ...connStore.conn,
-      oprationString: sql
-    })
-    // console.log('res222',res)
-    if (res.code === 200) {
-      ElMessage.success('更新成功')
-      addLocked.value = false
-      await reloadQuery() 
-    } else {
-      ElMessage.error('更新失败：' + res.message)
-    }
-  } catch (e) {
-    ElMessage.error('更新异常：' + e.message)
-  }
-}
 
-/* ========== 4. 提交修改 -> 拼 UPDATE -> 调接口 ========== */
-async function handleConfirmUpdate() {
-  const grid = xGrid.value
-  const fullData = grid.getTableData().fullData
-  const promises = []
-  changedRowKeys.value.forEach(key => {
-    const row = fullData.find(r => r[pkField.value] === key)
-    if (!row) return
-    const setList = []
-    resultSet.columns.forEach(col => {
-      setList.push(`\`${col}\` = ${formatValue(row[col])}`)
-    })
-    const sql = `UPDATE \`your_table\` SET ${setList.join(',')} WHERE ${rowToWhere(row)}`
-    promises.push(
-      databaseApi
-        .executeSqlWithText({ ...connStore.conn, oprationString: sql })
-        .then(res => {
-          if (res.code !== 200) throw new Error(res.message)
-        })
-    )
-  })
-  try {
-    await Promise.all(promises)
-    ElMessage.success('修改已提交')
-    changedRowKeys.value.clear()
-    await reloadQuery() // 刷新
-  } catch (e) {
-    ElMessage.error('提交失败：' + e.message)
-  }
-}
 
 /* 进入编辑 */
 function startEdit(row) {
