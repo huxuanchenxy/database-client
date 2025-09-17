@@ -172,8 +172,8 @@ const removeField = async (idx) => {
 
 /* ---------- SQL 预览 ---------- */
 const sqlPreview = computed(() => {
-  if (!isDisabled.value) return buildCreateSql(table.value)      // 新建
-  return buildAlterSql(oldTable.value, table.value)                    // 修改
+  // if (!isDisabled.value) return buildCreateSql(table.value)      // 新建
+  // return buildAlterSql(oldTable.value, table.value)                    // 修改
 })
 
 /* ---------- 生成 CREATE TABLE ---------- */

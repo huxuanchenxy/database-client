@@ -303,7 +303,7 @@ const dropTable = async()=> {
 
 const selectTable = async()=> {
   let currrenttable = currentNode.value.data.label
-  let sql = ' SELECT * FROM ' + currrenttable + ' LIMIT 1000000 ;'
+  let sql = ' SELECT * FROM ' + currrenttable + '  '
   sqlStore.setResult(sql, currrenttable)
 }
 

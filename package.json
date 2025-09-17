@@ -19,6 +19,7 @@
     "pinia-plugin-persistedstate": "^4.5.0",
     "sql-parser-cst": "^0.33.1",
     "vue": "^3.3.4",
+    "vxe-pc-ui": "^4.9.30",
     "vxe-table": "^4.16.7",
     "xe-utils": "^3.7.9"
   },

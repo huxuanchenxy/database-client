@@ -8,6 +8,9 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import 'vxe-table/lib/style.css'
 import VXETable from 'vxe-table'
 
+import VxeUI from 'vxe-pc-ui'
+import 'vxe-pc-ui/lib/style.css'
+
 const app = createApp(App)
 
 /* 1️⃣ 创建 pinia 实例 */
@@ -19,7 +22,7 @@ app.use(pinia)
 
 app.use(ElementPlus)
 app.use(VXETable)
-
+app.use(VxeUI)
 /* 注册图标 */
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)

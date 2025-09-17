@@ -77,12 +77,16 @@
                 :data="resultSet.rows"
                 :columns="gridColumns"
                 :edit-config="{ trigger: 'manual', mode: 'row', showStatus: true }"
+                :loading="loading"
                 border
                 stripe
                 height="99%"
                 size="mini"
                 highlight-hover-row
-                auto-resize>
+                auto-resize
+                :pager-config="tablePage"
+                @page-change="handlePageChange"
+                >
 
                   <template #action_slot="{ row }">
                   <!-- 未编辑状态 -->
@@ -220,7 +224,19 @@ const gridColumns = computed(() => {
   return cols
 })
 
+/* 分页参数 */
+const tablePage = reactive({
+  currentPage: 1,
+  pageSize: 10,
+  total: 0,
+  layouts: ['PrevPage', 'JumpNumber', 'NextPage', 'Total'] 
+})
+const loading = ref(false)
 
+
+/* 当前 SQL（不含 limit）和当前表名 */
+const currentSql = ref('')
+const currentTable = ref('')
 /* ==========  4. 加载数据  ========== */
 // 父组件可以调用 loadResult({ sql: 'select * from user' })
 const loadResult = async (sqlText) => {
@@ -230,28 +246,73 @@ const loadResult = async (sqlText) => {
     // 假定后端返回格式：
   // console.log('loadResult',sqlText)
 
-    const cleanedSql = sqlText.sql ? sqlText.sql.replace(/\r\n/g, ' '): sqlText.replace(/\r\n/g, ' ');
+    // const cleanedSql = sqlText.sql ? sqlText.sql.replace(/\r\n/g, ' '): sqlText.replace(/\r\n/g, ' ');
+    const cleanedSql = (sqlText.sql || sqlText).replace(/[\r\n;]/g, ' ');
+    currentSql.value = cleanedSql
+
+    //先去接口跑一圈，如果data是空，说明不是select，那就直接返回执行正常或失败
+    const reschk = await databaseApi.executeSqlWithText({
+      ...connStore.conn,
+      oprationString: currentSql.value
+    })
+    // console.log('reschk',reschk)
+    // console.log('reschk.data',reschk.data)
+    if (reschk.code == 200 && reschk.data == null) {
+      // console.log('reschk.code',reschk.code)
+      ElMessage.success(reschk.message)
+      return
+    }
+    if (reschk.code === 500)
+    {
+      ElMessage.error('失败：' + reschk.message)
+      return
+    }
     // console.log('cleanedSql',cleanedSql)
     if(cleanedSql)
     {
-        let parm = {
-                  ...connStore.conn,
-                  oprationString: cleanedSql,
+        //TODO:不支持多表联查
+        let countsql = " SELECT COUNT(*) FROM " + tableName.value + "  "
+          /* 3. 拿总条数 —— 用你提供的 count 接口 */
+        const countRes = await databaseApi.executeSqlWithText({
+          ...connStore.conn,
+          oprationString: countsql,   // 你新接口需要的参数
+        })
+        // console.log('countRes',countRes)
+        if (countRes.code !== 200) {
+          ElMessage.error('获取行数失败：' + countRes.message)
+          return
         }
-        const res = await databaseApi.executeSqlWithText(parm)
-        // console.log('resultarea  databaseApi.executeSqlWithText',res)
-        if(res.code === 200){
-          if(!res.data)
-          {
-            ElMessage.success('执行成功')
-          }
-          // let res = { columns:['id','name','age'], data:[{id:1,name:'a'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:2,name:'b'},{id:3,name:'cc'},{id:3,name:'cc'},{id:3,name:'cc'},{id:4,name:'dd'}], executionTime:88, affectedRows:2 }
-          
-          // ['employee_id', 'name', 'email', 'hire_date', 'department_id']
-          try{//有可能是insert语句这里没有data返回
-            // ElMessage.success(res.message)
-                //拿表结构获取哪个是自增列
-                const res2 = await databaseApi.getTableInfo({
+        
+        tablePage.total = countRes.data.data[0].count   // 接口返回数字
+        // console.log('tablePage.totalResult',tablePage.total)
+        tablePage.currentPage = 1
+        await loadPage(1, tablePage.pageSize)
+                       
+    }
+  } catch (e) {
+  } finally {
+    executing.value = false
+  }
+}
+
+const loadPage = async (page, size) => {
+  loading.value = true
+  try {
+    // console.log('loadPage',page,size)
+    /* 构造 limit 语句（MySQL 语法） */
+    const limitSql = `${currentSql.value} LIMIT ${size} OFFSET ${(page - 1) * size}`
+
+    const res = await databaseApi.executeSqlWithText({
+      ...connStore.conn,
+      oprationString: limitSql
+    })
+    // console.log('loadPage',res)
+    if (res.code !== 200) {
+      ElMessage.error('分页查询失败：' + res.message)
+      return
+    }
+
+    const res2 = await databaseApi.getTableInfo({
                   ...connStore.conn,
                   oprationString: tableName.value
                 })
@@ -266,30 +327,15 @@ const loadResult = async (sqlText) => {
                   resultSet.colSerial = autoColumnNames[0];
                 }
             resultSet.columns = res.data.columns || []
-            const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
+            // const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
             resultSet.affectedRows  =  0
-
-            // console.log('resultSet',resultSet)
-          }catch(e){
+  }catch(e){
             console.log('执行失败 错误信息:' + e.message)
-          }
-          //通知树更新
-          treeStore.triggerRefresh()
-          // console.log('treeStore.triggerRefresh()执行完毕')
-        }else{
-          addLocked.value = false
-          ElMessage.error('执行失败 失败原因:' + res.message)
-        }                                   
-    }
-    
-    
-    // await nextTick()
-    // VXETable.modal.message({ content: '查询完成', status: 'success' })
-  } catch (e) {
-    // VXETable.modal.message({ content: e.message || '查询失败', status: 'error' })
-  } finally {
-    executing.value = false
+          } finally {
+    loading.value = false
+    //通知树更新
+    treeStore.triggerRefresh()
   }
 }
 
@@ -593,12 +639,18 @@ async function reloadQuery() {
   // 这里偷懒直接调用你原来的 loadResult，需要把 sqlText 存起来
   await loadResult(sqlStore.data.sql) // 自己在外层缓存一下
 }
+
+const handlePageChange = ({ currentPage, pageSize }) => {
+  tablePage.currentPage = currentPage
+  tablePage.pageSize    = pageSize
+  loadPage(currentPage, pageSize)
+}
 </script>
 
 <style scoped>
 .grid-wrapper {
   flex: 1;
-  min-height: 420px;
+  min-height: 505px;
   padding: 8px;
   overflow-y: auto;
 }
