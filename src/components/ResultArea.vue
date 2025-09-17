@@ -257,6 +257,8 @@ const loadResult = async (sqlText) => {
     if (reschk.code == 200 && reschk.data == null) {
       // console.log('reschk.code',reschk.code)
       ElMessage.success(reschk.message)
+      //通知树更新
+      treeStore.triggerRefresh()
       return
     }
     if (reschk.code === 500)

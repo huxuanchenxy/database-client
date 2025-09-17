@@ -17,32 +17,13 @@
     </div>
 
     <el-divider />
-
-    <!-- <el-tree
-      ref="treeRef"
-      :data="treeData"
-      :props="treeProps"
-      :expand-on-click-node="false"
-      :highlight-current="true"
-      node-key="id"
-      class="database-tree-view"
-      @node-click="handleNodeClick"
-    >
-      <template #default="{ node, data }">
-        <span class="tree-node">
-          <el-icon v-if="data.icon">
-            <component :is="data.icon" />
-          </el-icon>
-          <span>{{ node.label }}</span>
-        </span>
-      </template>
-    </el-tree> -->
+ <div class="tree-wrapper">
   <el-tree :data="treeData"
    default-expand-all
    highlight-current
    @node-contextmenu="onContextMenu" >
   </el-tree>
-
+</div>
     <!-- 右键菜单 -->
   <div
     v-if="menu.show"
@@ -384,5 +365,11 @@ z-index: 9999;
 
 .context-menu .item:last-child {
   border-bottom: none;
+}
+
+.tree-wrapper {
+  height: 400px;          /* 想要多高就写多少 */
+  overflow: auto;         /* 超出时出现滚动条 */
+  border: 1px solid #dcdfe6; /* 可选，美观 */
 }
 </style>
