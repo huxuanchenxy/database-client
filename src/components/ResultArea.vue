@@ -35,9 +35,9 @@
           class="table-results"
         >
         <!-- 工具栏 -->
-        <div class="grid-toolbar">
+        <div class="grid-toolbar" v-if="fieldMeta">
           
-           <div class="btn-box">
+           <div class="btn-box" >
           <el-button v-if="resultSet.columns.length > 0"
             type="primary"
             size="mini"
@@ -73,6 +73,7 @@
           <!-- ✅ vxe-grid 自适应高度 -->
           <div class="grid-wrapper">
               <vxe-grid
+                v-if="fieldMeta"
                 ref="xGrid"
                 :data="resultSet.rows"
                 :columns="gridColumns"
@@ -162,6 +163,37 @@ const treeStore = useTreeStore()
 const localData = ref({ sql: '', result: null })
 const emit = defineEmits(['calltree'])
 
+const fieldMeta = ref({}) // 保存每个字段的类型  { colName: 'date' | 'time' | 'datetime' | 'string' ... }
+
+/* 把字段类型翻译成 vxe 的 editRender 配置 */
+function mapTypeToEditRender(type) {
+  // 统一转小写
+  const t = (type || '').toLowerCase()
+
+  if (t === 'date')
+    return {
+      name: 'ElDatePicker',
+      props: { type: 'date', format: 'YYYY-MM-DD', valueFormat: 'YYYY-MM-DD' },
+      immediate: true
+    }
+
+  if (t === 'time')
+    return {
+      name: 'ElTimePicker',
+      props: { format: 'HH:mm:ss', valueFormat: 'HH:mm:ss' },
+      immediate: true
+    }
+
+  if (t === 'datetime')
+    return {
+      name: 'ElDatePicker',
+      props: { type: 'datetime', format: 'YYYY-MM-DD HH:mm:ss', valueFormat: 'YYYY-MM-DD HH:mm:ss' },
+      immediate: true
+    }
+
+  // 默认 input
+  return { name: 'input', immediate: true }
+}
 const tableName = computed(() => {
   let cursql = sqlStore.data.sql
   // console.log('cursql', cursql)
@@ -182,12 +214,34 @@ const resultSet = reactive({
 
 /* ==========  3. 把后端字段转成 vxe-columns  ========== */
 const gridColumns = computed(() => {
-  const cols = resultSet.columns.map(col => ({
-    field: col,
-    title: col,
-    minWidth: 100,
-    editRender: { name: 'input' , immediate: true}
-  }))
+  const cols = resultSet.columns.map(col => {
+    const type = fieldMeta.value[col] || 'string'
+    return {
+      field: col,
+      title: col,
+      minWidth: 100,
+      editRender: mapTypeToEditRender(type)
+    }
+  })
+
+//   const cols = resultSet.columns.map(col => ({
+//     field: col,
+//     title: col,
+//     minWidth: 160,
+//     /* 关键：第一层就是 editRender，别再嵌套 */
+//     // editRender: {
+//     //   name: 'input',      // 4.x 内置
+//     //   attrs: { type: 'time' } ,// HTML5 原生日期框
+//     //   immediate: true
+//     // }
+//     editRender: {
+//   name: 'ElDatePicker',
+//   props: { type: 'date', format: 'YYYY-MM-DD', valueFormat: 'YYYY-MM-DD' },
+//   immediate: true
+// }
+//   }))
+
+
 
   // 操作列
   cols.push({
@@ -197,9 +251,11 @@ const gridColumns = computed(() => {
     fixed: 'right',
     slots: { default: 'action_slot' }
   })
-
+  // console.log('cols', cols)
   return cols
 })
+
+
 
 /* 分页参数 */
 const tablePage = reactive({
@@ -221,7 +277,7 @@ const loadResult = async (sqlText) => {
   try {
     // const res = await databaseApi.getdata(parm)   // ← 接口
     // 假定后端返回格式：
-  // console.log('loadResult',sqlText)
+  console.log('loadResult sqlText:',sqlText)
 
     // const cleanedSql = sqlText.sql ? sqlText.sql.replace(/\r\n/g, ' '): sqlText.replace(/\r\n/g, ' ');
     const cleanedSql = (sqlText.sql || sqlText).replace(/[\r\n;]/g, ' ');
@@ -238,6 +294,7 @@ const loadResult = async (sqlText) => {
       // console.log('reschk.code',reschk.code)
       currentSql.value = ''
       resultSet.value = null
+      fieldMeta.value = null
       ElMessage.success(reschk.message)
       //通知树更新
       treeStore.triggerRefresh()
@@ -248,6 +305,7 @@ const loadResult = async (sqlText) => {
       ElMessage.error('失败：' + reschk.message)
       currentSql.value = ''
       resultSet.value = null
+      fieldMeta.value = null
       return
     }
     // console.log('cleanedSql',cleanedSql)
@@ -278,6 +336,16 @@ const loadResult = async (sqlText) => {
   }
 }
 
+function parseType(dt) {
+  const t = (dt || '').toLowerCase();
+  if (t.includes('datetime')) return 'datetime';
+  if (t.includes('date') && t.includes('time')) return 'datetime';
+  if (t.includes('date')) return 'date';
+  if (t.includes('time')) return 'time';
+  // 可以继续扩展：bit/bool、int/number、decimal 等
+  return 'string';   // 默认走 input
+}
+
 const loadPage = async (page, size) => {
   loading.value = true
   try {
@@ -299,17 +367,31 @@ const loadPage = async (page, size) => {
                   ...connStore.conn,
                   oprationString: tableName.value
                 })
-                // console.log('res2',res2)
+                // console.log('getTableInfo',res2)
                 if(res2.code === 200)
                 {
+
                   let fields = res2.data.fields
                   // 2. 过滤出 isauto = true 的字段
                   let autoColumns = fields.filter(f => f.isauto)
                   // 3. 只拿 column_name
                   let autoColumnNames = autoColumns.map(f => f.column_name)
                   resultSet.colSerial = autoColumnNames[0];
+
+                  let list = res2.data.fields;
+                  //   const { data } = await getTableStruct() // 返回示例  [{field:'birthday',type:'date'}, ...]
+                  // data.forEach(i => (meta[i.field] = i.type))
+                  // fieldMeta.value = meta
+                  // console.log('columns111', gridColumns.value)
+                  fieldMeta.value = list.reduce((meta, item) => {
+                    meta[item.column_name] = parseType(item.data_type);
+                    return meta;
+                  }, {});
+                  // console.log('fieldMeta.value',fieldMeta.value)
                 }
             resultSet.columns = res.data.columns || []
+
+            // console.log('columns222', gridColumns.value)
             // const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
             resultSet.affectedRows  =  0
@@ -356,16 +438,6 @@ watch(
 const messageCount = computed(() => messages.value.filter(m => m.type !== 'success').length)
 const historyCount = computed(() => history.value.length)
 
-// 工具方法
-const getMessageTagType = (type) => {
-  const types = { error: 'danger', warning: 'warning', success: 'success', info: 'info' }
-  return types[type] || 'info'
-}
-const getMessageTypeLabel = (type) => {
-  const labels = { error: '错误', warning: '警告', success: '成功', info: '信息' }
-  return labels[type] || '信息'
-}
-const formatTime = (timestamp) => new Date(timestamp).toLocaleString()
 
 const xGrid = ref()
 /* ===== 新增/编辑 状态 ===== */
@@ -415,7 +487,8 @@ function handleAdd() {
   resultSet.rows.unshift(empty)        // 插到最前面
   nextTick(() => {
     const grid = xGrid.value
-    grid.setActiveRow(resultSet.rows[0]) // 自动进入编辑
+    // grid.setActiveRow(resultSet.rows[0]) // 自动进入编辑
+    grid.setEditRow(resultSet.rows[0])
   })
 
 }
@@ -439,7 +512,7 @@ async function handleConfirmInsert() {
   let cursql = sqlStore.data.sql
   let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
   const sql = " INSERT INTO " + tablename + " ( " + fields.join(',') + " ) VALUES ( " + values.join(',') + ") ;"
-  console.log('sql',sql)
+  // console.log('sql',sql)
   try {
     const res = await databaseApi.executeSqlWithText({
       ...connStore.conn,
@@ -482,7 +555,10 @@ const curID = ref('')
 /* 进入编辑 */
 function startEdit(row) {
   const grid = xGrid.value
-  grid.setActiveRow(row)    
+  // console.log('row',row)
+  // grid.setActiveRow(row)    
+  grid.setEditRow(row)
+  nextTick(() => xGrid.value.setEditRow(row))
   curID.value = formatValue(row[pkField.value])       // 让该行进入编辑
   row.__editing = true            // 控制按钮显示
 }
