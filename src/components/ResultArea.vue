@@ -76,7 +76,8 @@
                 ref="xGrid"
                 :data="resultSet.rows"
                 :columns="gridColumns"
-                :edit-config="{ trigger: 'manual', mode: 'row', showStatus: true }"
+                keep-source
+                :edit-config="{ trigger: 'manual', mode: 'row', showStatus: true,showAsterisk: true }"
                 :loading="loading"
                 border
                 stripe
@@ -135,27 +136,6 @@
               返回行数: {{ resultSet.rows.length }}
             </el-tag>
           </div>
-        <!-- <el-scrollbar height="100%">
-          <div v-if="messages.length === 0" class="no-messages">
-            <el-empty description="暂无消息" />
-          </div>
-          <div v-else>
-            <div
-              v-for="(message, index) in messages"
-              :key="index"
-              class="message-item"
-              :class="`message-${message.type}`"
-            >
-              <el-tag :type="getMessageTagType(message.type)" size="small">
-                {{ getMessageTypeLabel(message.type) }}
-              </el-tag>
-              <div class="message-content">
-                <div class="message-text">{{ message.content }}</div>
-                <div class="message-time">{{ formatTime(message.timestamp) }}</div>
-              </div>
-            </div>
-          </div>
-        </el-scrollbar> -->
       </div>
 
       <!-- 历史面板 -->
@@ -168,7 +148,6 @@
 
 <script setup>
 import { ref, reactive, computed, nextTick,onMounted,watch  } from 'vue'
-import { VXETable } from 'vxe-table'
 import { databaseApi } from '@/api/api.js'
 import { Loading } from '@element-plus/icons-vue'
 import HistoryPanel from './HistoryPanel.vue'
@@ -176,9 +155,7 @@ import { useConnStore } from '@/stores/conn'
 import { useSqlStore } from '@/stores/sqlStore'
 import { useTreeStore } from '@/stores/treeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { parse } from 'sql-parser-cst'
-import { add } from 'xe-utils'
-
+import { pickTablesByAst } from '@/utils/sqlTableAst'
 const sqlStore = useSqlStore()
 const connStore = useConnStore()
 const treeStore = useTreeStore()
@@ -187,8 +164,11 @@ const emit = defineEmits(['calltree'])
 
 const tableName = computed(() => {
   let cursql = sqlStore.data.sql
-  let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
-  return tablename;
+  // console.log('cursql', cursql)
+  // let tablename = cursql.match(/FROM\s+([^\s;]+)/i)?.[1] ?? ''
+  let tablename = pickTablesByAst(cursql, 'postgresql') // 或 postgresql / sqlite
+  // console.log('tablename', tablename)
+  return tablename[0] ?? '';
 });
 /* ==========  2. 响应式结果集  ========== */
 const resultSet = reactive({
@@ -256,6 +236,8 @@ const loadResult = async (sqlText) => {
     // console.log('reschk.data',reschk.data)
     if (reschk.code == 200 && reschk.data == null) {
       // console.log('reschk.code',reschk.code)
+      currentSql.value = ''
+      resultSet.value = null
       ElMessage.success(reschk.message)
       //通知树更新
       treeStore.triggerRefresh()
@@ -420,6 +402,7 @@ function rowToWherev3(row) {
 /* ===== 工具函数：值转 SQL 字面量 ===== */
 function formatValue(v) {
   if (v === null || v === undefined) return 'NULL'
+  if (v === '') return 'NULL'
   if (typeof v === 'string') return `'${v.replace(/'/g, "\\'")}'`
   return v
 }
@@ -478,8 +461,10 @@ async function handleConfirmInsert() {
 
 /* 取消编辑：不保存，直接退出 */
 function cancelEdit(row) {
-  xGrid.value.clearActived() // 退出编辑状态
-  row.__editing = false      // 按钮恢复“编辑”
+const $grid = xGrid.value
+  $grid.revertData(row)   // 4.16.7 可用
+  $grid.clearActived()    // 退出激活
+  row.__editing = false
 }
 
 async function handleCancelInsert() {
