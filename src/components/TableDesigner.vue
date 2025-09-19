@@ -90,7 +90,7 @@
 
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="save">保存</el-button>
+      <el-button v-if="changSQL == true" type="primary" @click="save">保存</el-button>
     </template>
   </el-dialog>
 </template>
@@ -110,6 +110,7 @@ const table = ref({
   comment: '',
   fields: []
 })
+const changSQL = ref(false) 
 const oldTable = ref(null) 
 
 const dialogTitle = computed(() =>
@@ -120,7 +121,7 @@ const dialogTitle = computed(() =>
 //   if (!m) return { type: dt, length: null }
 //   return { type: m[1].toLowerCase(), length: m[2] ?? null }
 // }
-
+console.log('table',table.value)
 /* ---------- 打开弹窗 ---------- */
 const openDialog = async (initialTableName = null) => {
   visible.value = true
@@ -170,6 +171,9 @@ const removeField = async (idx) => {
   table.value.fields.splice(idx, 1)
 }
 
+
+
+
 /* ---------- SQL 预览 ---------- */
 const sqlPreview = computed(() => {
   if (!isDisabled.value) return buildCreateSql(table.value)      // 新建
@@ -180,6 +184,7 @@ const sqlPreview = computed(() => {
 function buildCreateSql(t) {
   if (!t.name) return '-- 请输入表名'
   if (!t.fields.length) return '-- 请添加字段'
+  changSQL.value = true
   const cols = []
   const pks = []
   t.fields.forEach(f => {
@@ -196,7 +201,7 @@ function buildCreateSql(t) {
 /* ---------- 生成 ALTER TABLE（PostgreSQL 版） ---------- */
 function buildAlterSql(old, curr) {
   if (!old || !curr) return ''
-
+  // changSQL.value = true
   const alterList = []
 
   /* 0. 表名变更（优先级最高） */
@@ -364,6 +369,10 @@ function buildAlterSql(old, curr) {
     }
   }
 
+  if(alterList.length > 0)
+  {
+    changSQL.value = true;
+  }
   return alterList.length ? alterList.join('\n') : '-- 暂无改动'
 }
 
