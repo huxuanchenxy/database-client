@@ -592,7 +592,7 @@ async function startDelete(row) {
     // console.log('row',row)
     try {
 
-    const sql = `DELETE FROM ${tableName.value}  WHERE ${rowToWherev3(row).join(' AND ')}`
+    const sql = `DELETE FROM ${tableName.value}  WHERE ${rowToWherev4(row)} `
 
     /* 2. 调接口 */
     const res = await databaseApi.executeSqlWithText({
@@ -623,7 +623,7 @@ async function confirmEdit(row) {
       setList.push(`${col} = ${formatValue(row[col])}`) // 这里就是用户编辑后的值
     })
     
-    const sql = `UPDATE ${tableName.value} SET ${setList.join(',')} WHERE ${rowToWherev4(row.__old)}`
+    const sql = `UPDATE ${tableName.value} SET ${setList.join(',')} WHERE ${rowToWherev4(row.__old)} `
     // console.log('sql', sql)
     /* 2. 调接口 */
     const res = await databaseApi.executeSqlWithText({
