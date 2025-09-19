@@ -15,13 +15,16 @@
         <el-form-item label="账号" prop="username">
           <el-input v-model="form.username" placeholder="请输入账号" />
         </el-form-item>
-
         <el-form-item label="密码" prop="password">
-          <el-input
+        <el-input
             v-model="form.password"
             type="password"
-            placeholder="请输入密码"
-          />
+            placeholder="请输入强密码"
+            show-password
+        />
+        <div class="pwd-tips">
+            8-20位且同时包含大写、小写、数字、特殊字符
+        </div>
         </el-form-item>
 
         <el-button
@@ -53,9 +56,31 @@ const form = reactive({
   password: ''
 })
 
+// const rules = {
+//   username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
+//   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+// }
+
+// 强密码正则
+const strongPwd = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])[^\s]{8,20}$/
+
 const rules = {
-  username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  username: [
+    { required: true, message: '请输入账号', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    {
+      validator: (rule, value, cb) => {
+        if (!strongPwd.test(value)) {
+          cb(new Error('密码强度不足'))
+        } else {
+          cb()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
 }
 
 async function handleLogin() {
@@ -88,7 +113,7 @@ async function handleLogin() {
   background: #f3f3f3;
 }
 .login-box {
-  width: 380px;
+  width: 420px;
 }
 .login-btn {
   width: 100%;
