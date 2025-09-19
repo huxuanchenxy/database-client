@@ -61,7 +61,7 @@
               </el-tab-pane>
               <!-- 2. 设备管理（无结果区） -->
               <el-tab-pane label="设备管理" name="device">
-                <!-- <DeviceManage /> -->
+                <!-- <DeviceList /> -->
               </el-tab-pane>
 
               <!-- 3. 数据存储管理（无结果区） -->
@@ -90,6 +90,7 @@ import DatabaseTree from './components/DatabaseTree.vue'
 import SqlEditor from './components/SqlEditor.vue'
 import ResultArea from './components/ResultArea.vue'
 import ConnectionConfig from './components/ConnectionConfig.vue'
+import DeviceList from '@/components/DeviceList.vue'
 
 const activeTab = ref('sql')
 const DatabaseTreeRef = ref(null)
