@@ -472,19 +472,22 @@ function rowToWherev3(row) {
 }
 
 function rowToWherev4(oldrow) {
-  let where = Object
-  .entries(oldrow)
-  .filter(([k]) => !k.startsWith('_'))   // 去掉所有框架内部字段
-  .map(([k, v]) => `${k} = '${v}'`)      // 字符串类型加单引号
-  .join(' AND ');
-  return where;
+  return Object
+    .entries(oldrow)
+    .filter(([k]) => !k.startsWith('_'))
+    .map(([k, v]) =>
+      v === null
+        ? `${k} IS NULL`                       
+        : `${k} = '${String(v).replace(/'/g, "''")}'`  
+    )
+    .join(' AND ');
 }
 
 /* ===== 工具函数：值转 SQL 字面量 ===== */
 function formatValue(v) {
   if (v === null || v === undefined) return 'NULL'
   if (v === '') return 'NULL'
-  if (typeof v === 'string') return `'${v.replace(/'/g, "\\'")}'`
+  if (typeof v === 'string') return `'${v.replace(/'/g, "''")}'`
   return v
 }
 
