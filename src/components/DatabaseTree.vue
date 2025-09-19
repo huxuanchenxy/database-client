@@ -208,12 +208,13 @@ function onContextMenu(event, data, node) {
         menu.type = null;
         menu.show = false;
     }
+    emit('table-selected', data)
 }
 
 function onNodeClick(data, node) {
 
   emit('table-selected', data)
-  console.log('emit table-selected data:', data)
+  // console.log('emit table-selected data:', data)
   // if (data.type === 'table') {
     
   // } else if (data.type === 'database') {
