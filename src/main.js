@@ -12,6 +12,7 @@ import { ElDatePicker, ElTimePicker } from 'element-plus'
 import VxeUI from 'vxe-pc-ui'
 import 'vxe-pc-ui/lib/style.css'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import router from '@/router'
 /* 统一封装创建函数 */
 function createElementRender(Component, defaultType = 'date') {
   return {
@@ -37,7 +38,7 @@ function createElementRender(Component, defaultType = 'date') {
 VxeUI.renderer.add('ElDatePicker', createElementRender(ElDatePicker, 'date'))
 VxeUI.renderer.add('ElTimePicker', createElementRender(ElTimePicker, 'time'))
 const app = createApp(App)
-
+app.use(router)
 /* 1️⃣ 创建 pinia 实例 */
 const pinia = createPinia()
 /* 2️⃣ 装持久化插件 */
@@ -53,5 +54,7 @@ app.use(VxeUI)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+
+console.log('路由实例', router) 
 
 app.mount('#app')
