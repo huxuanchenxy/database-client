@@ -293,6 +293,39 @@ function buildAlterSql(old, curr) {
       if (dateTypes.includes(of.type) && numTypes.includes(cf.type)) {
         usingClause = ` USING (extract(epoch FROM ${quoteId(cf.column_name)}))`
       }
+
+      /* varchar → date / timestamp 系列 */
+      if (of.type === 'varchar' && (cf.type === 'date' || cf.type === 'timestamp')) {
+        usingClause = ` USING (${quoteId(cf.column_name)}::${cf.type})`
+      }
+
+      /* date / timestamp → varchar */
+      if (of.type === 'date' && cf.type === 'varchar') {
+        usingClause = ` USING (${quoteId(cf.column_name)}::varchar)`
+      }
+
+      /* varchar → time / timetz 系列 */
+      if (of.type === 'varchar' && (cf.type === 'time' || cf.type === 'timetz')) {
+        usingClause = ` USING (${quoteId(cf.column_name)}::${cf.type})`
+      }
+
+      /* time / timetz → varchar */
+      if (of.type === 'time' && cf.type === 'varchar') {
+        usingClause = ` USING (${quoteId(cf.column_name)}::varchar)`
+      }
+
+      /* date → time */
+      if (of.type === 'date' && cf.type === 'time') {
+        usingClause = ` USING (make_time(0,0,0))`   
+        // 或者 USING (d_col::timestamp::time)
+      }
+
+      /* time → date */
+      if (of.type === 'time' && cf.type === 'date') {
+        usingClause = ` USING ('1970-01-01'::date)`  
+        // 或者用 current_date
+      }
+
       alterList.push(
         `ALTER TABLE ${quoteId(curr.name)} ALTER COLUMN ${quoteId(cf.column_name)} TYPE ${typeSql}${usingClause};`
       )
