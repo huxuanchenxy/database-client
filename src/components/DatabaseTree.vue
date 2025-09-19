@@ -21,7 +21,9 @@
   <el-tree :data="treeData"
    default-expand-all
    highlight-current
-   @node-contextmenu="onContextMenu" >
+   @node-contextmenu="onContextMenu" 
+   @node-click="onNodeClick"
+   >
   </el-tree>
 </div>
     <!-- 右键菜单 -->
@@ -206,6 +208,17 @@ function onContextMenu(event, data, node) {
         menu.type = null;
         menu.show = false;
     }
+}
+
+function onNodeClick(data, node) {
+
+  emit('table-selected', data)
+  console.log('emit table-selected data:', data)
+  // if (data.type === 'table') {
+    
+  // } else if (data.type === 'database') {
+  //   emit('database-selected', data)
+  // }
 }
 
 // 点击空白处关闭菜单

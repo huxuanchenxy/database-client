@@ -26,8 +26,8 @@
         <!-- 左侧数据库树 -->
         <el-aside width="300px" class="app-aside">
           <DatabaseTree
-            :on-database-select="handleDatabaseSelect"
-            :on-table-select="handleTableSelect"
+            @database-selected="handleDatabaseSelect"
+            @table-selected="handleTableSelect"
             ref="DatabaseTreeRef"
           />
         </el-aside>
@@ -36,26 +36,39 @@
         <el-main class="app-main">
           <!-- 把 direction 设置成 vertical -->
           <el-container direction="vertical">
-            <!-- SQL编辑器 -->
-            <el-aside class="sql-aside">
-                  <h2>SQL 命令行</h2>
-                  <SqlEditor />
-            </el-aside>
 
-            <!-- 结果区域 -->
-            <el-main class="result-main">
-              <ResultArea
-                :result-set="resultSet"
-                :executing="executing"
-                :executed="executed"
-                :execution-time="executionTime"
-                :affected-rows="affectedRows"
-                :messages="messages"
-                :history="history"
-                @export-results="handleExportResults"
-                @calltree="handleCallTree"
-              />
-            </el-main>
+            <el-tabs v-model="activeTab" class="demo-tabs">
+              <el-tab-pane label="SQL命令行" name="sql">
+                  <!-- SQL编辑器 -->
+                  <el-aside class="sql-aside">
+                        <SqlEditor />
+                  </el-aside>
+
+                  <!-- 结果区域 -->
+                  <el-main class="result-main">
+                    <ResultArea
+                      :result-set="resultSet"
+                      :executing="executing"
+                      :executed="executed"
+                      :execution-time="executionTime"
+                      :affected-rows="affectedRows"
+                      :messages="messages"
+                      :history="history"
+                      @export-results="handleExportResults"
+                      @calltree="handleCallTree"
+                    />
+                  </el-main>
+              </el-tab-pane>
+              <!-- 2. 设备管理（无结果区） -->
+              <el-tab-pane label="设备管理" name="device">
+                <!-- <DeviceManage /> -->
+              </el-tab-pane>
+
+              <!-- 3. 数据存储管理（无结果区） -->
+              <el-tab-pane label="数据存储管理" name="storage">
+                <!-- <StorageManage /> -->
+              </el-tab-pane>
+            </el-tabs>
           </el-container>
         </el-main>
       </el-container>
@@ -78,6 +91,7 @@ import SqlEditor from './components/SqlEditor.vue'
 import ResultArea from './components/ResultArea.vue'
 import ConnectionConfig from './components/ConnectionConfig.vue'
 
+const activeTab = ref('sql')
 const DatabaseTreeRef = ref(null)
 
 const handleCallTree = () => {
@@ -110,88 +124,20 @@ const handleConnectionSuccess = (connectionConfig) => {
 
 // 处理数据库选择
 const handleDatabaseSelect = (databaseInfo) => {
-  console.log('选择数据库:', databaseInfo)
-  ElMessage.info(`已选择数据库: ${databaseInfo.database}`)
+  // console.log('选择数据库:', databaseInfo)
+  // ElMessage.info(`已选择数据库: ${databaseInfo.database}`)
+
+  activeTab.value = 'sql'
 }
 
 // 处理表选择
 const handleTableSelect = (tableInfo) => {
-  console.log('选择表:', tableInfo)
-  ElMessage.info(`已选择表: ${tableInfo.table}`)
+  // console.log('选择表:')
+  // ElMessage.info(`已选择表: ${tableInfo.table}`)
+  activeTab.value = 'sql'
 }
 
-// 处理SQL执行
-const handleExecuteSql = async (executionData) => {
-  executing.value = true
-  executed.value = false
-  executionTime.value = 0
-  affectedRows.value = 0
-  
-  try {
-    // 模拟API调用 - 在实际项目中，这里应该调用真实的API
-    console.log('执行SQL:', executionData.sql)
-    console.log('连接配置:', executionData)
-    
-    // 模拟执行延迟
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 模拟结果数据
-    const mockResult = {
-      columns: ['id', 'name', 'email', 'created_at'],
-      rows: [
-        [1, '张三', 'zhangsan@example.com', '2024-01-01 10:00:00'],
-        [2, '李四', 'lisi@example.com', '2024-01-02 11:00:00'],
-        [3, '王五', 'wangwu@example.com', '2024-01-03 12:00:00']
-      ],
-      executionTime: 125,
-      affectedRows: 0
-    }
-    
-    // 更新结果数据
-    Object.assign(resultSet, mockResult)
-    executionTime.value = mockResult.executionTime
-    affectedRows.value = mockResult.affectedRows
-    
-    // 添加消息
-    messages.value.push({
-      type: 'success',
-      content: `SQL执行成功，返回 ${mockResult.rows.length} 行数据`,
-      timestamp: Date.now()
-    })
-    
-    // 添加到历史记录
-    if (currentConnection.value) {
-      history.value.unshift({
-        id: Date.now(),
-        sql: executionData.sql,
-        timestamp: Date.now(),
-        executionTime: mockResult.executionTime,
-        result: mockResult,
-        connection: currentConnection.value
-      })
-      
-      // 限制历史记录数量
-      if (history.value.length > 100) {
-        history.value = history.value.slice(0, 100)
-      }
-    }
-    
-    executed.value = true
-    
-    ElMessage.success('SQL执行完成')
-    
-  } catch (error) {
-    console.error('执行SQL失败:', error)
-    messages.value.push({
-      type: 'error',
-      content: `执行失败: ${error.message || '未知错误'}`,
-      timestamp: Date.now()
-    })
-    ElMessage.error('SQL执行失败')
-  } finally {
-    executing.value = false
-  }
-}
+
 
 // 处理导出结果
 const handleExportResults = (resultSet) => {
