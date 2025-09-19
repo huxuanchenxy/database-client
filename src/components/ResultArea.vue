@@ -471,6 +471,15 @@ function rowToWherev3(row) {
   return setList
 }
 
+function rowToWherev4(oldrow) {
+  let where = Object
+  .entries(oldrow)
+  .filter(([k]) => !k.startsWith('_'))   // 去掉所有框架内部字段
+  .map(([k, v]) => `${k} = '${v}'`)      // 字符串类型加单引号
+  .join(' AND ');
+  return where;
+}
+
 /* ===== 工具函数：值转 SQL 字面量 ===== */
 function formatValue(v) {
   if (v === null || v === undefined) return 'NULL'
@@ -560,6 +569,8 @@ function startEdit(row) {
   grid.setEditRow(row)
   nextTick(() => xGrid.value.setEditRow(row))
   curID.value = formatValue(row[pkField.value])       // 让该行进入编辑
+  // grid.setRowCache(row) 
+  row.__old = { ...row }
   row.__editing = true            // 控制按钮显示
 }
 
@@ -608,9 +619,9 @@ async function confirmEdit(row) {
     resultSet.columns.forEach(col => {
       setList.push(`${col} = ${formatValue(row[col])}`) // 这里就是用户编辑后的值
     })
-    // console.log('setList',setList)
-    const sql = `UPDATE ${tableName.value} SET ${setList.join(',')} WHERE ${rowToWherev2(row)}`
-
+    
+    const sql = `UPDATE ${tableName.value} SET ${setList.join(',')} WHERE ${rowToWherev4(row.__old)}`
+    // console.log('sql', sql)
     /* 2. 调接口 */
     const res = await databaseApi.executeSqlWithText({
       ...connStore.conn,
