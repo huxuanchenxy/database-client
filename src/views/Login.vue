@@ -22,9 +22,9 @@
             placeholder="请输入强密码"
             show-password
         />
-        <div class="pwd-tips">
+        <!-- <div class="pwd-tips">
             8-20位且同时包含大写、小写、数字、特殊字符
-        </div>
+        </div> -->
         </el-form-item>
 
         <el-button
@@ -45,7 +45,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { setToken } from '@/utils/auth'
-// import { loginApi } from '@/api/user'   // 你自己的接口文件
+import { databaseApi } from '@/api/api'
 
 const router = useRouter()
 const formRef = ref()
@@ -89,12 +89,25 @@ async function handleLogin() {
     loading.value = true
     try {
       // 调后端鉴权接口
-    //   const { data } = await loginApi(form)
-     let data = { token: 'xxxx' }
+      let parms = {user: form.username,
+                        password: form.password
+                    }
+      let ret = await databaseApi.login(parms)
+    //  let data = { token: 'xxxx' }
       // 假设接口返回 { token: 'xxxx' }
-      setToken(data.token)
-      ElMessage.success('登录成功')
-      router.replace('/')     // 跳到首页（即你原来的 App.vue）
+      console.log(ret)
+    //   setToken(data.token)
+        if(ret.code === 200)
+        {
+            setToken('token')
+            ElMessage.success('登录成功')
+            // console.log('登录成功，准备跳转')
+            router.replace('/')     // 跳到首页（即你原来的 App.vue）
+            // console.log('跳转完成')
+        }else
+        {
+            ElMessage.error(ret.message)
+        }
     } catch (e) {
       ElMessage.error(e?.msg || '登录失败')
     } finally {

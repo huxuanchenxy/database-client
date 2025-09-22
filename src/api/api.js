@@ -74,6 +74,12 @@ export const databaseApi = {
   saveHistory: (historyRecord) => {
     return api.post('/history/save', historyRecord)
   }
+
+  ,
+  //登录
+  login: (parms) => {
+    return api.post('/common/login', parms)
+  }
 }
 
 export default api
