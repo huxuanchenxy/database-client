@@ -318,7 +318,7 @@ function editTable() {
 
 <style scoped>
 .database-tree {
-  height: 100%;
+  height: 510px;
   display: flex;
   flex-direction: column;
   border-right: 1px solid #e4e7ed;

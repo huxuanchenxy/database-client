@@ -55,6 +55,6 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-console.log('路由实例', router) 
+// console.log('路由实例', router) 
 
 app.mount('#app')

@@ -29,6 +29,7 @@
             @table-selected="handleTableSelect"
             ref="DatabaseTreeRef"
           />
+          <EquipmentTree ref="eqTree" />
         </el-aside>
 
         <!-- 主内容区域 -->
@@ -92,6 +93,7 @@ import ConnectionConfig from '@/components/ConnectionConfig.vue'
 import DeviceList from '@/components/DeviceList.vue'
 import { removeToken } from '@/utils/auth'
 import { useRouter } from 'vue-router'
+import EquipmentTree from '@/components/EquipmentTree.vue'
 
 const router = useRouter()   // 先拿到实例
 const activeTab = ref('sql')
