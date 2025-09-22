@@ -28,9 +28,13 @@
         <template #default="{ row }">
           <el-select v-model="row.type" size="small">
             <el-option label="integer" value="integer" />
+            <el-option label="bigint" value="bigint" />
+            <el-option label="boolean" value="boolean" />
+            <el-option label="double precision" value="double precision" />
             <el-option label="varchar" value="varchar" />
             <el-option label="date" value="date" />
             <el-option label="time" value="time" />
+            <el-option label="timestamp" value="timestamp" />
             <el-option label="text" value="text" />
           </el-select>
         </template>
