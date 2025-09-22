@@ -27,3 +27,18 @@ export function pickTablesByAst(sqlText, dialect = "postgresql") {
     return [];
   }
 }
+
+
+export function isSelectStatement(sqlText, dialect = 'postgresql') {
+  if (typeof sqlText !== 'string') return false;
+
+  try {
+    const cst = parse(sqlText, { dialect });
+
+    // 最外层语句节点类型如果是 'select_stmt' 就认为是 SELECT
+    return cst.statements.some(st => st.type === 'select_stmt');
+  } catch (e) {
+    // 解析失败就当它不是 SELECT
+    return false;
+  }
+}

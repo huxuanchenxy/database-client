@@ -156,7 +156,7 @@ import { useConnStore } from '@/stores/conn'
 import { useSqlStore } from '@/stores/sqlStore'
 import { useTreeStore } from '@/stores/treeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { pickTablesByAst } from '@/utils/sqlTableAst'
+import { pickTablesByAst,isSelectStatement } from '@/utils/sqlTableAst'
 const sqlStore = useSqlStore()
 const connStore = useConnStore()
 const treeStore = useTreeStore()
@@ -284,29 +284,52 @@ const loadResult = async (sqlText) => {
     currentSql.value = cleanedSql
 
     //先去接口跑一圈，如果data是空，说明不是select，那就直接返回执行正常或失败
-    const reschk = await databaseApi.executeSqlWithText({
-      ...connStore.conn,
-      oprationString: currentSql.value
-    })
-    // console.log('reschk',reschk)
-    // console.log('reschk.data',reschk.data)
-    if (reschk.code == 200 && reschk.data == null) {
-      // console.log('reschk.code',reschk.code)
-      currentSql.value = ''
-      resultSet.value = null
-      fieldMeta.value = null
-      ElMessage.success(reschk.message)
-      //通知树更新
-      treeStore.triggerRefresh()
-      return
-    }
-    if (reschk.code === 500)
-    {
-      ElMessage.error('失败：' + reschk.message)
-      currentSql.value = ''
-      resultSet.value = null
-      fieldMeta.value = null
-      return
+    // const reschk = await databaseApi.executeSqlWithText({
+    //   ...connStore.conn,
+    //   oprationString: currentSql.value
+    // })
+    // if (reschk.code == 200 && reschk.data == null) {
+    //   // console.log('reschk.code',reschk.code)
+    //   currentSql.value = ''
+    //   resultSet.value = null
+    //   fieldMeta.value = null
+    //   ElMessage.success(reschk.message)
+    //   //通知树更新
+    //   treeStore.triggerRefresh()
+    //   return
+    // }
+    // if (reschk.code === 500)
+    // {
+    //   ElMessage.error('失败：' + reschk.message)
+    //   currentSql.value = ''
+    //   resultSet.value = null
+    //   fieldMeta.value = null
+    //   return
+    // }
+    let reschk = isSelectStatement(cleanedSql, 'postgresql')
+    if (!reschk) {//非select语句就执行好后就不往下走，不分页了
+      const notselectsql = await databaseApi.executeSqlWithText({
+        ...connStore.conn,
+        oprationString: currentSql.value
+      })
+          if (notselectsql.code == 200 && notselectsql.data == null) {
+            // console.log('reschk.code',reschk.code)
+            currentSql.value = ''
+            resultSet.value = null
+            fieldMeta.value = null
+            ElMessage.success(notselectsql.message)
+            //通知树更新
+            treeStore.triggerRefresh()
+            return
+          }
+          if (notselectsql.code === 500)
+          {
+            ElMessage.error('失败：' + notselectsql.message)
+            currentSql.value = ''
+            resultSet.value = null
+            fieldMeta.value = null
+            return
+          }
     }
     // console.log('cleanedSql',cleanedSql)
     if(cleanedSql)
