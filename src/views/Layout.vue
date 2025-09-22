@@ -66,7 +66,7 @@
 
               <!-- 3. 数据存储管理（无结果区） -->
               <el-tab-pane label="数据存储管理" name="storage">
-                <!-- <StorageManage /> -->
+                <!-- <DataStorageList /> -->
               </el-tab-pane>
             </el-tabs>
           </el-container>
@@ -94,7 +94,7 @@ import DeviceList from '@/components/DeviceList.vue'
 import { removeToken } from '@/utils/auth'
 import { useRouter } from 'vue-router'
 import EquipmentTree from '@/components/EquipmentTree.vue'
-
+import DataStorageList from '@/components/DataStorageList.vue'
 const router = useRouter()   // 先拿到实例
 const activeTab = ref('sql')
 const DatabaseTreeRef = ref(null)
