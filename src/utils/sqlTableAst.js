@@ -6,23 +6,24 @@ import { parse, cstVisitor } from 'sql-parser-cst'
  * @param {string} dialect  'mysql' | 'postgresql' | 'sqlite' | 'bigquery'
  * @returns {string[]}      表名数组
  */
-export function pickTablesByAst(sqlText, dialect = 'postgresql') {
-    if (typeof sqlText !== 'string') return []
+export function pickTablesByAst(sqlText, dialect = "postgresql") {
+  if (typeof sqlText !== "string") return [];
 
   try {
-    const cst = parse(sqlText, { dialect })
-    const tables = new Set()
+    const cst = parse(sqlText, { dialect });
+    const tables = new Set();
 
-    cstVisitor({
-      // 只要遇到标识符就当成表名收
-      identifier: (node) => {
-        tables.add(node.text)
+    for (const stmt of cst.statements || []) {
+      for (const clause of stmt.clauses || []) {
+        if (clause.type === "from_clause" && clause.expr?.type === "identifier") {
+          tables.add(clause.expr.text);
+        }
       }
-    })(cst)
+    }
 
-    return Array.from(tables)
+    return Array.from(tables);
   } catch (e) {
-    console.error('[sql-parser-cst] 解析失败:', e.message)
-    return []
+    console.error("[sql-parser-cst] 解析失败:", e.message);
+    return [];
   }
 }
