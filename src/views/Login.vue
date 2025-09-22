@@ -93,17 +93,14 @@ async function handleLogin() {
                         password: form.password
                     }
       let ret = await databaseApi.login(parms)
-    //  let data = { token: 'xxxx' }
-      // 假设接口返回 { token: 'xxxx' }
+
       console.log(ret)
     //   setToken(data.token)
         if(ret.code === 200)
         {
             setToken('token')
             ElMessage.success('登录成功')
-            // console.log('登录成功，准备跳转')
-            router.replace('/')     // 跳到首页（即你原来的 App.vue）
-            // console.log('跳转完成')
+            router.replace('/')     
         }else
         {
             ElMessage.error(ret.message)
