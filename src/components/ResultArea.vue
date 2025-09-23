@@ -196,7 +196,7 @@ function mapTypeToEditRender(type) {
   if (t === 'timestamp')
     return {
       name: 'ElDatePicker',
-      props: { type: 'datetime', format: 'YYYY-MM-DD HH:mm:ss', valueFormat: 'YYYY-MM-DD HH:mm:ss' },
+      props: { type: 'datetime', format: 'YYYY-MM-DD HH:mm:ss.SSSSSS', valueFormat: 'YYYY-MM-DD HH:mm:ss.SSSSSS' },
       immediate: true
     }
 
