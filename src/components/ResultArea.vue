@@ -157,6 +157,7 @@ import { useSqlStore } from '@/stores/sqlStore'
 import { useTreeStore } from '@/stores/treeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { pickTablesByAst,isSelectStatement,hasLimitClause } from '@/utils/sqlTableAst'
+import { quoteId } from '@/utils/db.js'
 const sqlStore = useSqlStore()
 const connStore = useConnStore()
 const treeStore = useTreeStore()
@@ -168,6 +169,7 @@ const fieldMeta = ref({}) // 保存每个字段的类型  { colName: 'date' | 't
 /* 把字段类型翻译成 vxe 的 editRender 配置 */
 function mapTypeToEditRender(type) {
   // 统一转小写
+  // console.log('type', type)
   const t = (type || '').toLowerCase()
 
   if (t === 'date')
@@ -185,6 +187,13 @@ function mapTypeToEditRender(type) {
     }
 
   if (t === 'datetime')
+    return {
+      name: 'ElDatePicker',
+      props: { type: 'datetime', format: 'YYYY-MM-DD HH:mm:ss', valueFormat: 'YYYY-MM-DD HH:mm:ss' },
+      immediate: true
+    }
+
+  if (t === 'timestamp')
     return {
       name: 'ElDatePicker',
       props: { type: 'datetime', format: 'YYYY-MM-DD HH:mm:ss', valueFormat: 'YYYY-MM-DD HH:mm:ss' },
@@ -361,6 +370,7 @@ const loadResult = async (sqlText) => {
 function parseType(dt) {
   const t = (dt || '').toLowerCase();
   if (t.includes('datetime')) return 'datetime';
+  if (t.includes('timestamp')) return 'datetime';
   if (t.includes('date') && t.includes('time')) return 'datetime';
   if (t.includes('date')) return 'date';
   if (t.includes('time')) return 'time';
@@ -428,8 +438,8 @@ const loadPage = async (page, size) => {
             console.log('执行失败 错误信息:' + e.message)
           } finally {
     loading.value = false
-    //通知树更新
-    treeStore.triggerRefresh()
+    //通知树更新,查询不要通知树更新
+    // treeStore.triggerRefresh()
   }
 }
 
@@ -649,11 +659,11 @@ async function confirmEdit(row) {
   try {
     const setList = []
     resultSet.columns.forEach(col => {
-      setList.push(`${col} = ${formatValue(row[col])}`) // 这里就是用户编辑后的值
+      setList.push(`${quoteId(col)} = ${formatValue(row[col])}`) // 这里就是用户编辑后的值
     })
     
     const sql = `UPDATE ${tableName.value} SET ${setList.join(',')} WHERE ${rowToWherev4(row.__old)} `
-    // console.log('sql', sql)
+    console.log('sql', sql)
     /* 2. 调接口 */
     const res = await databaseApi.executeSqlWithText({
       ...connStore.conn,
