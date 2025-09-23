@@ -289,7 +289,7 @@ const loadResult = async (sqlText) => {
   console.log('loadResult sqlText:',sqlText)
 
     // const cleanedSql = sqlText.sql ? sqlText.sql.replace(/\r\n/g, ' '): sqlText.replace(/\r\n/g, ' ');
-    const cleanedSql = (sqlText.sql || sqlText).replace(/[\r\n;]/g, ' ');
+    const cleanedSql = (sqlText.sql || sqlText).replace(/[\r\n]/g, ' ');
     currentSql.value = cleanedSql
 
     //先去接口跑一圈，如果data是空，说明不是select，那就直接返回执行正常或失败
@@ -387,7 +387,8 @@ const loadPage = async (page, size) => {
     if(!hasLimitClause(currentSql.value))
     {
       // console.log('loadPage',sql)
-        sql = `${currentSql.value} LIMIT ${size} OFFSET ${(page - 1) * size}`
+        let cleanedSql = currentSql.value.replace(/[\r\n;]/g, ' ');
+        sql = `${cleanedSql} LIMIT ${size} OFFSET ${(page - 1) * size} ;`
     }
     
     const res = await databaseApi.executeSqlWithText({
