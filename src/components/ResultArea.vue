@@ -516,8 +516,8 @@ function rowToWherev4(oldrow) {
     .filter(([k]) => !k.startsWith('_'))
     .map(([k, v]) =>
       v === null
-        ? `${k} IS NULL`                       
-        : `${k} = '${String(v).replace(/'/g, "''")}'`  
+        ? `${quoteId(k)} IS NULL`                       
+        : `${quoteId(k)} = '${String(v).replace(/'/g, "''")}'`  
     )
     .join(' AND ');
 }
@@ -556,7 +556,7 @@ async function handleConfirmInsert() {
     if(col == resultSet.colSerial && row[col] == '')
     {}else
     {
-      fields.push(col)
+      fields.push(quoteId(col))
       values.push(formatValue(row[col]))
     }
   })
