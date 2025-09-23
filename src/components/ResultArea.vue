@@ -156,7 +156,7 @@ import { useConnStore } from '@/stores/conn'
 import { useSqlStore } from '@/stores/sqlStore'
 import { useTreeStore } from '@/stores/treeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { pickTablesByAst,isSelectStatement } from '@/utils/sqlTableAst'
+import { pickTablesByAst,isSelectStatement,hasLimitClause } from '@/utils/sqlTableAst'
 const sqlStore = useSqlStore()
 const connStore = useConnStore()
 const treeStore = useTreeStore()
@@ -335,19 +335,18 @@ const loadResult = async (sqlText) => {
     if(cleanedSql)
     {
         //TODO:不支持多表联查
-        let countsql = " SELECT COUNT(*) FROM " + tableName.value + "  "
-          /* 3. 拿总条数 —— 用你提供的 count 接口 */
-        const countRes = await databaseApi.executeSqlWithText({
-          ...connStore.conn,
-          oprationString: countsql,   // 你新接口需要的参数
-        })
-        // console.log('countRes',countRes)
-        if (countRes.code !== 200) {
-          ElMessage.error('获取行数失败：' + countRes.message)
-          return
-        }
-        
-        tablePage.total = countRes.data.data[0].count   // 接口返回数字
+        // let countsql = " SELECT COUNT(*) FROM " + tableName.value + "  "
+        //   /* 3. 拿总条数 —— 用你提供的 count 接口 */
+        // const countRes = await databaseApi.executeSqlWithText({
+        //   ...connStore.conn,
+        //   oprationString: countsql,   // 你新接口需要的参数
+        // })
+        // // console.log('countRes',countRes)
+        // if (countRes.code !== 200) {
+        //   ElMessage.error('获取行数失败：' + countRes.message)
+        //   return
+        // }
+        // tablePage.total = countRes.data.data[0].count   // 接口返回数字
         // console.log('tablePage.totalResult',tablePage.total)
         tablePage.currentPage = 1
         await loadPage(1, tablePage.pageSize)
@@ -374,11 +373,16 @@ const loadPage = async (page, size) => {
   try {
     // console.log('loadPage',page,size)
     /* 构造 limit 语句（MySQL 语法） */
-    const limitSql = `${currentSql.value} LIMIT ${size} OFFSET ${(page - 1) * size}`
-
+    let sql = currentSql.value
+    if(!hasLimitClause(currentSql.value))
+    {
+      // console.log('loadPage',sql)
+        sql = `${currentSql.value} LIMIT ${size} OFFSET ${(page - 1) * size}`
+    }
+    
     const res = await databaseApi.executeSqlWithText({
       ...connStore.conn,
-      oprationString: limitSql
+      oprationString: sql
     })
     // console.log('loadPage',res)
     if (res.code !== 200) {
@@ -386,6 +390,7 @@ const loadPage = async (page, size) => {
       return
     }
 
+    
     const res2 = await databaseApi.getTableInfo({
                   ...connStore.conn,
                   oprationString: tableName.value
@@ -417,6 +422,7 @@ const loadPage = async (page, size) => {
             // console.log('columns222', gridColumns.value)
             // const emptyRow = Object.fromEntries(res.data.columns.map(k => [k, '']))
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
+            tablePage.total = res.data.rowCount
             resultSet.affectedRows  =  0
   }catch(e){
             console.log('执行失败 错误信息:' + e.message)

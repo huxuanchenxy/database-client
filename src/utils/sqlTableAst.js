@@ -42,3 +42,42 @@ export function isSelectStatement(sqlText, dialect = 'postgresql') {
     return false;
   }
 }
+
+
+/**
+ * 判断 SQL 语句中是否存在 LIMIT 子句
+ * @param {string} sqlText
+ * @param {string} dialect  'mysql' | 'postgresql' | 'sqlite' | 'bigquery'
+ * @returns {boolean}
+ */
+export function hasLimitClause(sqlText, dialect = 'postgresql') {
+  if (typeof sqlText !== 'string') return false;
+
+  try {
+    const cst = parse(sqlText, { dialect });
+
+    // 递归访问函数
+    function visit(node) {
+      if (node && typeof node === 'object') {
+        // 如果节点类型就是 limit_clause（不同方言关键字统一映射）
+        if (node.type === 'limit_clause') return true;
+
+        // 深度优先遍历所有子属性
+        for (const key in node) {
+          const child = node[key];
+          if (Array.isArray(child)) {
+            if (child.some(visit)) return true;
+          } else if (visit(child)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    return cst.statements.some(visit);
+  } catch (e) {
+    // 解析失败默认当作无 LIMIT
+    return false;
+  }
+}
