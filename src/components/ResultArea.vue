@@ -196,7 +196,7 @@ function mapTypeToEditRender(type) {
   if (t === 'timestamp')
     return {
       name: 'ElDatePicker',
-      props: { type: 'datetime', format: 'YYYY-MM-DD HH:mm:ss.SSSSSS', valueFormat: 'YYYY-MM-DD HH:mm:ss.SSSSSS' },
+      props: { type: 'datetime', format: 'YYYY-MM-DD HH:mm:ss', valueFormat: 'YYYY-MM-DD HH:mm:ss' },
       immediate: true
     }
 
@@ -510,16 +510,37 @@ function rowToWherev3(row) {
   return setList
 }
 
-function rowToWherev4(oldrow) {
+// function rowToWherev4(oldrow) {
+//   console.log('fieldMeta.value',fieldMeta.value) 
+//   return Object
+//     .entries(oldrow)
+//     .filter(([k]) => !k.startsWith('_'))
+//     .map(([k, v]) =>
+//       v === null
+//         ? `${quoteId(k)} IS NULL`                       
+//         : `${quoteId(k)} = '${String(v).replace(/'/g, "''")}'`  
+//     )
+//     .join(' AND ');
+// }
+
+function rowToWherev4(oldRow) {
   return Object
-    .entries(oldrow)
+    .entries(oldRow)
     .filter(([k]) => !k.startsWith('_'))
-    .map(([k, v]) =>
-      v === null
-        ? `${quoteId(k)} IS NULL`                       
-        : `${quoteId(k)} = '${String(v).replace(/'/g, "''")}'`  
-    )
-    .join(' AND ');
+    .map(([k, v]) => {
+      if (v === null) {
+        return `${quoteId(k)} IS NULL`
+      }
+      // 如果是 datetime，只比到秒
+      if (fieldMeta.value[k] === 'datetime') {
+        // 去掉毫秒部分，保证格式 2025-09-22 13:49:53
+        const secStr = String(v).replace(/\.\d+$/, '')
+        return `date_trunc('second', ${quoteId(k)}) = timestamp '${secStr}'`
+      }
+      // 普通字段保持原样
+      return `${quoteId(k)} = '${String(v).replace(/'/g, "''")}'`
+    })
+    .join(' AND ')
 }
 
 /* ===== 工具函数：值转 SQL 字面量 ===== */
