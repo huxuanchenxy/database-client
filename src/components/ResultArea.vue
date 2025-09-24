@@ -223,34 +223,36 @@ const resultSet = reactive({
 
 /* ==========  3. 把后端字段转成 vxe-columns  ========== */
 const gridColumns = computed(() => {
+  // const cols = resultSet.columns.map(col => {
+  //   console.log('col',col)
+  //   console.log('fieldMeta.value333',fieldMeta.value)
+  //   const type = fieldMeta.value[col] || 'string'
+  //   return {
+  //     field: col,
+  //     title: col,
+  //     minWidth: 100,
+  //     editRender: mapTypeToEditRender(type)
+  //   }
+  // })
+
   const cols = resultSet.columns.map(col => {
     const type = fieldMeta.value[col] || 'string'
-    return {
+
+    const baseCol = {
       field: col,
       title: col,
       minWidth: 100,
       editRender: mapTypeToEditRender(type)
     }
+
+    /* 关键：OID 为 24 的是 regtype，需要 JSON 化显示 */
+    // if (type === 24 || type === 'regtype') {   // 24 就是 OID 值
+      baseCol.formatter = ({ cellValue }) =>
+        typeof cellValue === 'object' ? JSON.stringify(cellValue, null, 2) : cellValue
+    //}
+
+    return baseCol
   })
-
-//   const cols = resultSet.columns.map(col => ({
-//     field: col,
-//     title: col,
-//     minWidth: 160,
-//     /* 关键：第一层就是 editRender，别再嵌套 */
-//     // editRender: {
-//     //   name: 'input',      // 4.x 内置
-//     //   attrs: { type: 'time' } ,// HTML5 原生日期框
-//     //   immediate: true
-//     // }
-//     editRender: {
-//   name: 'ElDatePicker',
-//   props: { type: 'date', format: 'YYYY-MM-DD', valueFormat: 'YYYY-MM-DD' },
-//   immediate: true
-// }
-//   }))
-
-
 
   // 操作列
   cols.push({
@@ -338,6 +340,7 @@ function parseType(dt) {
   if (t.includes('date') && t.includes('time')) return 'datetime';
   if (t.includes('date')) return 'date';
   if (t.includes('time')) return 'time';
+  if (t.includes('oid')) return 'oid';
   // 可以继续扩展：bit/bool、int/number、decimal 等
   return 'string';   // 默认走 input
 }
@@ -371,7 +374,7 @@ const loadPage = async (page, size) => {
       ...connStore.conn,
       oprationString: sql
     })
-    // console.log('loadPage',res)
+    console.log('loadPage',res)
     if (res.code !== 200) {
       ElMessage.error('分页查询失败：' + res.message)
       return
@@ -397,13 +400,14 @@ const loadPage = async (page, size) => {
                   //   const { data } = await getTableStruct() // 返回示例  [{field:'birthday',type:'date'}, ...]
                   // data.forEach(i => (meta[i.field] = i.type))
                   // fieldMeta.value = meta
-                  // console.log('columns111', gridColumns.value)
+                  console.log('fieldMeta.value111', list)
                   fieldMeta.value = list.reduce((meta, item) => {
                     meta[item.column_name] = parseType(item.data_type);
                     return meta;
                   }, {});
-                  // console.log('fieldMeta.value',fieldMeta.value)
+                  console.log('fieldMeta.value222',fieldMeta.value)
                 }
+                console.log('res.data.columns',res.data.columns)
             resultSet.columns = res.data.columns || []
 
             // console.log('columns222', gridColumns.value)
