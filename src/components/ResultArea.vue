@@ -156,7 +156,7 @@ import { useConnStore } from '@/stores/conn'
 import { useSqlStore } from '@/stores/sqlStore'
 import { useTreeStore } from '@/stores/treeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { pickTablesByAst,isSelectStatement,hasLimitClause ,isSelectStatementV2} from '@/utils/sqlTableAst'
+import { pickTablesByAst,isSelectStatement,hasLimitClause ,isSelectStatementV2,hasOrderByClause} from '@/utils/sqlTableAst'
 import { quoteId } from '@/utils/db.js'
 const sqlStore = useSqlStore()
 const connStore = useConnStore()
@@ -292,29 +292,7 @@ const loadResult = async (sqlText) => {
     const cleanedSql = (sqlText.sql || sqlText).replace(/[\r\n]/g, ' ');
     currentSql.value = cleanedSql
 
-    //先去接口跑一圈，如果data是空，说明不是select，那就直接返回执行正常或失败
-    // const reschk = await databaseApi.executeSqlWithText({
-    //   ...connStore.conn,
-    //   oprationString: currentSql.value
-    // })
-    // if (reschk.code == 200 && reschk.data == null) {
-    //   // console.log('reschk.code',reschk.code)
-    //   currentSql.value = ''
-    //   resultSet.value = null
-    //   fieldMeta.value = null
-    //   ElMessage.success(reschk.message)
-    //   //通知树更新
-    //   treeStore.triggerRefresh()
-    //   return
-    // }
-    // if (reschk.code === 500)
-    // {
-    //   ElMessage.error('失败：' + reschk.message)
-    //   currentSql.value = ''
-    //   resultSet.value = null
-    //   fieldMeta.value = null
-    //   return
-    // }
+
     let reschk = isSelectStatement(cleanedSql, 'postgresql')
     if (!reschk) {//非select语句就执行好后就不往下走，不分页了
       const notselectsql = await databaseApi.executeSqlWithText({
@@ -343,20 +321,6 @@ const loadResult = async (sqlText) => {
     // console.log('cleanedSql',cleanedSql)
     if(cleanedSql)
     {
-        //TODO:不支持多表联查
-        // let countsql = " SELECT COUNT(*) FROM " + tableName.value + "  "
-        //   /* 3. 拿总条数 —— 用你提供的 count 接口 */
-        // const countRes = await databaseApi.executeSqlWithText({
-        //   ...connStore.conn,
-        //   oprationString: countsql,   // 你新接口需要的参数
-        // })
-        // // console.log('countRes',countRes)
-        // if (countRes.code !== 200) {
-        //   ElMessage.error('获取行数失败：' + countRes.message)
-        //   return
-        // }
-        // tablePage.total = countRes.data.data[0].count   // 接口返回数字
-        // console.log('tablePage.totalResult',tablePage.total)
         tablePage.currentPage = 1
         await loadPage(1, tablePage.pageSize)
                        
@@ -384,14 +348,21 @@ const loadPage = async (page, size) => {
   try {
     // console.log('loadPage',page,size)
     /* 构造 limit 语句（MySQL 语法） */
-    let sql = currentSql.value
+    let sql = currentSql.value.replace(/[\r\n;]/g, ' ');
+    //如果没有order by 则加上 order by 第一个字段
+    if(!hasOrderByClause(sql))
+    {
+        sql = `${sql} order by 1 `
+    }
+
     //要没有limit而且是from的select语句
-    if(!hasLimitClause(currentSql.value) && isSelectStatementV2(currentSql.value))
+    if(!hasLimitClause(sql))
     {
       // console.log('loadPage',sql)
-        let cleanedSql = currentSql.value.replace(/[\r\n;]/g, ' ');
-
-        sql = `${cleanedSql} LIMIT ${size} OFFSET ${(page - 1) * size} ;`
+        sql = `${sql} LIMIT ${size} OFFSET ${(page - 1) * size} `
+    }
+    if(isSelectStatementV2(sql))
+    {
         //有from的正常语句
         showbutton.value = true
     }
@@ -516,18 +487,7 @@ function rowToWherev3(row) {
   return setList
 }
 
-// function rowToWherev4(oldrow) {
-//   console.log('fieldMeta.value',fieldMeta.value) 
-//   return Object
-//     .entries(oldrow)
-//     .filter(([k]) => !k.startsWith('_'))
-//     .map(([k, v]) =>
-//       v === null
-//         ? `${quoteId(k)} IS NULL`                       
-//         : `${quoteId(k)} = '${String(v).replace(/'/g, "''")}'`  
-//     )
-//     .join(' AND ');
-// }
+
 
 function rowToWherev4(oldRow) {
   return Object

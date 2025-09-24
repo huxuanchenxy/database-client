@@ -99,3 +99,29 @@ export function hasLimitClause(sqlText, dialect = 'postgresql') {
     return false;
   }
 }
+
+
+export function hasOrderByClause(sqlText, dialect = 'postgresql') {
+  if (typeof sqlText !== 'string') return false;
+
+  try {
+    const cst = parse(sqlText, { dialect });
+
+    function visit(node) {
+      if (node && typeof node === 'object') {
+        if (node.type === 'order_by_clause') return true;   // 关键区别
+        for (const key in node) {
+          const child = node[key];
+          if (Array.isArray(child)) {
+            if (child.some(visit)) return true;
+          } else if (visit(child)) return true;
+        }
+      }
+      return false;
+    }
+
+    return cst.statements.some(visit);
+  } catch (e) {
+    return false;
+  }
+}
