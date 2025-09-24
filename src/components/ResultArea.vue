@@ -37,8 +37,8 @@
         <!-- 工具栏 -->
         <div class="grid-toolbar" v-if="fieldMeta">
           
-           <div class="btn-box" >
-          <el-button v-if="resultSet.columns.length > 0"
+           <div class="btn-box" v-if="showbutton" >
+          <el-button v-if="resultSet.columns.length > 0 "
             type="primary"
             size="mini"
             :disabled="addLocked"
@@ -92,7 +92,7 @@
 
                   <template #action_slot="{ row }">
                   <!-- 未编辑状态 -->
-                  <template v-if="!row.__editing && addLocked === false">
+                  <template v-if="!row.__editing && addLocked === false && showbutton">
                     <el-button type="primary" size="mini" @click="startEdit(row)">
                       编辑
                     </el-button>
@@ -103,14 +103,14 @@
 
                   <!-- 编辑中状态 -->
                   <template v-else>
-                    <el-button v-if="addLocked === false"
+                    <el-button v-if="addLocked === false && showbutton"
                       type="success"
                       size="mini"
                       :loading="row.__saving"
                       @click="confirmEdit(row)">
                       确认
                     </el-button>
-                    <el-button v-if="addLocked === false"
+                    <el-button v-if="addLocked === false && showbutton"
                       type="info"
                       size="mini"
                       @click="cancelEdit(row)">
@@ -156,14 +156,14 @@ import { useConnStore } from '@/stores/conn'
 import { useSqlStore } from '@/stores/sqlStore'
 import { useTreeStore } from '@/stores/treeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { pickTablesByAst,isSelectStatement,hasLimitClause } from '@/utils/sqlTableAst'
+import { pickTablesByAst,isSelectStatement,hasLimitClause ,isSelectStatementV2} from '@/utils/sqlTableAst'
 import { quoteId } from '@/utils/db.js'
 const sqlStore = useSqlStore()
 const connStore = useConnStore()
 const treeStore = useTreeStore()
 const localData = ref({ sql: '', result: null })
 const emit = defineEmits(['calltree'])
-
+const showbutton = ref(false)
 const fieldMeta = ref({}) // 保存每个字段的类型  { colName: 'date' | 'time' | 'datetime' | 'string' ... }
 
 /* 把字段类型翻译成 vxe 的 editRender 配置 */
@@ -379,16 +379,21 @@ function parseType(dt) {
 }
 
 const loadPage = async (page, size) => {
+  showbutton.value = false
   loading.value = true
   try {
     // console.log('loadPage',page,size)
     /* 构造 limit 语句（MySQL 语法） */
     let sql = currentSql.value
-    if(!hasLimitClause(currentSql.value))
+    //要没有limit而且是from的select语句
+    if(!hasLimitClause(currentSql.value) && isSelectStatementV2(currentSql.value))
     {
       // console.log('loadPage',sql)
         let cleanedSql = currentSql.value.replace(/[\r\n;]/g, ' ');
+
         sql = `${cleanedSql} LIMIT ${size} OFFSET ${(page - 1) * size} ;`
+        //有from的正常语句
+        showbutton.value = true
     }
     
     const res = await databaseApi.executeSqlWithText({

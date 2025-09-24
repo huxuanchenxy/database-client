@@ -43,6 +43,24 @@ export function isSelectStatement(sqlText, dialect = 'postgresql') {
   }
 }
 
+export function isSelectStatementV2(sqlText, dialect = 'postgresql') {
+  if (typeof sqlText !== 'string') return false;
+
+  try {
+    const cst = parse(sqlText, { dialect });
+
+    return cst.statements.some(st => {
+      // 1. 顶层必须是 select_stmt
+      if (st.type !== 'select_stmt') return false;
+
+      // 2. 必须带 FROM 子句（真正查表）
+      return (st.clauses || []).some(c => c.type === 'from_clause');
+    });
+  } catch (e) {
+    return false;
+  }
+}
+
 
 /**
  * 判断 SQL 语句中是否存在 LIMIT 子句
