@@ -65,9 +65,9 @@
               </el-tab-pane>
 
               <!-- 3. 数据存储管理（无结果区） -->
-              <el-tab-pane label="数据存储管理" name="storage">
-                <!-- <DataStorageList /> -->
-              </el-tab-pane>
+              <!-- <el-tab-pane label="数据存储管理" name="storage">
+                <DataStorageList />
+              </el-tab-pane> -->
             </el-tabs>
           </el-container>
         </el-main>

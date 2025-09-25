@@ -219,6 +219,7 @@ const resultSet = reactive({
   affectedRows: 0,
   //哪个是自增列
   colSerial: '',
+  caozuo:true,
 })
 
 
@@ -289,14 +290,18 @@ const gridColumns = computed(() => {
     return baseCol
   })
 
-  // 操作列
-  cols.push({
-    field: 'action',
-    title: '操作',
-    width: 110,
-    fixed: 'right',
-    slots: { default: 'action_slot' }
-  })
+  if(resultSet.caozuo)
+  {
+    // 操作列
+    cols.push({
+      field: 'action',
+      title: '操作',
+      width: 110,
+      fixed: 'right',
+      slots: { default: 'action_slot' }
+    })
+  }
+  
 
   // console.log('final gridColumns:', cols)
   return cols
@@ -451,7 +456,12 @@ const loadPage = async (page, size) => {
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
             tablePage.total = res.data.rowCount
             resultSet.affectedRows  =  0
-
+            resultSet.caozuo = true
+            if(res.data.isSysTb)
+            {
+              showbutton.value = false
+              resultSet.caozuo = false
+            }
             await nextTick();
             xGrid.value.reloadColumn(gridColumns.value); 
   }catch(e){
