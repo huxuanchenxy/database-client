@@ -80,6 +80,12 @@ export const databaseApi = {
   login: (parms) => {
     return api.post('/common/login', parms)
   }
+
+  ,
+  getdevicelist: (parms) => {
+    return api.post('/device/getdevicelist', parms)
+  }
+
 }
 
 export default api

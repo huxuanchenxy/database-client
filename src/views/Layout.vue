@@ -37,7 +37,7 @@
           <!-- 把 direction 设置成 vertical -->
           <el-container direction="vertical">
 
-            <el-tabs v-model="activeTab" class="demo-tabs">
+            <el-tabs v-model="activeTab" class="demo-tabs" @tab-change="handleTabChange">
               <el-tab-pane label="SQL命令行" name="sql">
                   <!-- SQL编辑器 -->
                   <el-aside class="sql-aside">
@@ -61,7 +61,7 @@
               </el-tab-pane>
               <!-- 2. 设备管理（无结果区） -->
               <el-tab-pane label="设备管理" name="device">
-                <!-- <DeviceList /> -->
+                <DeviceList />
               </el-tab-pane>
 
               <!-- 3. 数据存储管理（无结果区） -->
@@ -95,13 +95,22 @@ import { removeToken } from '@/utils/auth'
 import { useRouter } from 'vue-router'
 import EquipmentTree from '@/components/EquipmentTree.vue'
 import DataStorageList from '@/components/DataStorageList.vue'
-const router = useRouter()   // 先拿到实例
-const activeTab = ref('sql')
-const DatabaseTreeRef = ref(null)
+import { useTabStore } from '@/stores/tab'
+import { storeToRefs } from 'pinia'
 
+const router = useRouter()   // 先拿到实例
+// const activeTab = ref('sql')
+
+const DatabaseTreeRef = ref(null)
+const tabStore = useTabStore()
+const { activeTab } = storeToRefs(tabStore)
 const handleCallTree = () => {
   console.log('查看调用树')
   DatabaseTreeRef.value?.loadDatabases()
+}
+
+function handleTabChange(tabName) {
+  tabStore.activeTab = tabName
 }
 
 const sqlCode = ref('')

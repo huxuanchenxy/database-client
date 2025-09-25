@@ -61,7 +61,7 @@ import { ref, onMounted,watch,reactive  } from 'vue'
 import { ElMessage,ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import ConnectionConfig from './ConnectionConfig.vue'
-import { databaseApi } from '../api/api'
+import { databaseApi } from '@/api/api'
 import { useConnStore } from '@/stores/conn'
 
 

@@ -38,14 +38,16 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { ElTree, ElInput, ElButton, ElIcon } from 'element-plus'
 import { Folder, Monitor, Cpu } from '@element-plus/icons-vue'
-
+import { useConnStore } from '@/stores/conn'
+import { ElMessage,ElMessageBox } from 'element-plus'
+import { databaseApi } from '@/api/api'
 /* ===== 响应式变量 ===== */
 const filterText = ref('')
 const treeRef = ref(null)
-
+const connStore = useConnStore()
 /* ===== 树形数据 ===== */
 const treeData = ref([
   {
@@ -82,6 +84,35 @@ function filterNode(value, data) {
 function expandAll() {
   const nodes = treeRef.value?.store._getAllNodes()
   nodes?.forEach(node => node.expand())
+}
+
+onMounted(() => {
+  loadData()
+})
+
+const loadData = async () => {
+
+  //todo: 获取连接信息如果失败则把connStore.conn变null
+  // console.log('loadDatabases connStore.conn',connStore.conn)
+  // if (!currentConnection.value) return
+  if (!connStore.conn) return
+
+  try {
+    const res = await databaseApi.getdevicelist(connStore.conn)
+    console.log('eqptree:',res)
+  // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
+    if(res.code === 200) {
+    //   treeData.value = buildTree(dbdata)
+    }else
+    {
+      
+      ElMessage.error('获取数据库列表失败:'+res.message)
+    }
+  } catch (e) {
+    console.error(e)
+    ElMessage.error('连接失败:'+e)
+  } finally {
+  }
 }
 </script>
 
