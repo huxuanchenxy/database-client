@@ -221,35 +221,70 @@ const resultSet = reactive({
   colSerial: '',
 })
 
+
+function jsonEditRender() {
+  console.log('jsonEditRender init')
+  return {
+    // 使用内置 renderer 名称 'input' 或 '$input' 更保险（避免组件解析错误）
+    name: 'input',
+    props: {
+      type: 'text',
+      maxlength: 20000,
+      autofocus: true
+    },
+    // 关键：把两个参数都打印出来（slotParams, eventParams）
+    events: {
+      input(slotParams, eventParams) {
+        // 这两行能让你立刻看到到底哪个参数携带 value
+        // console.log('[jsonEditRender] input slotParams:', slotParams)
+        // console.log('[jsonEditRender] input eventParams:', eventParams)
+
+        // eventParams.value 通常是最新输入值（有些版本事件会把 value 放在第二参）
+        const text = (eventParams && eventParams.value !== undefined)
+          ? eventParams.value
+          : (slotParams && slotParams.value)
+
+        // 尝试 parse 回写 row 字段（仅示范）
+        try {
+          slotParams.row[slotParams.column.field] = JSON.parse(text)
+        } catch (e) {
+          slotParams.row[slotParams.column.field] = text
+        }
+      },
+      // 你也可以监听 change/blur 等
+      change(slotParams, eventParams) {
+        // console.log('[jsonEditRender] change', slotParams, eventParams)
+      }
+    },
+    // type: 'default' 可视/非可视差异按需选
+    // type: 'visible' // 如果想编辑器一直可见（调试时可以尝试）
+    // attrs/props/other config...
+  }
+}
+
 /* ==========  3. 把后端字段转成 vxe-columns  ========== */
 const gridColumns = computed(() => {
-  // const cols = resultSet.columns.map(col => {
-  //   console.log('col',col)
-  //   console.log('fieldMeta.value333',fieldMeta.value)
-  //   const type = fieldMeta.value[col] || 'string'
-  //   return {
-  //     field: col,
-  //     title: col,
-  //     minWidth: 100,
-  //     editRender: mapTypeToEditRender(type)
-  //   }
-  // })
-
   const cols = resultSet.columns.map(col => {
     const type = fieldMeta.value[col] || 'string'
 
     const baseCol = {
       field: col,
       title: col,
-      minWidth: 100,
-      editRender: mapTypeToEditRender(type)
+      minWidth: 100
     }
 
-    /* 关键：OID 为 24 的是 regtype，需要 JSON 化显示 */
-    // if (type === 24 || type === 'regtype') {   // 24 就是 OID 值
+    if (type === 24 || type === 'regtype' || type === 'oid') {
+      // 显示时格式化成 JSON 字符串
       baseCol.formatter = ({ cellValue }) =>
-        typeof cellValue === 'object' ? JSON.stringify(cellValue, null, 2) : cellValue
-    //}
+        typeof cellValue === 'object'
+          ? JSON.stringify(cellValue, null, 2)
+          : cellValue
+
+      // 编辑时用输入框
+      baseCol.editRender = jsonEditRender()
+    } else {
+      baseCol.editRender = mapTypeToEditRender(type) // 其它列走老逻辑
+    }
 
     return baseCol
   })
@@ -262,7 +297,8 @@ const gridColumns = computed(() => {
     fixed: 'right',
     slots: { default: 'action_slot' }
   })
-  // console.log('cols', cols)
+
+  // console.log('final gridColumns:', cols)
   return cols
 })
 
@@ -288,7 +324,7 @@ const loadResult = async (sqlText) => {
   try {
     // const res = await databaseApi.getdata(parm)   // ← 接口
     // 假定后端返回格式：
-  console.log('loadResult sqlText:',sqlText)
+  // console.log('loadResult sqlText:',sqlText)
 
     // const cleanedSql = sqlText.sql ? sqlText.sql.replace(/\r\n/g, ' '): sqlText.replace(/\r\n/g, ' ');
     const cleanedSql = (sqlText.sql || sqlText).replace(/[\r\n]/g, ' ');
@@ -374,7 +410,7 @@ const loadPage = async (page, size) => {
       ...connStore.conn,
       oprationString: sql
     })
-    console.log('loadPage',res)
+    // console.log('loadPage',res)
     if (res.code !== 200) {
       ElMessage.error('分页查询失败：' + res.message)
       return
@@ -400,14 +436,14 @@ const loadPage = async (page, size) => {
                   //   const { data } = await getTableStruct() // 返回示例  [{field:'birthday',type:'date'}, ...]
                   // data.forEach(i => (meta[i.field] = i.type))
                   // fieldMeta.value = meta
-                  console.log('fieldMeta.value111', list)
+                  // console.log('fieldMeta.value111', list)
                   fieldMeta.value = list.reduce((meta, item) => {
                     meta[item.column_name] = parseType(item.data_type);
                     return meta;
                   }, {});
-                  console.log('fieldMeta.value222',fieldMeta.value)
+                  // console.log('fieldMeta.value222',fieldMeta.value)
                 }
-                console.log('res.data.columns',res.data.columns)
+                // console.log('res.data.columns',res.data.columns)
             resultSet.columns = res.data.columns || []
 
             // console.log('columns222', gridColumns.value)
@@ -415,6 +451,9 @@ const loadPage = async (page, size) => {
             resultSet.rows = res.data.data && res.data.data.length > 0 ? res.data.data : []
             tablePage.total = res.data.rowCount
             resultSet.affectedRows  =  0
+
+            await nextTick();
+            xGrid.value.reloadColumn(gridColumns.value); 
   }catch(e){
             console.log('执行失败 错误信息:' + e.message)
           } finally {
@@ -603,6 +642,13 @@ function startEdit(row) {
   nextTick(() => xGrid.value.setEditRow(row))
   curID.value = formatValue(row[pkField.value])       // 让该行进入编辑
   // grid.setRowCache(row) 
+    // 1. 把对象列提前转成 JSON 字符串
+  resultSet.columns.forEach(col => {
+    const type = fieldMeta.value[col]
+    if ((type === 24 || type === 'regtype' || type === 'oid') && typeof row[col] === 'object') {
+      row[col] = JSON.stringify(row[col], null, 2)
+    }
+  })
   row.__old = { ...row }
   row.__editing = true            // 控制按钮显示
 }
@@ -648,6 +694,15 @@ async function startDelete(row) {
 async function confirmEdit(row) {
   row.__saving = true
   try {
+
+    // 2. 把字符串列再解析回对象
+    resultSet.columns.forEach(col => {
+      const type = fieldMeta.value[col]
+      if ((type === 24 || type === 'regtype' || type === 'oid') && typeof row[col] === 'string') {
+        try { row[col] = JSON.parse(row[col]) } catch { /* 留字符串 */ }
+      }
+    })
+
     const setList = []
     resultSet.columns.forEach(col => {
       setList.push(`${quoteId(col)} = ${formatValue(row[col])}`) // 这里就是用户编辑后的值

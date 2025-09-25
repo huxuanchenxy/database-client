@@ -125,7 +125,7 @@ const dialogTitle = computed(() =>
 //   if (!m) return { type: dt, length: null }
 //   return { type: m[1].toLowerCase(), length: m[2] ?? null }
 // }
-console.log('table',table.value)
+// console.log('table',table.value)
 /* ---------- 打开弹窗 ---------- */
 const openDialog = async (initialTableName = null) => {
   visible.value = true
