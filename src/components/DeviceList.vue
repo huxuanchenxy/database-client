@@ -14,10 +14,10 @@
       <el-table-column prop="tcp_port" label="端口" width="80" />
       <el-table-column prop="created_at" label="创建时间" />
       <el-table-column prop="updated_at" label="最后通信时间" />
-      <el-table-column label="状态" width="90">
+      <el-table-column label="状态" width="120">
         <template #default="{ row }">
-          <el-tag :type="row.status === '已连接' ? 'success' : 'danger'">
-            {{ row.status }}
+          <el-tag :type="statusColorMap[row.comm_status]">
+            {{ row.comm_status }}
           </el-tag>
         </template>
       </el-table-column>
@@ -25,10 +25,10 @@
         <template #default="{ row }">
           <el-button
             link
-            :type="row.status === '已连接' ? 'danger' : 'primary'"
+            :type="btnMap[row.comm_status].type"
             @click="toggleConnect(row)"
           >
-            {{ row.status === '已连接' ? '断开' : '连接' }}
+            {{ btnMap[row.comm_status].text }}
           </el-button>
           <el-button link type="primary" @click="openEdit(row)">配置</el-button>
           <el-popconfirm title="确定删除吗？" @confirm="delDevice(row.id)">
@@ -91,6 +91,22 @@ function toggleConnect(row) {
 onMounted(() => {
   loadList()
 })
+
+// 颜色映射：success / danger / warning / info / primary 任选
+const statusColorMap = {
+  OK:           'success',
+  ERROR:        'danger',
+  TIMEOUT:      'warning',
+  DISCONNECTED: 'info'
+}
+
+/* ------- 状态 → 按钮配置 ------- */
+const btnMap = {
+  OK:          { type: 'danger',  text: '断开' },
+  ERROR:       { type: 'warning', text: '重连' },
+  TIMEOUT:     { type: 'warning', text: '重连' },
+  DISCONNECTED:{ type: 'primary', text: '连接' }
+}
 </script>
 
 <style scoped>
