@@ -16,8 +16,8 @@
       <el-table-column prop="updated_at" label="最后通信时间" />
       <el-table-column label="状态" width="120">
         <template #default="{ row }">
-          <el-tag :type="statusColorMap[row.comm_status]">
-            {{ row.comm_status }}
+          <el-tag :type="statusColorMap[row.comm_status].type">
+            {{ statusColorMap[row.comm_status].text }}
           </el-tag>
         </template>
       </el-table-column>
@@ -94,10 +94,10 @@ onMounted(() => {
 
 // 颜色映射：success / danger / warning / info / primary 任选
 const statusColorMap = {
-  OK:           'success',
-  ERROR:        'danger',
-  TIMEOUT:      'warning',
-  DISCONNECTED: 'info'
+  OK:           { type: 'success',  text: '成功' },
+  ERROR:        { type: 'danger',  text: '错误' },
+  TIMEOUT:      { type: 'warning',  text: '超时' },
+  DISCONNECTED: { type: 'info',  text: '断开' },
 }
 
 /* ------- 状态 → 按钮配置 ------- */
