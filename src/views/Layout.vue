@@ -29,7 +29,9 @@
             @table-selected="handleTableSelect"
             ref="DatabaseTreeRef"
           />
-          <EquipmentTree ref="eqTree" />
+          <EquipmentTree
+          @root-selected="handlestorageSelect"
+          ref="eqTree" />
         </el-aside>
 
         <!-- 主内容区域 -->
@@ -65,9 +67,9 @@
               </el-tab-pane>
 
               <!-- 3. 数据存储管理（无结果区） -->
-              <!-- <el-tab-pane label="数据存储管理" name="storage">
+              <el-tab-pane label="数据存储管理" name="storage">
                 <DataStorageList />
-              </el-tab-pane> -->
+              </el-tab-pane>
             </el-tabs>
           </el-container>
         </el-main>
@@ -142,6 +144,10 @@ const handleDatabaseSelect = (databaseInfo) => {
   // ElMessage.info(`已选择数据库: ${databaseInfo.database}`)
 
   activeTab.value = 'sql'
+}
+
+const handlestorageSelect = (databaseInfo) => {
+  activeTab.value = 'storage'
 }
 
 // 处理表选择

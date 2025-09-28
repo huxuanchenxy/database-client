@@ -41,13 +41,13 @@
       </el-table-column>
     </el-table>
     <!-- 列表分页 -->
-    <el-pagination
+    <!-- <el-pagination
       v-model:current-page="listQuery.page"
       :page-size="listQuery.limit"
       :total="listTotal"
       layout="total, prev, pager, next"
       @current-change="getList"
-    />
+    /> -->
 
     <!-- ================= 执行记录 ================= -->
     <el-divider content-position="left">执行记录</el-divider>
@@ -88,7 +88,10 @@ import { ref, onMounted } from 'vue'
 import DataStorageEdit from './DataStorageEdit.vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
+import { databaseApi } from '@/api/api'
+import { useConnStore } from '@/stores/conn'
 
+const connStore = useConnStore()
 /* ========== 列表相关 ========== */
 const list = ref([])
 const listTotal = ref(0)
@@ -112,16 +115,13 @@ const currentRow = ref(null)
 async function getList() {
   try {
     // const { data } = await axios.get('/api/storage/list', { params: listQuery.value })
-
-    let mock = [
-    { id: 1, deviceName: 'PLC-A', table: 'plc_data', point: '24/30', interval: '1秒', lastTime: '2025-09-19 10:00:00', status: '已暂停' },
-    { id: 2, deviceName: 'PLC-B', table: 'auto_log', point: '自动', interval: '5秒', lastTime: '2025-09-19 10:05:00', status: '运行中' }
-  ]
+    const res = await databaseApi.getallconfiginfo(connStore.conn)
+    console.log('list:',res)
     // list.value = data.list
-    list.value = mock
-    listTotal.value = data.total
+    // list.value = mock
+    // listTotal.value = data.total
   } catch (e) {
-    ElMessage.error('获取列表失败')
+    ElMessage.error('获取列表失败1')
   }
 }
 
@@ -201,7 +201,7 @@ function openEdit(row) {
 
 onMounted(() => {
   getList()
-  getLog()
+//   getLog()
 })
 </script>
 

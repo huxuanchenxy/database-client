@@ -85,6 +85,16 @@ export const databaseApi = {
   getdevicelist: (parms) => {
     return api.post('/device/getdevicelist', parms)
   }
+  //获取所有配置信息
+    ,
+  getallconfiginfo: (parms) => {
+    return api.post('/device/getallconfiginfo', parms)
+  }
+  //根据设备id获取所有点位
+      ,
+  getregisterbydeviceid: (parms) => {
+    return api.post('/device/getregisterbydeviceid', parms)
+  }
 
 }
 

@@ -1,17 +1,9 @@
 <template>
   <div class="equipment-tree">
     <!-- 顶部工具栏（可选） -->
-    <!-- <div class="toolbar">
-      <el-input
-        v-model="filterText"
-        placeholder="输入关键字过滤"
-        prefix-icon="Search"
-        clearable
-      />
-      <el-button type="primary" text icon="Refresh" @click="expandAll">
-        全部展开
-      </el-button>
-    </div> -->
+    <div class="toolbar">
+        <span>设备列表</span>
+    </div>
 
     <!-- 树本体 -->
     <el-tree
@@ -22,6 +14,8 @@
       node-key="id"
       highlight-current
       default-expand-all
+      @node-contextmenu="onContextMenu" 
+      @node-click="onNodeClick"
       :expand-on-click-node="false"
     >
       <!-- 自定义节点图标 -->
@@ -35,10 +29,25 @@
       </template>
     </el-tree>
   </div>
+
+      <!-- 右键菜单 -->
+  <div
+v-if="menu.show"
+    class="context-menu"
+    :style="{ width: menu.width + 'px', height: menu.height + 'px', left: menu.left + 'px', top: menu.top + 'px' }"
+    @mouseleave="menu.show = false"
+  >
+    <div class="item" @click="handleCreate('device')" v-if="menu.type === 'device'">
+      数据存储管理
+    </div>
+    <div class="item"  v-if="menu.type === 'storage'">
+        <div class="item" @click="handleCreate('selecttable')">打开表</div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch,reactive  } from 'vue'
 import { ElTree, ElInput, ElButton, ElIcon } from 'element-plus'
 import { Folder, Monitor, Cpu } from '@element-plus/icons-vue'
 import { useConnStore } from '@/stores/conn'
@@ -49,30 +58,52 @@ const filterText = ref('')
 const treeRef = ref(null)
 const connStore = useConnStore()
 /* ===== 树形数据 ===== */
-const treeData = ref([
-  {
-    id: 1,
-    label: '设备列表',
-    icon: Folder,
-    children: [
-      {
-        id: 11,
-        label: 'PLC-A',
-        icon: Cpu,
-        children: [{ id: 111, label: 'plc_data', icon: Monitor }]
-      },
-      { id: 12, label: 'PLC-B', icon: Cpu },
-      { id: 13, label: '其他设备', icon: Monitor }
-    ]
-  }
-])
-
+const treeData = ref(null)
+const emit = defineEmits(['root-selected', 'children-selected'])
 /* ===== 配置项 ===== */
 const defaultProps = {
   children: 'children',
   label: 'label'
 }
 
+
+/* --------------------- 右键菜单 --------------------- */
+// 右键菜单状态
+const menu = reactive({
+show: false,
+left: 0,
+top: 0,
+type: null,
+height:38,
+width:80,
+})
+
+function onNodeClick(data, node) {
+  emit('root-selected', data)
+}
+
+const currentNode = ref(null)
+// 节点右键事件
+function onContextMenu(event, data, node) {
+    console.log('node',node)
+    console.log('data',data)
+    event.preventDefault(); // 阻止默认右键菜单
+    currentNode.value = node;
+    // 使用鼠标事件的实际坐标
+    menu.left = event.clientX;
+    menu.top = event.clientY;
+    menu.show = true;
+    
+    if (data.type === 'device') {
+        menu.type = 'device';
+    } else if (data.type === 'storage') {
+        menu.type = 'storage';
+    } else {
+        menu.type = null;
+        menu.show = false;
+    }
+    // emit('table-selected', data)
+}
 /* ===== 搜索过滤 ===== */
 watch(filterText, val => treeRef.value?.filter(val))
 function filterNode(value, data) {
@@ -90,6 +121,41 @@ onMounted(() => {
   loadData()
 })
 
+const buildTree = (apiData) => {
+  const tree = []
+  apiData.data.forEach(dev => {
+    // 设备节点
+    const deviceNode = {
+      id: `dev_${dev.deviceid}`,
+      label: dev.devicename,
+      type:'device',
+      children: []
+    }
+
+    dev.lsConfig.forEach(cfg => {
+      // 配置节点
+      const cfgNode = {
+        id: `cfg_${cfg.configid}`,
+        // label: `${cfg.configname}（刷新间隔 ${cfg.refreshinterval}s）`,
+        label: `${cfg.configname}`,
+        type:'storage',
+        children: []
+      }
+
+    //   cfg.lsRegisters.forEach(reg => {
+    //     // 寄存器节点
+    //     cfgNode.children.push({
+    //       id: `reg_${reg.registersid}`,
+    //       label: reg.pointname
+    //     })
+    //   })
+
+      deviceNode.children.push(cfgNode)
+    })
+    tree.push(deviceNode)
+  })
+  return tree
+}
 const loadData = async () => {
 
   //todo: 获取连接信息如果失败则把connStore.conn变null
@@ -98,11 +164,11 @@ const loadData = async () => {
   if (!connStore.conn) return
 
   try {
-    const res = await databaseApi.getdevicelist(connStore.conn)
+    const res = await databaseApi.getallconfiginfo(connStore.conn)
     console.log('eqptree:',res)
   // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
     if(res.code === 200) {
-    //   treeData.value = buildTree(dbdata)
+      treeData.value = buildTree(res)
     }else
     {
       
@@ -114,6 +180,8 @@ const loadData = async () => {
   } finally {
   }
 }
+
+
 </script>
 
 <style scoped>
@@ -140,5 +208,32 @@ const loadData = async () => {
 }
 .node-icon {
   color: #409eff;
+}
+
+
+.context-menu {
+position: absolute;
+z-index: 9999;
+}
+
+
+.context-menu .item {
+  cursor: pointer;
+  background: #d12828;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+}
+
+
+.context-menu .item:hover {
+  background-color: #f0f0f0;
+}
+
+.context-menu .item:last-child {
+  border-bottom: none;
 }
 </style>

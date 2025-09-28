@@ -17,6 +17,9 @@
     </div>
 
     <el-divider />
+        <div class="toolbar">
+        <span>数据库</span>
+    </div>
  <div class="tree-wrapper">
   <el-tree :data="treeData"
    default-expand-all
@@ -385,5 +388,10 @@ z-index: 9999;
   height: 400px;          /* 想要多高就写多少 */
   overflow: auto;         /* 超出时出现滚动条 */
   border: 1px solid #dcdfe6; /* 可选，美观 */
+}
+
+.toolbar {
+  display: flex;
+  top:0px;
 }
 </style>
