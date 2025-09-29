@@ -25,15 +25,15 @@
       </el-table-column>
       <el-table-column label="操作" width="220">
         <template #default="{ row }">
-          <el-button
+          <!-- <el-button
             link
             :type="row.status === '运行中' ? 'warning' : 'success'"
             @click="toggleStatus(row)"
           >
             {{ row.status === '运行中' ? '暂停' : '启动' }}
-          </el-button>
+          </el-button> -->
           <el-button link type="primary" @click="openEdit(row)">修改</el-button>
-          <el-popconfirm title="确定删除吗？" @confirm="delRow(row.id)">
+          <el-popconfirm title="确定删除吗？" @confirm="delRow(row)">
             <template #reference>
               <el-button link type="danger">删除</el-button>
             </template>
@@ -91,7 +91,8 @@ import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import { databaseApi } from '@/api/api'
 import { useConnStore } from '@/stores/conn'
-
+import { useTreeStore } from '@/stores/treeStore'
+const treeStore = useTreeStore()
 
 const connStore = useConnStore()
 /* ========== 列表相关 ========== */
@@ -136,7 +137,7 @@ async function getList() {
     // list.value = mock
     // listTotal.value = data.total
   } catch (e) {
-    ElMessage.error('获取列表失败1')
+    ElMessage.error('获取列表失败')
   }
 }
 
@@ -167,11 +168,21 @@ let mock =
    删除一条配置
    DELETE  /api/storage/:id
 ---------------------------------------------------- */
-async function delRow(id) {
+async function delRow(row) {
   try {
-    await axios.delete(`/api/storage/${id}`)
-    ElMessage.success('删除成功')
-    handleOk()
+    console.log('row',row)
+    const parm = { ...connStore.conn, oprationInt: row.configid }
+    const res = await databaseApi.delconfig(parm)
+    if(res.code === 200)
+    {
+        ElMessage.success('删除成功')
+        handleOk()
+        treeStore.triggerRefresh()
+    }else
+    {
+        ElMessage.error(res.message)
+    }
+    
   } catch (e) {
     ElMessage.error('删除失败')
   }
@@ -195,8 +206,9 @@ async function toggleStatus(row) {
 
 /* 新增 / 编辑成功后统一处理：刷新列表、重置分页、刷新日志 */
 function handleOk() {
+    showEdit.value = false
   getList()
-  getLog()
+//   getLog()
 }
 
 /* 查看日志详情（示例） */

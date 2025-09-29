@@ -132,7 +132,14 @@ export const databaseApi = {
   getallconfiginfotj: (parms) => {
     return api.post('/device/getallconfiginfotj', parms)
   }
-  
+  ,
+  execconfig: (parms) => {
+    return api.post('/device/execconfig', parms)
+  }
+  ,
+  delconfig: (parms) => {
+    return api.post('/device/delconfig', parms)
+  }
   
 }
 

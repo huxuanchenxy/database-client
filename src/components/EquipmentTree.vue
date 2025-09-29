@@ -53,6 +53,8 @@ import { Folder, Monitor, Cpu } from '@element-plus/icons-vue'
 import { useConnStore } from '@/stores/conn'
 import { ElMessage,ElMessageBox } from 'element-plus'
 import { databaseApi } from '@/api/api'
+import { useTreeStore } from '@/stores/treeStore'
+const treeStore = useTreeStore()
 /* ===== 响应式变量 ===== */
 const filterText = ref('')
 const treeRef = ref(null)
@@ -181,6 +183,13 @@ const loadData = async () => {
   }
 }
 
+watch(
+  () => treeStore.refreshTrigger,
+  () => {
+    console.log('进设备tree了')
+    loadData() // ✅ 触发刷新
+  }
+)
 
 </script>
 

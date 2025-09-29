@@ -16,6 +16,7 @@
           placeholder="请选择或输入PLC设备"
           style="width: 100%"
           @change="onPlcChange"
+          :disabled="isEdit"
         >
           <el-option
             v-for="item in plcOptions"
@@ -35,7 +36,7 @@
       </el-form-item>
 
       <!-- 数据间隔 -->
-      <el-form-item label="数据间隔" prop="interval">
+      <el-form-item label="数据间隔(s)" prop="interval">
         <el-input type="number"
           v-model="form.interval"
           placeholder="请输入数据间隔（秒）"
@@ -65,12 +66,12 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch,reactive,nextTick  } from 'vue'
+import { onMounted, ref, watch,reactive,nextTick,computed  } from 'vue'
 import { databaseApi } from '@/api/api'
 import { useConnStore } from '@/stores/conn'
 import { ElMessage,ElMessageBox } from 'element-plus'
-
-
+import { useTreeStore } from '@/stores/treeStore'
+const treeStore = useTreeStore()
 const connStore = useConnStore()
 const tableRef = ref(null)  
 const props = defineProps({
@@ -82,10 +83,16 @@ const props = defineProps({
 })
 const formRef = ref(null) // 表单实例
 const form = ref({
+  configid:'',//configid
   plcDevice: '',
   dataStorage: '',
   interval: '',
+  status:null,
   points: []
+})
+
+const isEdit = computed(() => {
+  return !!(props.row && props.row.deviceid)
 })
 
 // 模拟接口返回数据
@@ -100,7 +107,16 @@ const rules = reactive({
   ],
   dataStorage: [
     { required: true, message: '请输入存储名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度 2-50 个字符', trigger: 'blur' }
+    { min: 2, max: 50, message: '长度 2-50 个字符', trigger: 'blur' },
+    // {
+    //   validator: (_, val, cb) => {
+    //     console.log('')
+    //     // const n = Number(val)
+    //     // if (Number.isInteger(n) && n > 0 && n <= 86400) cb()
+    //     // else cb(new Error('请输入 1-86400 的整数秒'))
+    //   },
+    //   trigger: 'blur'
+    // }
   ],
   interval: [
     { required: true, message: '请输入数据间隔', trigger: 'blur' },
@@ -124,10 +140,13 @@ const rules = reactive({
 
 
 const initForm = (row) => {
+  // console.log('row',row)
   // 根据 row 回显表单
+  form.value.configid = row.configid
   form.value.plcDevice = { id: row.deviceid, device_name: row.devicename }
   form.value.dataStorage = row.configname   // 或 row.configname 看你绑定的 value
   form.value.interval = row.refreshinterval
+  form.value.status = row.status
   fetchPoints(row.deviceid)
   // 测点回显
   // checkByConfig(row.configid)
@@ -202,10 +221,10 @@ const checkByConfig = (configid) => {
   // console.log('form.value.plcDevice',form.value.plcDevice)
   
   const plc = treeData.value.find(p => p.deviceid === form.value.plcDevice?.id)
-  console.log('plc',plc)
+  // console.log('plc',plc)
   const cfg = plc?.lsConfig.find(c => c.configid === configid)
   const regIds = cfg?.lsRegisters.map(r => r.registersid) ?? []
-  console.log('regIds',regIds)
+  // console.log('regIds',regIds)
   // 2. 遍历表格数据，勾选匹配行
   nextTick(() => {
     pointOptions.value.forEach(row => {
@@ -234,7 +253,7 @@ const fetchStorageOptions = async () => {
 }
 const fetchPoints = async (deviceid) => {
   try {
-    const parm = { ...connStore.conn, oprationString: deviceid }
+    const parm = { ...connStore.conn, oprationString: String(deviceid) }
     const res = await databaseApi.getregisterbydeviceid(parm)
     if (res.code === 200) {
       // 1. 先赋值
@@ -260,6 +279,30 @@ const fetchPoints = async (deviceid) => {
 const handleConfirm = async () => {
   try {
     await formRef.value.validate()
+// console.log('form.points：', form.points)
+    const ids = form.value.points.map(p => p.registerid)
+  //  console.log('已选 id：', ids)
+    let modbusexectree ={
+                "id":isEdit.value ? form.value.configid: 0,
+                "name":form.value.dataStorage,
+                "deviceid":form.value.plcDevice.id,
+                "refreshinterval":form.value.interval,
+                "status":1,
+                "lsRegistersconfig":ids
+		}
+    const parm = { ...connStore.conn, modbusexectree: modbusexectree }
+    const res = await databaseApi.execconfig(parm)
+    if(res.code ===200)
+    {
+      ElMessage.success('提交成功')
+      // visible.value = false
+      emit('refresh')          // ← 通知父组件刷新
+      emit('update:visible', false) // ← 关闭弹窗
+      treeStore.triggerRefresh()
+    }else
+    {
+      ElMessage.error(res.message)
+    }
     emit('confirm', { ...form.value })
     emit('update:visible', false)
   } catch {
@@ -271,7 +314,7 @@ const handleConfirm = async () => {
 const loadData = () => {
     fetchPlcDevices()
     fetchStorageOptions()
-    fetchPoints()
+    // fetchPoints()
 }
 
 onMounted(() => {
