@@ -143,8 +143,12 @@ export const databaseApi = {
     ,
   deldevice: (parms) => {
     return api.post('/device/deldevice', parms)
+  },
+  //设备新增修改接口
+  execdevice: (parms) => {
+    return api.post('/device/execdevice', parms)
   }
-
+ 
   
 }
 

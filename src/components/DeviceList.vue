@@ -6,7 +6,7 @@
         <el-button type="primary" @click="openAdd">新增设备</el-button>
       </div>
     </template>
-
+<div class="table-wrapper">
     <el-table :data="deviceList" stripe style="width: 100%">
       <el-table-column prop="id" label="序号" width="60" />
       <el-table-column prop="device_name" label="设备名称" />
@@ -19,6 +19,9 @@
       <el-table-column prop="data_bits" label="数据位" />
       <el-table-column prop="stop_bits" label="停止位" />
       <el-table-column prop="parity" label="校验位" />
+<el-table-column prop="timeout_m" label="超时" />
+<el-table-column prop="retry_count" label="重试次数" />
+<el-table-column prop="is_active" label="是否激活" />
       <el-table-column prop="created_at" label="创建时间" />
       <el-table-column prop="updated_at" label="最后通信时间" />
       <el-table-column label="状态" width="120">
@@ -46,6 +49,8 @@
         </template>
       </el-table-column>
     </el-table>
+
+</div>
   </el-card>
 
   <!-- 新增/编辑弹窗 -->
@@ -98,18 +103,17 @@ async function delDevice(id) {
   // ElMessage.success('删除成功')
   console.log('id',id)
     try {
-    console.log('row',row)
-    const parm = { ...connStore.conn, oprationInt: row.configid }
-    const res = await databaseApi.deldevice(parm)
-    if(res.code === 200)
-    {
-        ElMessage.success('删除成功')
-        handleOk()
-        treeStore.triggerRefresh()
-    }else
-    {
-        ElMessage.error(res.message)
-    }
+    // const parm = { ...connStore.conn, oprationInt: row.configid }
+    // const res = await databaseApi.deldevice(parm)
+    // if(res.code === 200)
+    // {
+    //     ElMessage.success('删除成功')
+    //     handleOk()
+    //     treeStore.triggerRefresh()
+    // }else
+    // {
+    //     ElMessage.error(res.message)
+    // }
     
   } catch (e) {
     ElMessage.error('删除失败')
@@ -146,5 +150,10 @@ const btnMap = {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow: auto;   /* 窗口缩小时出现滚动条 */
 }
 </style>

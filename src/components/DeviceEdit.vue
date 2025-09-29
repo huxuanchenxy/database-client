@@ -3,7 +3,7 @@
   <el-dialog
     v-model="visible"
     :title="isAdd ? '新增设备' : '编辑设备'"
-    width="500px"
+    width="560px"
     @close="handleClose"
   >
     <el-form
@@ -12,6 +12,7 @@
       :rules="dynamicRules"
       label-width="110px"
     >
+      <!-- 基础公共字段 -->
       <el-form-item label="设备名称" prop="device_name">
         <el-input v-model="form.device_name" placeholder="请输入设备名称" />
       </el-form-item>
@@ -22,6 +23,33 @@
           <el-option label="MODBUS_RTU" value="MODBUS_RTU" />
         </el-select>
       </el-form-item>
+
+
+      <el-form-item label="超时时间(ms)" prop="timeout_ms">
+        <el-input-number
+          v-model="form.timeout_ms"
+          :min="100"
+          :max="60000"
+          step="100"
+          controls-position="right"
+          style="width: 100%"
+        />
+      </el-form-item>
+
+      <el-form-item label="重试次数" prop="retry_count">
+        <el-input-number
+          v-model="form.retry_count"
+          :min="0"
+          :max="10"
+          controls-position="right"
+          style="width: 100%"
+        />
+      </el-form-item>
+
+      <el-form-item label="启用状态" prop="is_active">
+        <el-switch v-model="form.is_active" active-text="启用" inactive-text="禁用" />
+      </el-form-item>
+
 
       <!-- TCP 字段组 -->
       <template v-if="form.protocol_type === 'MODBUS_TCP'">
@@ -99,12 +127,14 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-// import { addDevice, updateDevice } from '@/api/device' // 换成你的接口
 import { databaseApi } from '@/api/api'
-
+import { useConnStore } from '@/stores/conn'
+import { useTreeStore } from '@/stores/treeStore'
+const treeStore = useTreeStore()
+const connStore = useConnStore()
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  row: { type: Object, default: () => null } // null=新增
+  row: { type: Object, default: () => null }
 })
 const emit = defineEmits(['update:modelValue', 'refresh'])
 
@@ -127,63 +157,54 @@ const defaultForm = () => ({
   baud_rate: 9600,
   data_bits: 8,
   stop_bits: 1,
-  parity: 'N'
+  parity: 'N',
+  /* 新增公共字段 */
+  timeout_ms: 1500,
+  retry_count: 3,
+  is_active: true
 })
 const form = ref(defaultForm())
-
 const isAdd = computed(() => !props.row)
 
 watch(
   () => props.modelValue,
   val => {
     if (val) {
-      // 打开时重置表单
       nextTick(() => formRef.value?.clearValidate())
-      form.value = props.row ? { ...props.row } : defaultForm()
+      form.value = props.row ? { ...defaultForm(), ...props.row } : defaultForm()
     }
   }
 )
 
 /* 动态校验规则 */
 const createRules = () => ({
-  device_name: [
-    { required: true, message: '请输入设备名称', trigger: 'blur' }
-  ],
-  protocol_type: [
-    { required: true, message: '请选择协议类型', trigger: 'change' }
-  ],
-  slave_id: [
-    { required: true, type: 'number', message: '请输入从站地址', trigger: 'blur' }
-  ],
+  device_name: [{ required: true, message: '请输入设备名称', trigger: 'blur' }],
+  protocol_type: [{ required: true, message: '请选择协议类型', trigger: 'change' }],
+  slave_id: [{ required: true, type: 'number', message: '请输入从站地址', trigger: 'blur' }],
   ip_address: [
     { required: true, message: '请输入IP地址', trigger: 'blur' },
-    { pattern: /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/, message: 'IP格式错误', trigger: 'blur' }
+    { pattern: /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.\d{1,2}|1\d\d|2[0-4]\d|25[0-5]){3}$/, message: 'IP格式错误', trigger: 'blur' }
   ],
-  tcp_port: [
-    { required: true, type: 'number', min: 1, max: 65535, message: '端口范围 1-65535', trigger: 'blur' }
-  ],
-  serial_port: [
-    { required: true, message: '请输入串口号', trigger: 'blur' }
-  ],
-  baud_rate: [
-    { required: true, type: 'number', message: '请选择波特率', trigger: 'change' }
-  ],
-  data_bits: [
-    { required: true, type: 'number', message: '请选择数据位', trigger: 'change' }
-  ],
-  stop_bits: [
-    { required: true, type: 'number', message: '请选择停止位', trigger: 'change' }
-  ],
-  parity: [
-    { required: true, message: '请选择校验位', trigger: 'change' }
-  ]
+  tcp_port: [{ required: true, type: 'number', min: 1, max: 65535, message: '端口范围 1-65535', trigger: 'blur' }],
+  serial_port: [{ required: true, message: '请输入串口号', trigger: 'blur' }],
+  baud_rate: [{ required: true, type: 'number', message: '请选择波特率', trigger: 'change' }],
+  data_bits: [{ required: true, type: 'number', message: '请选择数据位', trigger: 'change' }],
+  stop_bits: [{ required: true, type: 'number', message: '请选择停止位', trigger: 'change' }],
+  parity: [{ required: true, message: '请选择校验位', trigger: 'change' }],
+  /* 新增公共字段校验 */
+  timeout_ms: [{ required: true, type: 'number', min: 100, max: 60000, message: '超时范围 100-60000 ms', trigger: 'blur' }],
+  retry_count: [{ required: true, type: 'number', min: 0, max: 10, message: '重试范围 0-10', trigger: 'blur' }],
+  is_active: [{ required: true, type: 'boolean', trigger: 'change' }]
 })
 const allRules = ref(createRules())
 
 const dynamicRules = computed(() => {
   const base = {
     device_name: allRules.value.device_name,
-    protocol_type: allRules.value.protocol_type
+    protocol_type: allRules.value.protocol_type,
+    timeout_ms: allRules.value.timeout_ms,
+    retry_count: allRules.value.retry_count,
+    is_active: allRules.value.is_active
   }
   if (form.value.protocol_type === 'MODBUS_TCP') {
     Object.assign(base, {
@@ -204,7 +225,6 @@ const dynamicRules = computed(() => {
 })
 
 function onProtocolChange () {
-  // 切换协议时清空专属字段的校验
   nextTick(() => formRef.value?.clearValidate())
 }
 
@@ -214,11 +234,38 @@ async function handleSubmit () {
   await formRef.value.validate()
   submitLoading.value = true
   try {
-    const api = isAdd.value ? addDevice : updateDevice
-    await api(form.value)
-    ElMessage.success(isAdd.value ? '新增成功' : '修改成功')
-    handleClose()
-    emit('refresh') // 通知父组件刷新列表
+    // const api = isAdd.value ? addDevice : updateDevice
+    // await api(form.value)
+
+     let devices = {
+    "id": 0,
+    "device_name": "控制器Ab",
+    "protocol_type": "MODBUS_TCP",
+    "slave_id": 2,
+    "ip_address": "192.168.3.1",
+    "tcp_port": 5020,
+    "serial_port": "",
+    "baud_rate": 115200,
+    "data_bits": 8,
+    "stop_bits": 1,
+    "parity": "N",
+    "timeout_ms": 1500,
+    "retry_count": 3,
+    "is_active": true
+  }
+    const parm = { ...connStore.conn, devices: devices }
+    const res = await databaseApi.execdevice(parm)
+    if(res.code === 200)
+    {
+      ElMessage.success(isAdd.value ? '新增成功' : '修改成功')
+      handleClose()
+      emit('refresh')
+      treeStore.triggerRefresh()
+    }else
+    {
+      ElMessage.error(res.message)
+    }
+    
   } finally {
     submitLoading.value = false
   }
