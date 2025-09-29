@@ -9,7 +9,7 @@
 
     <!-- ================= 主列表 ================= -->
     <el-table :data="list" stripe style="width: 100%">
-      <!-- <el-table-column prop="id" label="序号" width="60" /> -->
+      <el-table-column type="index" width="55" label="序号" />
       <el-table-column prop="devicename" label="设备名称" />
       <el-table-column prop="configname" label="存储数据表" />
       <el-table-column prop="ratio" label="数据点" />
