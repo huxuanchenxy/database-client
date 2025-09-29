@@ -10,15 +10,16 @@
     <!-- ================= 主列表 ================= -->
     <el-table :data="list" stripe style="width: 100%">
       <!-- <el-table-column prop="id" label="序号" width="60" /> -->
-      <el-table-column prop="device_name" label="设备名称" />
+      <el-table-column prop="devicename" label="设备名称" />
       <el-table-column prop="configname" label="存储数据表" />
-      <el-table-column prop="point" label="数据点" />
-      <el-table-column prop="interval" label="存储间隔" />
-      <el-table-column prop="lastTime" label="最后执行时间" />
+      <el-table-column prop="ratio" label="数据点" />
+      <el-table-column prop="refreshinterval" label="存储间隔(s)" />
+      <el-table-column prop="created_at" label="开始时间" />
+      <el-table-column prop="updated_at" label="最后执行时间" />
       <el-table-column label="状态" width="90">
         <template #default="{ row }">
-          <el-tag :type="row.status === '运行中' ? 'success' : 'warning'">
-            {{ row.status }}
+          <el-tag :type="statusMap[row.status].type">
+            {{ statusMap[row.status].text }}
           </el-tag>
         </template>
       </el-table-column>
@@ -107,6 +108,12 @@ const logQuery = ref({ page: 1, limit: 2 })
 const showEdit = ref(false)
 const currentRow = ref(null)
 
+
+const statusMap = {
+  1: { type: 'success',  text: '已启动' },
+  0: { type: 'info',  text: '未启动' },
+}
+
 /* ----------------------------------------------------
    调接口取列表数据
    GET  /api/storage/list
@@ -116,7 +123,7 @@ const currentRow = ref(null)
 async function getList() {
   try {
     // const { data } = await axios.get('/api/storage/list', { params: listQuery.value })
-    const res = await databaseApi.getallconfiginfolist(connStore.conn)
+    const res = await databaseApi.getallconfiginfotj(connStore.conn)
     // console.log('list:',res)
     if(res.code === 200)
     {

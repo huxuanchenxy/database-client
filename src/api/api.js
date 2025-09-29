@@ -100,6 +100,12 @@ export const databaseApi = {
   getallconfiginfolist: (parms) => {
     return api.post('/device/getallconfiginfolist', parms)
   }
+  //数据存储管理带统计
+  ,
+  getallconfiginfotj: (parms) => {
+    return api.post('/device/getallconfiginfotj', parms)
+  }
+  
   
 }
 
