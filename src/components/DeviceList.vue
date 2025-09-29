@@ -11,14 +11,14 @@
       <el-table-column prop="id" label="序号" width="60" />
       <el-table-column prop="device_name" label="设备名称" />
       <el-table-column prop="protocol_type" label="协议" />
-      <el-table-column prop="slave_id" label="slave_id" />
+      <el-table-column prop="slave_id" label="从站地址" />
       <el-table-column prop="ip_address" label="IP地址" />
       <el-table-column prop="tcp_port" label="端口" width="80" />
-<el-table-column prop="serial_port" label="serial_port" />  
-      <el-table-column prop="baud_rate" label="baud_rate" />
-      <el-table-column prop="data_bits" label="data_bits" />
-      <el-table-column prop="stop_bits" label="stop_bits" />
-      <el-table-column prop="parity" label="parity" />
+      <el-table-column prop="serial_port" label="串口号" />  
+      <el-table-column prop="baud_rate" label="波特率" />
+      <el-table-column prop="data_bits" label="数据位" />
+      <el-table-column prop="stop_bits" label="停止位" />
+      <el-table-column prop="parity" label="校验位" />
       <el-table-column prop="created_at" label="创建时间" />
       <el-table-column prop="updated_at" label="最后通信时间" />
       <el-table-column label="状态" width="120">
