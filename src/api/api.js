@@ -140,6 +140,11 @@ export const databaseApi = {
   delconfig: (parms) => {
     return api.post('/device/delconfig', parms)
   }
+    ,
+  deldevice: (parms) => {
+    return api.post('/device/deldevice', parms)
+  }
+
   
 }
 

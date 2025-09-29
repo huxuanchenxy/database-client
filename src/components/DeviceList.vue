@@ -10,8 +10,15 @@
     <el-table :data="deviceList" stripe style="width: 100%">
       <el-table-column prop="id" label="序号" width="60" />
       <el-table-column prop="device_name" label="设备名称" />
+      <el-table-column prop="protocol_type" label="协议" />
+      <el-table-column prop="slave_id" label="slave_id" />
       <el-table-column prop="ip_address" label="IP地址" />
       <el-table-column prop="tcp_port" label="端口" width="80" />
+<el-table-column prop="serial_port" label="serial_port" />  
+      <el-table-column prop="baud_rate" label="baud_rate" />
+      <el-table-column prop="data_bits" label="data_bits" />
+      <el-table-column prop="stop_bits" label="stop_bits" />
+      <el-table-column prop="parity" label="parity" />
       <el-table-column prop="created_at" label="创建时间" />
       <el-table-column prop="updated_at" label="最后通信时间" />
       <el-table-column label="状态" width="120">
@@ -55,6 +62,8 @@ import DeviceEdit from './DeviceEdit.vue'
 import { ElMessage } from 'element-plus'
 import { databaseApi } from '@/api/api.js'
 import { useConnStore } from '@/stores/conn'
+import { useTreeStore } from '@/stores/treeStore'
+const treeStore = useTreeStore()
 const connStore = useConnStore()
 const deviceList = ref([])
 const showEdit = ref(false)
@@ -79,9 +88,32 @@ function openEdit(row) {
   currentRow.value = row
   showEdit.value = true
 }
-function delDevice(id) {
-  deviceList.value = deviceList.value.filter(item => item.id !== id)
-  ElMessage.success('删除成功')
+
+function handleOk() {
+  loadList()
+}
+
+async function delDevice(id) {
+  // deviceList.value = deviceList.value.filter(item => item.id !== id)
+  // ElMessage.success('删除成功')
+  console.log('id',id)
+    try {
+    console.log('row',row)
+    const parm = { ...connStore.conn, oprationInt: row.configid }
+    const res = await databaseApi.deldevice(parm)
+    if(res.code === 200)
+    {
+        ElMessage.success('删除成功')
+        handleOk()
+        treeStore.triggerRefresh()
+    }else
+    {
+        ElMessage.error(res.message)
+    }
+    
+  } catch (e) {
+    ElMessage.error('删除失败')
+  }
 }
 function toggleConnect(row) {
   row.status = row.status === '已连接' ? '已断开' : '已连接'
