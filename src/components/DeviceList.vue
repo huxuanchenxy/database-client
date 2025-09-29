@@ -101,19 +101,19 @@ function handleOk() {
 async function delDevice(id) {
   // deviceList.value = deviceList.value.filter(item => item.id !== id)
   // ElMessage.success('删除成功')
-  console.log('id',id)
+  // console.log('id',id)
     try {
-    // const parm = { ...connStore.conn, oprationInt: row.configid }
-    // const res = await databaseApi.deldevice(parm)
-    // if(res.code === 200)
-    // {
-    //     ElMessage.success('删除成功')
-    //     handleOk()
-    //     treeStore.triggerRefresh()
-    // }else
-    // {
-    //     ElMessage.error(res.message)
-    // }
+    const parm = { ...connStore.conn, oprationInt: id }
+    const res = await databaseApi.deldevice(parm)
+    if(res.code === 200)
+    {
+        ElMessage.success('删除成功')
+        handleOk()
+        treeStore.triggerRefresh()
+    }else
+    {
+        ElMessage.error(res.message)
+    }
     
   } catch (e) {
     ElMessage.error('删除失败')
