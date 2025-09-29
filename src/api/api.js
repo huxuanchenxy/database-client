@@ -1,5 +1,5 @@
 import axios from 'axios'
-
+import { ElLoading, ElMessage } from 'element-plus'
 // 创建axios实例
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -9,13 +9,38 @@ const api = axios.create({
   }
 })
 
+/* ------------ 全局 loading 逻辑 ------------ */
+let loadingInstance = null
+let requestCount = 0
+
+function openLoading() {
+  if (requestCount === 0) {
+    loadingInstance = ElLoading.service({
+      lock: true,
+      text: '加载中…',
+      background: 'rgba(0,0,0,0.5)'
+    })
+  }
+  requestCount++
+}
+
+function closeLoading() {
+  requestCount--
+  if (requestCount <= 0) {
+    requestCount = 0
+    loadingInstance?.close()
+    loadingInstance = null
+  }
+}
+
 // 请求拦截器
 api.interceptors.request.use(
   config => {
-    // console.log('发送请求:', config)
+    openLoading()
     return config
   },
   error => {
+    closeLoading()
     return Promise.reject(error)
   }
 )
@@ -23,9 +48,11 @@ api.interceptors.request.use(
 // 响应拦截器
 api.interceptors.response.use(
   response => {
+    closeLoading()
     return response.data
   },
   error => {
+    closeLoading()
     console.error('API错误:', error,import.meta.env.VITE_API_BASE_URL)
     return Promise.reject(error)
   }
