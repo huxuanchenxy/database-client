@@ -85,7 +85,7 @@ export const databaseApi = {
   getdevicelist: (parms) => {
     return api.post('/device/getdevicelist', parms)
   }
-  //获取所有配置信息
+  //获取所有配置信息,树结构
     ,
   getallconfiginfo: (parms) => {
     return api.post('/device/getallconfiginfo', parms)
@@ -95,7 +95,12 @@ export const databaseApi = {
   getregisterbydeviceid: (parms) => {
     return api.post('/device/getregisterbydeviceid', parms)
   }
-
+  //数据存储管理
+        ,
+  getallconfiginfolist: (parms) => {
+    return api.post('/device/getallconfiginfolist', parms)
+  }
+  
 }
 
 export default api

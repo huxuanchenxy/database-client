@@ -1,86 +1,280 @@
 <template>
   <el-dialog
-    :title="isAdd ? '新增配置' : '修改配置'"
-    v-model="visible"
-    width="460px"
-    @closed="reset"
+    title="存储配置"
+    width="600px"
+    :model-value="visible"
+    @update:model-value="val => $emit('update:visible', val)"
   >
-    <el-form ref="formRef" :model="form" label-width="100px">
-      <el-form-item label="选择PLC设备" prop="deviceName">
-        <el-select v-model="form.deviceName" placeholder="请选择">
-          <el-option label="PLC-A" value="PLC-A" />
-          <el-option label="PLC-B" value="PLC-B" />
+    <el-form ref="formRef" :rules="rules" :model="form" label-width="100px">
+      <!-- PLC 设备 -->
+      <el-form-item label="PLC设备" prop="plcDevice">
+        <el-select
+          v-model="form.plcDevice"
+          filterable
+          allow-create
+          value-key="id"
+          placeholder="请选择或输入PLC设备"
+          style="width: 100%"
+          @change="onPlcChange"
+        >
+          <el-option
+            v-for="item in plcOptions"
+              :key="item.id"
+              :label="item.device_name"
+              :value="item"
+          />
         </el-select>
       </el-form-item>
 
-      <el-form-item label="数据表" prop="table">
-        <el-input v-model="form.table" placeholder="如 plc_data" />
-      </el-form-item>
-
-      <el-form-item label="存储间隔" prop="interval">
-        <el-input v-model="form.interval" placeholder="如 1秒 / 自动" />
-      </el-form-item>
-
-      <el-form-item label="数据点选择" prop="point">
+      <!-- 数据存储 -->
+      <el-form-item label="数据存储" prop="dataStorage">
         <el-input
-          v-model="form.point"
-          placeholder="如 24/30 或 自动"
+          v-model="form.dataStorage"
+          placeholder="请输入数据存储名"
         />
+      </el-form-item>
+
+      <!-- 数据间隔 -->
+      <el-form-item label="数据间隔" prop="interval">
+        <el-input type="number"
+          v-model="form.interval"
+          placeholder="请输入数据间隔（秒）"
+        />
+      </el-form-item>
+
+      <!-- 测点选择 -->
+      <el-form-item label="测点选择" prop="points">
+          <el-table
+            ref="tableRef"
+            :data="pointOptions"
+            row-key="registerid"
+            @selection-change="val => form.points = val"
+          >
+            <el-table-column type="selection" width="55" />
+            <el-table-column prop="point_name" label="测点名称" />
+            <el-table-column prop="remark" label="备注" />
+          </el-table>
       </el-form-item>
     </el-form>
 
     <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="submit">保存配置</el-button>
+      <el-button @click="$emit('update:visible', false)">取消</el-button>
+      <el-button type="primary" @click="handleConfirm">确定</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup>
-import { ref, watch, computed, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import { onMounted, ref, watch,reactive,nextTick  } from 'vue'
+import { databaseApi } from '@/api/api'
+import { useConnStore } from '@/stores/conn'
+import { ElMessage,ElMessageBox } from 'element-plus'
 
+
+const connStore = useConnStore()
+const tableRef = ref(null)  
 const props = defineProps({
-  modelValue: Boolean,
-  row: Object
+  visible: Boolean,
+  row: {          // 这里叫 row，对应 :row="currentRow"
+    type: Object,
+    default: () => ({})
+  }
 })
-const emit = defineEmits(['update:modelValue', 'refresh'])
-
-const visible = ref(false)
-const formRef = ref(null)
+const formRef = ref(null) // 表单实例
 const form = ref({
-  deviceName: '',
-  table: '',
+  plcDevice: '',
+  dataStorage: '',
   interval: '',
-  point: ''
+  points: []
 })
 
-const isAdd = computed(() => !props.row)
+// 模拟接口返回数据
+const plcOptions = ref([])
+const treeData = ref([])
+const pointOptions = ref([])
 
-watch(() => props.modelValue, val => {
-  visible.value = val
-  if (val) nextTick(() => fillForm())
+/* 校验规则 */
+const rules = reactive({
+  plcDevice: [
+    { required: true, message: '请选择 PLC 设备', trigger: 'change' }
+  ],
+  dataStorage: [
+    { required: true, message: '请输入存储名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度 2-50 个字符', trigger: 'blur' }
+  ],
+  interval: [
+    { required: true, message: '请输入数据间隔', trigger: 'blur' },
+    {
+      validator: (_, val, cb) => {
+        const n = Number(val)
+        if (Number.isInteger(n) && n > 0 && n <= 86400) cb()
+        else cb(new Error('请输入 1-86400 的整数秒'))
+      },
+      trigger: 'blur'
+    }
+  ],
+  points: [
+    {
+      validator: (_, val, cb) =>
+        val && val.length > 0 ? cb() : cb(new Error('至少选择一个测点')),
+      trigger: 'change'
+    }
+  ]
 })
-watch(visible, val => emit('update:modelValue', val))
 
-function fillForm() {
-  if (props.row) {
-    form.value = { ...props.row }
-  } else {
-    reset()
+
+const initForm = (row) => {
+  // 根据 row 回显表单
+  form.value.plcDevice = { id: row.deviceid, device_name: row.devicename }
+  form.value.dataStorage = row.configname   // 或 row.configname 看你绑定的 value
+  form.value.interval = row.refreshinterval
+  fetchPoints(row.deviceid)
+  // 测点回显
+  // checkByConfig(row.configid)
+}
+
+const initAdd = () => {
+  // 根据 row 回显表单
+  form.value.plcDevice = { }
+  form.value.dataStorage = ''   // 或 row.configname 看你绑定的 value
+  form.value.interval = ''
+  pointOptions.value = []
+}
+
+watch(() => props.row, (newVal) => {
+  // console.log('子组件收到', newVal)
+  initAdd()
+  if (!newVal) return          // 新增时 newVal 为 null
+  // 下面做回显逻辑
+  initForm(newVal)
+}, { immediate: true })  
+
+// watch(() => props.visible, (val) => {
+//   if (val) {
+//     // 无论新增/编辑，先清一次
+//     formRef.value.resetFields()
+//     nextTick(() => tableRef.value.clearSelection())
+//     // 如果是编辑再回显
+//     if (props.row?.deviceid) initForm(props.row)
+//   }
+// }, { immediate: true })
+
+
+// 随便用
+// console.log('子组件收到', props.row)
+
+const emit = defineEmits(['update:visible', 'confirm'])
+
+
+
+
+
+
+const fetchPlcDevices = async () => {
+  try {
+    const res = await databaseApi.getdevicelist(connStore.conn)
+    if (res.code === 200 && Array.isArray(res.data)) {
+      plcOptions.value = res.data.map(item => ({
+        id: item.id,
+        device_name: item.device_name
+      }))
+    }else
+    {
+      ElMessage.error(res.message)
+    }
+  } catch (e) {
+    ElMessage.error('PLC设备列表加载失败')
   }
 }
-function reset() {
-  form.value = { deviceName: '', table: '', interval: '', point: '' }
+
+
+/* PLC 选中事件 */
+const onPlcChange = (val) => {
+  form.value.dataStorage = '' // 清空旧选中
+  fetchPoints(val.id)
 }
-function submit() {
-  if (!form.value.deviceName || !form.value.table) {
-    ElMessage.warning('请完整填写')
-    return
+
+
+//看已经勾选了哪些测点
+const checkByConfig = (configid) => {
+  // 1. 找到 configid = 1 的寄存器列表
+  // console.log('treeedata',treeData.value)
+  // console.log('form.value.plcDevice',form.value.plcDevice)
+  
+  const plc = treeData.value.find(p => p.deviceid === form.value.plcDevice?.id)
+  console.log('plc',plc)
+  const cfg = plc?.lsConfig.find(c => c.configid === configid)
+  const regIds = cfg?.lsRegisters.map(r => r.registersid) ?? []
+  console.log('regIds',regIds)
+  // 2. 遍历表格数据，勾选匹配行
+  nextTick(() => {
+    pointOptions.value.forEach(row => {
+      const checked = regIds.includes(row.registerid)
+      tableRef.value.toggleRowSelection(row, checked)
+    })
+  })
+}
+
+
+const fetchStorageOptions = async () => {
+  try {
+    const res = await databaseApi.getallconfiginfo(connStore.conn)
+    if(res.code === 200)
+    {
+      treeData.value = res.data
+    }else
+    {
+
+    }
+  }catch
+  {
+
   }
-  // TODO: 调接口保存
-  ElMessage.success(isAdd.value ? '新增成功' : '修改成功')
-  emit('refresh')
-  visible.value = false
+  // storageOptions.push(...res)
 }
+const fetchPoints = async (deviceid) => {
+  try {
+    const parm = { ...connStore.conn, oprationString: deviceid }
+    const res = await databaseApi.getregisterbydeviceid(parm)
+    if (res.code === 200) {
+      // 1. 先赋值
+      pointOptions.value = res.data.data.map(item => ({
+        ...item,
+        remark: '注释'
+      }))
+
+      // // 2. 等 DOM 更新完再回显勾选
+      // await nextTick()
+      // // 如果仍不行，再补一层 nextTick
+      // await nextTick()
+
+      // 3. 现在勾选才生效
+      if (props.row?.configid) {
+        checkByConfig(props.row.configid)
+      }
+    }
+  } catch {
+    ElMessage.error('加载测点失败')
+  }
+}
+const handleConfirm = async () => {
+  try {
+    await formRef.value.validate()
+    emit('confirm', { ...form.value })
+    emit('update:visible', false)
+  } catch {
+    ElMessage.warning('请正确填写表单')
+  }
+}
+
+
+const loadData = () => {
+    fetchPlcDevices()
+    fetchStorageOptions()
+    fetchPoints()
+}
+
+onMounted(() => {
+  loadData()
+})
 </script>

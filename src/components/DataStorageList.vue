@@ -9,9 +9,9 @@
 
     <!-- ================= 主列表 ================= -->
     <el-table :data="list" stripe style="width: 100%">
-      <el-table-column prop="id" label="序号" width="60" />
-      <el-table-column prop="deviceName" label="设备名称" />
-      <el-table-column prop="table" label="存储数据表" />
+      <!-- <el-table-column prop="id" label="序号" width="60" /> -->
+      <el-table-column prop="device_name" label="设备名称" />
+      <el-table-column prop="configname" label="存储数据表" />
       <el-table-column prop="point" label="数据点" />
       <el-table-column prop="interval" label="存储间隔" />
       <el-table-column prop="lastTime" label="最后执行时间" />
@@ -91,6 +91,7 @@ import axios from 'axios'
 import { databaseApi } from '@/api/api'
 import { useConnStore } from '@/stores/conn'
 
+
 const connStore = useConnStore()
 /* ========== 列表相关 ========== */
 const list = ref([])
@@ -115,8 +116,15 @@ const currentRow = ref(null)
 async function getList() {
   try {
     // const { data } = await axios.get('/api/storage/list', { params: listQuery.value })
-    const res = await databaseApi.getallconfiginfo(connStore.conn)
-    console.log('list:',res)
+    const res = await databaseApi.getallconfiginfolist(connStore.conn)
+    // console.log('list:',res)
+    if(res.code === 200)
+    {
+        list.value = res.data
+    }else
+    {
+        ElMessage.error(res.message)
+    }
     // list.value = data.list
     // list.value = mock
     // listTotal.value = data.total

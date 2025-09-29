@@ -85,8 +85,8 @@ function onNodeClick(data, node) {
 const currentNode = ref(null)
 // 节点右键事件
 function onContextMenu(event, data, node) {
-    console.log('node',node)
-    console.log('data',data)
+    // console.log('node',node)
+    // console.log('data',data)
     event.preventDefault(); // 阻止默认右键菜单
     currentNode.value = node;
     // 使用鼠标事件的实际坐标
@@ -165,7 +165,7 @@ const loadData = async () => {
 
   try {
     const res = await databaseApi.getallconfiginfo(connStore.conn)
-    console.log('eqptree:',res)
+    // console.log('eqptree:',res)
   // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
     if(res.code === 200) {
       treeData.value = buildTree(res)
