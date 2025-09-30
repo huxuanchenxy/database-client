@@ -37,7 +37,7 @@ v-if="menu.show"
     :style="{ width: menu.width + 'px', height: menu.height + 'px', left: menu.left + 'px', top: menu.top + 'px' }"
     @mouseleave="menu.show = false"
   >
-    <div class="item" @click="handleCreate('device')" v-if="menu.type === 'device'">
+    <div class="item" @click="handleCreate('device')" v-if="menu.type === 'device11'">
       数据存储管理
     </div>
     <div class="item"  v-if="menu.type === 'storage'">
@@ -183,6 +183,13 @@ const loadData = async () => {
   }
 }
 
+
+function handleCreate(type) {
+  menu.show = false
+  if (type === 'selecttable') {
+    console.log('打开横向点位表')
+  }
+}
 watch(
   () => treeStore.refreshTrigger,
   () => {
@@ -228,7 +235,7 @@ z-index: 9999;
 
 .context-menu .item {
   cursor: pointer;
-  background: #d12828;
+  background: #faf9f9;
   font-size: 14px;
   color: #333;
   border-bottom: 1px solid #eee;
