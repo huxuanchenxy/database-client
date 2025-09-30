@@ -4,7 +4,7 @@
     title="动态数据列表"
     :model-value="visible"
     width="90%"
-    height="99%"
+    :style="{ height: '75vh' }"
     top="5vh"
     :close-on-click-modal="false"
     @closed="handleClosed"
@@ -24,7 +24,7 @@
       stripe
       highlight-hover-row
       auto-resize
-      style="height:calc(100vh - 400px);"
+      style="height:500px;"
       size="mini"
       :data="tableData"
       :columns="dynamicColumns"
@@ -65,7 +65,7 @@ const dynamicColumns = ref([])     // 动态列
 const pager = reactive({
   total: 0,
   currentPage: 1,
-  pageSize: 20,
+  pageSize: 10,
   pageSizes: [10, 20, 50, 100],
   layouts: ['Sizes', 'PrevJump', 'PrevPage', 'Number', 'NextPage', 'NextJump', 'FullJump', 'Total']
 })
