@@ -44,6 +44,8 @@ v-if="menu.show"
         <div class="item" @click="handleCreate('selecttable')">打开表</div>
     </div>
   </div>
+
+   <DataGridDialog v-model:visible="datashow" />
 </template>
 
 <script setup>
@@ -54,6 +56,9 @@ import { useConnStore } from '@/stores/conn'
 import { ElMessage,ElMessageBox } from 'element-plus'
 import { databaseApi } from '@/api/api'
 import { useTreeStore } from '@/stores/treeStore'
+import DataGridDialog from '@/components/DataGridDialog.vue'
+
+const datashow = ref(false)
 const treeStore = useTreeStore()
 /* ===== 响应式变量 ===== */
 const filterText = ref('')
@@ -186,8 +191,10 @@ const loadData = async () => {
 
 function handleCreate(type) {
   menu.show = false
+  console.log('currentNode',currentNode.value)
   if (type === 'selecttable') {
     console.log('打开横向点位表')
+    datashow.value = true
   }
 }
 watch(
