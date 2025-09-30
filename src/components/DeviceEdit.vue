@@ -238,20 +238,20 @@ async function handleSubmit () {
     // await api(form.value)
 
      let devices = {
-    "id": 0,
-    "device_name": "控制器Ab",
-    "protocol_type": "MODBUS_TCP",
-    "slave_id": 2,
-    "ip_address": "192.168.3.1",
-    "tcp_port": 5020,
-    "serial_port": "",
-    "baud_rate": 115200,
-    "data_bits": 8,
-    "stop_bits": 1,
-    "parity": "N",
-    "timeout_ms": 1500,
-    "retry_count": 3,
-    "is_active": true
+    "id": isAdd ? 0: form.value.id,
+    "device_name": form.value.device_name,
+    "protocol_type": form.value.protocol_type,
+    "slave_id": form.value.slave_id,
+    "ip_address": form.value.ip_address,
+    "tcp_port": form.value.tcp_port,
+    "serial_port": form.value.serial_port,
+    "baud_rate": form.value.baud_rate,
+    "data_bits": form.value.data_bits,
+    "stop_bits": form.value.stop_bits,
+    "parity": form.value.parity,
+    "timeout_ms": form.value.timeout_ms,
+    "retry_count": form.value.retry_count,
+    "is_active": form.value.is_active,
   }
     const parm = { ...connStore.conn, devices: devices }
     const res = await databaseApi.execdevice(parm)
