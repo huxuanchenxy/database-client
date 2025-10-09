@@ -206,7 +206,7 @@ const emit = defineEmits(['update:visible', 'confirm'])
 
 const fetchPlcDevices = async () => {
   try {
-    initAdd()
+    // initAdd()
     const res = await databaseApi.getdevicelist(connStore.conn)
     // console.log(' fetchPlcDevices res',res)
     if (res.code === 200) {

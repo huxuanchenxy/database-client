@@ -86,7 +86,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted,nextTick } from 'vue'
 import DataStorageEdit from './DataStorageEdit.vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
@@ -221,12 +221,17 @@ function viewLog(row) {
 function openAdd() {
   currentRow.value = null
   showEdit.value = true
-  editRef.value.fetchPlcDevices()
+  nextTick(() => {
+    editRef.value.fetchPlcDevices()
+  })
+  
 }
 function openEdit(row) {
   currentRow.value = row
   showEdit.value = true
-  editRef.value.fetchPlcDevices()
+    nextTick(() => {
+    editRef.value.fetchPlcDevices()
+  })
 }
 
 onMounted(() => {
