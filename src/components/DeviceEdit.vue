@@ -183,7 +183,7 @@ const createRules = () => ({
   slave_id: [{ required: true, type: 'number', message: '请输入从站地址', trigger: 'blur' }],
   ip_address: [
     { required: true, message: '请输入IP地址', trigger: 'blur' },
-    { pattern: /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.\d{1,2}|1\d\d|2[0-4]\d|25[0-5]){3}$/, message: 'IP格式错误', trigger: 'blur' }
+    { pattern: /^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$/, message: 'IP格式错误', trigger: 'blur' }
   ],
   tcp_port: [{ required: true, type: 'number', min: 1, max: 65535, message: '端口范围 1-65535', trigger: 'blur' }],
   serial_port: [{ required: true, message: '请输入串口号', trigger: 'blur' }],
