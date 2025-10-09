@@ -8,7 +8,7 @@
     </template>
     <div class="table-wrapper">
       <el-table :data="deviceList" stripe style="width: 100%">
-        <el-table-column prop="id" label="序号" width="60" />
+        <el-table-column type="index" width="60" label="序号" />
         <el-table-column prop="device_name" label="设备名称" />
         <el-table-column prop="protocol_type" label="协议" />
         <el-table-column prop="slave_id" label="从站地址" />

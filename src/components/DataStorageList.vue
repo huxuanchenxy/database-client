@@ -78,6 +78,7 @@
 
   <!-- 新增 / 编辑弹窗 -->
   <DataStorageEdit
+    ref="editRef"
     v-model="showEdit"
     :row="currentRow"
     @refresh="handleOk"
@@ -108,7 +109,7 @@ const logQuery = ref({ page: 1, limit: 2 })
 /* ========== 弹窗相关 ========== */
 const showEdit = ref(false)
 const currentRow = ref(null)
-
+const editRef = ref(null)
 
 const statusMap = {
   1: { type: 'success',  text: '已启动' },
@@ -220,10 +221,12 @@ function viewLog(row) {
 function openAdd() {
   currentRow.value = null
   showEdit.value = true
+  editRef.value.fetchPlcDevices()
 }
 function openEdit(row) {
   currentRow.value = row
   showEdit.value = true
+  editRef.value.fetchPlcDevices()
 }
 
 onMounted(() => {

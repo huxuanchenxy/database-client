@@ -4,6 +4,7 @@
     width="600px"
     :model-value="visible"
     @update:model-value="val => $emit('update:visible', val)"
+    @closed="onClosed"
   >
     <el-form ref="formRef" :rules="rules" :model="form" label-width="100px">
       <!-- PLC 设备 -->
@@ -99,7 +100,25 @@ const isEdit = computed(() => {
 const plcOptions = ref([])
 const treeData = ref([])
 const pointOptions = ref([])
+const configList = ref([]) 
 
+const getConfiguredDeviceIds = () => {
+  const idSet = new Set()
+  if (Array.isArray(configList.value)) {
+    configList.value.forEach(cfg => idSet.add(cfg.deviceid))
+  }
+  return idSet
+}
+const fetchConfigList = async () => {
+  try {
+    const res = await databaseApi.getallconfiginfotj(connStore.conn)
+    if (res.code === 200 && Array.isArray(res.data)) {
+      configList.value = res.data
+    }
+  } catch (e) {
+    ElMessage.error('获取已存在配置列表失败')
+  }
+}
 /* 校验规则 */
 const rules = reactive({
   plcDevice: [
@@ -168,14 +187,10 @@ watch(() => props.row, (newVal) => {
   initForm(newVal)
 }, { immediate: true })  
 
-// watch(() => props.visible, (val) => {
-//   if (val) {
-//     // 无论新增/编辑，先清一次
-//     formRef.value.resetFields()
-//     nextTick(() => tableRef.value.clearSelection())
-//     // 如果是编辑再回显
-//     if (props.row?.deviceid) initForm(props.row)
-//   }
+// watch(() => props.visible, async (val) => {
+//   if (!val) return          // 弹窗关闭时不处理
+//   await fetchConfigList()   // 重新拿“已有配置”
+//   fetchPlcDevices()         // 重新算 PLC 列表（内部会根据 isEdit 自动决定是否过滤）
 // }, { immediate: true })
 
 
@@ -191,12 +206,34 @@ const emit = defineEmits(['update:visible', 'confirm'])
 
 const fetchPlcDevices = async () => {
   try {
+    initAdd()
     const res = await databaseApi.getdevicelist(connStore.conn)
-    if (res.code === 200 && Array.isArray(res.data)) {
-      plcOptions.value = res.data.map(item => ({
-        id: item.id,
-        device_name: item.device_name
-      }))
+    // console.log(' fetchPlcDevices res',res)
+    if (res.code === 200) {
+      if(Array.isArray(res.data))
+      {
+          let list = res.data.map(item => ({
+            id: item.id,
+            device_name: item.device_name
+          }))
+          // console.log('fetchPlcDevices list all',list)
+          if (!isEdit.value) {
+                const res2 = await databaseApi.getallconfiginfotj(connStore.conn)
+                if (res2.code === 200 && Array.isArray(res2.data)) {
+                  // console.log('getallconfiginfotj',res2.data)
+                  let existed = res2.data
+                    const existedIds = new Set(existed.map(i => i.deviceid))
+                    // console.log('existedIds',existedIds)
+                    list = list.filter(p => !existedIds.has(p.id))
+                    // console.log('plcOptions.value',list)
+                }
+
+            
+          }
+          // console.log('plcOptions.value',list)
+          plcOptions.value = list
+      }
+
     }else
     {
       ElMessage.error(res.message)
@@ -217,7 +254,7 @@ const onPlcChange = (val) => {
 //看已经勾选了哪些测点
 const checkByConfig = (configid) => {
   // 1. 找到 configid = 1 的寄存器列表
-  // console.log('treeedata',treeData.value)
+  console.log('treeedata',treeData.value)
   // console.log('form.value.plcDevice',form.value.plcDevice)
   
   const plc = treeData.value.find(p => p.deviceid === form.value.plcDevice?.id)
@@ -317,7 +354,14 @@ const loadData = () => {
     // fetchPoints()
 }
 
-onMounted(() => {
+const onClosed = () => {
+  loadData()
+}
+
+onMounted(async () => {
+  await fetchConfigList()   
   loadData()
 })
+
+defineExpose({ fetchPlcDevices })
 </script>
