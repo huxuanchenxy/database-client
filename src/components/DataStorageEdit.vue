@@ -254,7 +254,7 @@ const onPlcChange = (val) => {
 //看已经勾选了哪些测点
 const checkByConfig = (configid) => {
   // 1. 找到 configid = 1 的寄存器列表
-  console.log('treeedata',treeData.value)
+  // console.log('treeedata',treeData.value)
   // console.log('form.value.plcDevice',form.value.plcDevice)
   
   const plc = treeData.value.find(p => p.deviceid === form.value.plcDevice?.id)

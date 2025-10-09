@@ -147,6 +147,7 @@ const btnMap = {
 
 .table-wrapper {
   width: 100%;
+  height:70vh;
   overflow: auto; /* 窗口缩小时出现滚动条 */
 }
 </style>
