@@ -355,6 +355,8 @@ const loadData = () => {
 }
 
 const onClosed = () => {
+  formRef.value?.resetFields()
+  initAdd()
   loadData()
 }
 
@@ -363,5 +365,5 @@ onMounted(async () => {
   loadData()
 })
 
-defineExpose({ fetchPlcDevices })
+defineExpose({ fetchPlcDevices ,initForm})
 </script>

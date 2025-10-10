@@ -231,6 +231,7 @@ function openEdit(row) {
   showEdit.value = true
     nextTick(() => {
     editRef.value.fetchPlcDevices()
+    editRef.value.initForm(row)
   })
 }
 
