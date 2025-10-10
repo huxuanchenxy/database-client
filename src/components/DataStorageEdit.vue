@@ -1,11 +1,9 @@
 <template>
   <el-dialog
-    title="存储配置"
-    width="600px"
-    :model-value="visible"
-    @update:model-value="val => $emit('update:visible', val)"
-    @closed="onClosed"
-  >
+  title="存储配置"
+  width="600px"
+  @closed="onClosed"
+>
     <el-form ref="formRef" :rules="rules" :model="form" label-width="100px">
       <!-- PLC 设备 -->
       <el-form-item label="PLC设备" prop="plcDevice">
@@ -60,7 +58,7 @@
     </el-form>
 
     <template #footer>
-      <el-button @click="$emit('update:visible', false)">取消</el-button>
+      <el-button @click="handleClose">取消</el-button>
       <el-button type="primary" @click="handleConfirm">确定</el-button>
     </template>
   </el-dialog>
@@ -358,12 +356,18 @@ const onClosed = () => {
   formRef.value?.resetFields()
   initAdd()
   loadData()
+  emit('refresh')
 }
 
 onMounted(async () => {
   await fetchConfigList()   
   loadData()
 })
+
+
+function handleClose () {
+  emit('refresh') 
+}
 
 defineExpose({ fetchPlcDevices ,initForm})
 </script>
