@@ -33,13 +33,13 @@
         </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button
+            <!-- <el-button
               link
               :type="btnMap[row.comm_status].type"
               @click="toggleConnect(row)"
             >
               {{ btnMap[row.comm_status].text }}
-            </el-button>
+            </el-button> -->
             <el-button link type="primary" @click="openEdit(row)"
               >配置</el-button
             >

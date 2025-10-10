@@ -32,7 +32,7 @@
           >
             {{ row.status === '运行中' ? '暂停' : '启动' }}
           </el-button> -->
-          <el-button link type="primary" @click="openEdit(row)">修改</el-button>
+          <el-button link type="primary" @click="openEdit(row)">配置</el-button>
           <el-popconfirm title="确定删除吗？" @confirm="delRow(row)">
             <template #reference>
               <el-button link type="danger">删除</el-button>
