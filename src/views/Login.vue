@@ -12,24 +12,34 @@
         :model="form"
         :rules="rules"
         label-width="70px"
+        label-height="70px"
         @keyup.enter="handleLogin"
       >
         <div class="input-box-username">
-          <el-form-item label="账号" prop="username">
+          <el-form-item prop="username">
+              <template #label>
+                <div class="label-pic">
+                  <img src="/容器@1x.png" alt="账号" />
+                </div>
+              </template>
             <el-input
-              class="no-border"
               v-model="form.username"
               placeholder="请输入账号"
+              class="large-input"
             />
           </el-form-item>
         </div>
         <div class="input-box-password">
-          <el-form-item label="密码" prop="password">
+          <el-form-item prop="password">
+              <template #label>
+                <div class="label-pic">
+                  <img src="/路径@1x.png" alt="密码" />
+                </div>
+              </template>
             <el-input
-              class="no-border"
               v-model="form.password"
               type="password"
-              placeholder="请输入强密码"
+              placeholder="请输入密码"
               show-password
             />
           </el-form-item>
@@ -37,7 +47,7 @@
         <div class="login-btn">
           <el-button
             type="primary"
-            style="width: 100%; height: 100%; font-size: 24px"
+            style="width: 100%; height: 100%; font-size: 23px"
             :loading="loading"
             @click="handleLogin"
           >
@@ -130,7 +140,7 @@ async function handleLogin() {
 .login-box {
   position: absolute;
   top: 30%;
-  right: 15%;
+  right: 9%;
   width: 420px;
   height: 420px;
   border-radius: 24px;
@@ -146,7 +156,7 @@ async function handleLogin() {
   opacity: 1;
 
   font-family: Source Han Sans;
-  font-size: 24px;
+  font-size: 23px;
   font-weight: bold;
   line-height: normal;
   letter-spacing: 0em;
@@ -188,6 +198,9 @@ async function handleLogin() {
 
   box-sizing: border-box;
   border: 1px solid #999999;
+
+    display: flex;        /* 新增 */
+  align-items: stretch; /* 垂直撑满 */
 }
 
 .input-box-password {
@@ -201,11 +214,70 @@ async function handleLogin() {
 
   box-sizing: border-box;
   border: 1px solid #999999;
+    display: flex;        /* 新增 */
+  align-items: stretch; /* 垂直撑满 */
 }
 
-.no-border {
-  --el-input-border: none;
-  --el-input-hover-border: none;
-  --el-input-focus-border: none;
+/* 让 form-item 本身占满 */
+.input-box-username .el-form-item,
+.input-box-password .el-form-item {
+  width: 100%;
+  margin: 0;              /* 去掉默认 22px 下边距 */
+  display: flex;          /* 关键：让 label 和 content 在同一行 */
+  align-items: stretch;
+}
+
+/* 让 form-item__content 也 100% 高 */
+.input-box-username .el-form-item__content,
+.input-box-password .el-form-item__content {
+  flex: 1;                /* 占满剩余空间 */
+  display: flex;
+  align-items: stretch;
+}
+
+/* 最后 input 本身 100% 宽即可 */
+.input-box-username .el-input,
+.input-box-password .el-input {
+  width: 100%;
+  height: 82%;
+  --el-input-font-size: 23px;
+}
+
+:deep(.el-input__wrapper) {
+  box-shadow: none !important;          /* 去掉默认灰色 inset 边框 */
+}
+
+:deep(.el-form-item__label) {
+  height: 100%;
+}
+
+
+:deep(.el-form-item__label::before) {
+  content: '' !important;
+  display: none !important;
+}
+
+.large-input {
+  --el-input-font-size: 24px;
+}
+
+/* 图片容器居中 */
+.label-pic {
+  width: 100%;
+  height: 100%;              
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* 控制图片大小 */
+.label-pic img {
+  width: 20px;   /* 想要多大写多大 */
+  height: 20px;
+}
+
+:deep(.el-card__header) {
+  border-bottom: none !important;
 }
 </style>
