@@ -279,5 +279,7 @@ async function handleLogin() {
 
 :deep(.el-card__header) {
   border-bottom: none !important;
+  top: 20px;
+    position: relative;
 }
 </style>
