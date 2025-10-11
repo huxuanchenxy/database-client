@@ -189,7 +189,7 @@ async function handleLogin() {
 
 .input-box-username {
   position: absolute;
-  left: 36px;
+  left: 30px;
   top: 130px;
   width: 85.5%;
   height: 12.4%;
@@ -205,7 +205,7 @@ async function handleLogin() {
 
 .input-box-password {
   position: absolute;
-  left: 36px;
+  left: 30px;
   top: 220px;
   width: 85.5%;
   height: 12.4%;
