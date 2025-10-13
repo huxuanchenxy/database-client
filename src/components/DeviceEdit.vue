@@ -338,7 +338,7 @@
                   type="primary"
                   :loading="saveLoading"
                   @click="handleSave"
-                  >保 存</el-button
+                  >确 定</el-button
                 >
               </template>
             </el-dialog>
@@ -349,7 +349,7 @@
     <template #footer>
       <el-button @click="handleClose">取 消</el-button>
       <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-        确 定
+        保 存
       </el-button>
     </template>
   </el-dialog>
@@ -683,41 +683,75 @@ const fetchList = async () => {
 };
 
 // 新增 / 修改提交
-const handleSave = async () => {
-  await formRef2.value.validate();
-  saveLoading.value = true;
-  try {
-    let obj = {
-		  id:isAdd2.value?0:form2.id,
-			device_id:form.value.id,
-			point_name:form2.point_name,
-			description:form2.description,
-			register_address:form2.register_address,
-			register_count:form2.register_count,
-			function_code:form2.function_code,
-			data_type:form2.data_type,
-			byte_order:form2.byte_order,
-			scaling_factor:form2.scaling_factor,
-			offset_value:form2.offset_value,
-			unit:form2.unit,
-      poll_interval_ms:form2.poll_interval_ms,
-			is_active:form2.is_active 
-		 }
-     console.log('点位新增 提交 obj:',obj)
-    const parm = { ...connStore.conn, registers: obj }
-    console.log('点位新增 提交 parm:',parm)
-    const res = await databaseApi.execregister(parm)
-    console.log('点位新增 修改 res:',res)
-    if (res.code === 200) {
-      ElMessage.success(isAdd2.value ? "新增成功" : "修改成功");
-      dialogVisible.value = false;
-      fetchList(); // 刷新
-    } else {
-      ElMessage.error(res.message);
-    }
+// const handleSave = async () => {
+//   await formRef2.value.validate();
+//   saveLoading.value = true;
+//   try {
+//     let obj = {
+// 		  id:isAdd2.value?0:form2.id,
+// 			device_id:form.value.id,
+// 			point_name:form2.point_name,
+// 			description:form2.description,
+// 			register_address:form2.register_address,
+// 			register_count:form2.register_count,
+// 			function_code:form2.function_code,
+// 			data_type:form2.data_type,
+// 			byte_order:form2.byte_order,
+// 			scaling_factor:form2.scaling_factor,
+// 			offset_value:form2.offset_value,
+// 			unit:form2.unit,
+//       poll_interval_ms:form2.poll_interval_ms,
+// 			is_active:form2.is_active 
+// 		 }
+//      console.log('点位新增 提交 obj:',obj)
+//     const parm = { ...connStore.conn, registers: obj }
+//     console.log('点位新增 提交 parm:',parm)
+//     const res = await databaseApi.execregister(parm)
+//     console.log('点位新增 修改 res:',res)
+//     if (res.code === 200) {
+//       ElMessage.success(isAdd2.value ? "新增成功" : "修改成功");
+//       dialogVisible.value = false;
+//       fetchList(); // 刷新
+//     } else {
+//       ElMessage.error(res.message);
+//     }
     
-  } catch (e) {
-    ElMessage.error(isAdd2.value ? "新增失败" : "修改失败");
+//   } catch (e) {
+//     ElMessage.error(isAdd2.value ? "新增失败" : "修改失败");
+//   } finally {
+//     saveLoading.value = false;
+//   }
+// };
+
+
+// 新增 / 修改提交（仅本地同步，不调接口）
+const handleSave = async () => {
+  await formRef2.value.validate();   // 仍然先做校验
+  saveLoading.value = true;
+
+  try {
+    if (isAdd2.value) {
+      /* ------- 新增 ------- */
+      const newRow = {
+        ...form2,
+        id: 0, // 临时唯一 id（时间戳）
+        device_id: form.value.id,
+      };
+      tableData.value.push(newRow);
+      // ElMessage.success('新增成功');
+    } else {
+      /* ------- 修改 ------- */
+      const idx = tableData.value.findIndex(r => r.id === form2.id);
+      if (idx !== -1) {
+        // 整体覆盖，保持响应式
+        tableData.value[idx] = { ...form2, device_id: form.value.id };
+        // 触发 Vue 重新渲染
+        tableData.value = [...tableData.value];
+        // ElMessage.success('修改成功');
+      }
+    }
+
+    dialogVisible.value = false;   // 关闭弹窗
   } finally {
     saveLoading.value = false;
   }
@@ -726,17 +760,24 @@ const handleSave = async () => {
 // 删除
 const handleDelete = async (row) => {
   try {
-    const parm = { ...connStore.conn, oprationInt: row.id }
-    const res = await databaseApi.delregister(parm)
-    if(res.code === 200)
-    {
-      ElMessage.success("删除成功");
-      fetchList();
-    }else
-    {
-        ElMessage.error(res.message)
-    }
 
+    const idx = tableData.value.findIndex(r => r.id === row.id);
+    if (idx !== -1) {
+      tableData.value.splice(idx, 1);
+    }
+    if(row.id != 0)
+    {
+        const parm = { ...connStore.conn, oprationInt: row.id }
+        const res = await databaseApi.delregister(parm)
+        if(res.code === 200)
+        {
+          ElMessage.success("删除成功");
+          fetchList();
+        }else
+        {
+            ElMessage.error(res.message)
+        }
+    }
   } catch (e) {
     ElMessage.error("删除失败");
   }
