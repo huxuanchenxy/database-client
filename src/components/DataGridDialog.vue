@@ -72,7 +72,7 @@ const pager = reactive({
   currentPage: 1,
   pageSize: 10,
   pageSizes: [10, 20, 50, 100],
-  layouts: ['Sizes', 'PrevJump', 'PrevPage', 'Number', 'NextPage', 'NextJump', 'FullJump', 'Total']
+  layouts: [ 'PrevJump', 'PrevPage', 'Number', 'NextPage', 'NextJump', 'Total']
 })
 
 /* ----------------- 生命周期 ----------------- */
@@ -106,12 +106,12 @@ function buildColumns(list,columns) {
 async function loadData() {
   loading.value = true
   // await nextTick()
-  console.log('extra',props.extra)
+  // console.log('extra',props.extra)
   let cfgstr = props.extra.data.id
   let cfgid = Number(cfgstr.replace('cfg_', ''))
-  const parm = { ...connStore.conn, oprationInt: cfgid }
+  const parm = { ...connStore.conn, oprationInt: cfgid,lsInt:[pager.currentPage,pager.pageSize] }
   const res = await databaseApi.getdatavalue(parm)
-  console.log('res',res)
+  // console.log('loadData res',res)
   if(res.code === 200 && res.data && res.data.list && res.data.list.length > 0)
   {
     // const total = 111
@@ -120,7 +120,7 @@ async function loadData() {
     // const start = (page - 1) * size + 1
     tableData.value = res.data.list
     dynamicColumns.value = buildColumns(res.data.list,res.data.columns)
-    // pager.total = total
+    pager.total = res.data.rowCount
     loading.value = false
   }
 }
