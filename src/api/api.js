@@ -148,7 +148,11 @@ export const databaseApi = {
   execdevice: (parms) => {
     return api.post('/device/execdevice', parms)
   }
- 
+// 根据设备id获取全部点位
+  ,getregister: (parms) => {
+    return api.post('/device/getregister', parms)
+  }
+
   
 }
 

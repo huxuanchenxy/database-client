@@ -37,19 +37,21 @@ v-if="menu.show"
     :style="{ width: menu.width + 'px', height: menu.height + 'px', left: menu.left + 'px', top: menu.top + 'px' }"
     @mouseleave="menu.show = false"
   >
-    <div class="item" @click="handleCreate('device')" v-if="menu.type === 'device11'">
-      数据存储管理
+    <div class="item" @click="handleCreate('device')" v-if="menu.type === 'device'">
+      打开表
     </div>
-    <div class="item"  v-if="menu.type === 'storage'">
+    <div class="item"  v-if="menu.type === 'storage111'">
         <div class="item" @click="handleCreate('selecttable')">打开表</div>
     </div>
   </div>
 
-   <DataGridDialog v-model:visible="datashow" />
+   <DataGridDialog
+   ref="childRef"
+   v-model:visible="datashow" :extra="currentNode" />
 </template>
 
 <script setup>
-import { onMounted, ref, watch,reactive  } from 'vue'
+import { onMounted, ref, watch,reactive,nextTick  } from 'vue'
 import { ElTree, ElInput, ElButton, ElIcon } from 'element-plus'
 import { Folder, Monitor, Cpu } from '@element-plus/icons-vue'
 import { useConnStore } from '@/stores/conn'
@@ -73,6 +75,7 @@ const defaultProps = {
   label: 'label'
 }
 
+const childRef = ref(null)
 
 /* --------------------- 右键菜单 --------------------- */
 // 右键菜单状态
@@ -190,10 +193,14 @@ const loadData = async () => {
 
 
 function handleCreate(type) {
+  console.log('handleCreate',type)
   menu.show = false
   console.log('currentNode',currentNode.value)
-  if (type === 'selecttable') {
+  if (type === 'device') {
     console.log('打开横向点位表')
+    // nextTick(() => {
+    //   childRef.value.loadData()
+    // })
     datashow.value = true
   }
 }

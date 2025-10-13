@@ -1,7 +1,7 @@
 <!-- DataGridDialog.vue -->
 <template>
   <el-dialog
-    title="动态数据列表"
+    title="点位表"
     :model-value="visible"
     width="90%"
     :style="{ height: '75vh' }"
@@ -50,11 +50,16 @@
 <script setup>
 import { nextTick, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-
+import { databaseApi } from '@/api/api'
+import { useConnStore } from '@/stores/conn'
+const connStore = useConnStore()
 /* ----------------- props & emit ----------------- */
 const props = defineProps({
   visible: { type: Boolean, default: false }   // v-model:visible
+  ,extra: Object
 })
+
+
 const emit = defineEmits(['update:visible'])
 
 /* ----------------- 表格相关 ----------------- */
@@ -115,7 +120,13 @@ function buildColumns(list) {
 /* ----------------- 数据加载 ----------------- */
 async function loadData() {
   loading.value = true
-  await nextTick()
+  // await nextTick()
+  console.log('extra',props.extra)
+  let devicestr = props.extra.data.id
+  let deviceid = Number(devicestr.replace('dev_', ''))
+  const parm = { ...connStore.conn, oprationInt: deviceid }
+  const res = await databaseApi.getregister(parm)
+  console.log('res',res)
   // 模拟异步
   setTimeout(() => {
     const total = 111
@@ -195,6 +206,8 @@ function fakeSaveApi(row) {
 function fakeDeleteApi(row) {
   return new Promise((resolve) => setTimeout(resolve, 300))
 }
+
+defineExpose({ loadData})
 </script>
 
 <style scoped>
