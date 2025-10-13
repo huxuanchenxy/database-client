@@ -6,6 +6,7 @@
     width="760px"
     :style="{ 'margin':'2vh auto' }"
     @close="handleClose"
+    @opened="onDialogOpened"
   >
     <el-form
       ref="formRef"
@@ -189,7 +190,7 @@
               :close-on-click-modal="false"
               @closed="resetform2"
             >
-              <el-form2
+              <el-form
                 ref="formRef2"
                 :model="form2"
                 :rules="rules"
@@ -198,7 +199,7 @@
               >
                 <!-- 设备名称：仅读 -->
                 <el-form-item label="设备名称">
-                  <el-input :model-value="deviceName" disabled />
+                  <el-input :model-value="form.device_name" disabled />
                 </el-form-item>
 
                 <el-form-item label="点位名称" prop="point_name">
@@ -329,7 +330,7 @@
                 <el-form-item label="是否启用" prop="is_active">
                   <el-switch v-model="form2.is_active" />
                 </el-form-item>
-              </el-form2>
+              </el-form>
 
               <template #footer>
                 <el-button @click="dialogVisible = false">取 消</el-button>
@@ -568,7 +569,6 @@ function handleClose() {
 
 //点位配置
 /* --------------------- 静态数据 --------------------- */
-const deviceName = "PLC主控器"; // 默认设备名称，仅读
 const deviceId = 1; // 当前设备 id，根据实际路由或父组件传入自行调整
 
 const dataTypeOptions = [
@@ -664,43 +664,17 @@ const fetchList = async () => {
   loading.value = true;
   try {
     // TODO: 替换成你的真实接口
-    // const res = await axios.get(`/api/devices/${deviceId}/points`)
-    // tableData.value = res.data
-    // 下面用假数据演示
-    tableData.value = [
-      {
-        id: 5,
-        device_id: 1,
-        point_name: "温度传感器",
-        description: "监测温度",
-        register_address: 40001,
-        register_count: 2,
-        function_code: 3,
-        data_type: "FLOAT32",
-        byte_order: "BIG_ENDIAN",
-        scaling_factor: 0.1,
-        offset_value: 0,
-        unit: "°C",
-        poll_interval_ms: 1900,
-        is_active: true,
-      },
-      {
-        id: 6,
-        device_id: 1,
-        point_name: "压力传感器",
-        description: "监测压力",
-        register_address: 40003,
-        register_count: 2,
-        function_code: 3,
-        data_type: "FLOAT32",
-        byte_order: "BIG_ENDIAN",
-        scaling_factor: 0.01,
-        offset_value: 0,
-        unit: "MPa",
-        poll_interval_ms: 2000,
-        is_active: true,
-      },
-    ];
+    let deviceid = 0
+    deviceid = form.value.id
+    // console.log('form.value',form.value)
+    const parm = { ...connStore.conn, oprationInt: deviceid }
+    const res = await databaseApi.getregister(parm)
+    // console.log('点位列表：',res)
+    if (res.code === 200) {
+      tableData.value = res.data
+    } else {
+      ElMessage.error(res.message);
+    }
   } catch (e) {
     ElMessage.error("获取列表失败");
   } finally {
@@ -713,16 +687,35 @@ const handleSave = async () => {
   await formRef2.value.validate();
   saveLoading.value = true;
   try {
-    // TODO: 替换成你的真实接口
-    // const payload = { ...form2 }
-    // if (isAdd2.value) {
-    //   await axios.post(`/api/devices/${deviceId}/points`, payload)
-    // } else {
-    //   await axios.put(`/api/devices/${deviceId}/points/${form2.id}`, payload)
-    // }
-    ElMessage.success(isAdd2.value ? "新增成功" : "修改成功");
-    dialogVisible.value = false;
-    fetchList(); // 刷新
+    let obj = {
+		  id:isAdd2.value?0:form2.id,
+			device_id:form.value.id,
+			point_name:form2.point_name,
+			description:form2.description,
+			register_address:form2.register_address,
+			register_count:form2.register_count,
+			function_code:form2.function_code,
+			data_type:form2.data_type,
+			byte_order:form2.byte_order,
+			scaling_factor:form2.scaling_factor,
+			offset_value:form2.offset_value,
+			unit:form2.unit,
+      poll_interval_ms:form2.poll_interval_ms,
+			is_active:form2.is_active 
+		 }
+     console.log('点位新增 提交 obj:',obj)
+    const parm = { ...connStore.conn, registers: obj }
+    console.log('点位新增 提交 parm:',parm)
+    const res = await databaseApi.execregister(parm)
+    console.log('点位新增 修改 res:',res)
+    if (res.code === 200) {
+      ElMessage.success(isAdd2.value ? "新增成功" : "修改成功");
+      dialogVisible.value = false;
+      fetchList(); // 刷新
+    } else {
+      ElMessage.error(res.message);
+    }
+    
   } catch (e) {
     ElMessage.error(isAdd2.value ? "新增失败" : "修改失败");
   } finally {
@@ -733,10 +726,17 @@ const handleSave = async () => {
 // 删除
 const handleDelete = async (row) => {
   try {
-    // TODO: 替换成你的真实接口
-    // await axios.delete(`/api/devices/${deviceId}/points/${row.id}`)
-    ElMessage.success("删除成功");
-    fetchList();
+    const parm = { ...connStore.conn, oprationInt: row.id }
+    const res = await databaseApi.delregister(parm)
+    if(res.code === 200)
+    {
+      ElMessage.success("删除成功");
+      fetchList();
+    }else
+    {
+        ElMessage.error(res.message)
+    }
+
   } catch (e) {
     ElMessage.error("删除失败");
   }
@@ -765,6 +765,10 @@ const resetForm = () => {
 onMounted(() => {
   fetchList();
 });
+
+function onDialogOpened() {
+  fetchList()
+}
 </script>
 
 <style scoped>

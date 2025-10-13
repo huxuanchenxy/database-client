@@ -152,11 +152,18 @@ export const databaseApi = {
   ,getregister: (parms) => {
     return api.post('/device/getregister', parms)
   }
-
+  //点位表数据
     ,getdatavalue: (parms) => {
     return api.post('/device/getdatavalue', parms)
   }
-  
+  //点位新增修改接口
+      ,execregister: (parms) => {
+    return api.post('/device/execregister', parms)
+  }
+  //删除点位配置
+  ,delregister: (parms) => {
+    return api.post('/device/delregister', parms)
+  }
   
 }
 
