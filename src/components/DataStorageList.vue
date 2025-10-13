@@ -51,7 +51,7 @@
     /> -->
 
     <!-- ================= 执行记录 ================= -->
-    <el-divider content-position="left">执行记录</el-divider>
+    <!-- <el-divider content-position="left">执行记录</el-divider>
     <el-table :data="logList" stripe style="width: 100%">
       <el-table-column prop="id" label="序号" width="60" />
       <el-table-column prop="deviceName" label="设备名称" />
@@ -66,14 +66,13 @@
         </template>
       </el-table-column>
     </el-table>
-    <!-- 日志分页 -->
     <el-pagination
       v-model:current-page="logQuery.page"
       :page-size="logQuery.limit"
       :total="logTotal"
       layout="total, prev, pager, next"
       @current-change="getLog"
-    />
+    /> -->
   </el-card>
 
   <!-- 新增 / 编辑弹窗 -->
