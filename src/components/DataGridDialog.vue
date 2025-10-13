@@ -78,27 +78,12 @@ const pager = reactive({
 /* ----------------- 生命周期 ----------------- */
 watch(() => props.visible, async (v) => v && loadData())
 
-/* ----------------- 假数据工厂 ----------------- */
-// 随机生成一行数据
-function mockRow(id) {
-  const base = {
-    id,
-    deviceName: `设备-${id}`,
-    collectTime: new Date(Date.now() - id * 1000 * 60).toLocaleString(),
-    temperature: (20 + Math.random() * 15).toFixed(1),
-    humidity: (40 + Math.random() * 40).toFixed(1),
-    pressure: (100 + Math.random() * 50).toFixed(2)
-  }
-  // 动态扩展字段 data1~dataN
-  for (let i = 1; i <= 3; i++) base[`data${i}`] = (Math.random() * 100).toFixed(2)
-  return base
-}
 
 // 根据行数据推导列配置
-function buildColumns(list) {
+function buildColumns(list,columns) {
   const cols = []
   if (!list.length) return cols
-  const keys = Object.keys(list[0]).filter(k => k !== 'id' && !k.startsWith('__'))
+  const keys = columns
   keys.forEach((key) => {
     cols.push({
       field: key,
@@ -122,23 +107,22 @@ async function loadData() {
   loading.value = true
   // await nextTick()
   console.log('extra',props.extra)
-  let devicestr = props.extra.data.id
-  let deviceid = Number(devicestr.replace('dev_', ''))
-  const parm = { ...connStore.conn, oprationInt: deviceid }
-  const res = await databaseApi.getregister(parm)
+  let cfgstr = props.extra.data.id
+  let cfgid = Number(cfgstr.replace('cfg_', ''))
+  const parm = { ...connStore.conn, oprationInt: cfgid }
+  const res = await databaseApi.getdatavalue(parm)
   console.log('res',res)
-  // 模拟异步
-  setTimeout(() => {
-    const total = 111
-    const page = pager.currentPage
-    const size = pager.pageSize
-    const start = (page - 1) * size + 1
-    const list = Array.from({ length: size }, (_, i) => mockRow(start + i))
-    tableData.value = list
-    dynamicColumns.value = buildColumns(list)
-    pager.total = total
+  if(res.code === 200 && res.data && res.data.list && res.data.list.length > 0)
+  {
+    // const total = 111
+    // const page = pager.currentPage
+    // const size = pager.pageSize
+    // const start = (page - 1) * size + 1
+    tableData.value = res.data.list
+    dynamicColumns.value = buildColumns(res.data.list,res.data.columns)
+    // pager.total = total
     loading.value = false
-  }, 300)
+  }
 }
 
 function handlePageChange({ currentPage, pageSize }) {

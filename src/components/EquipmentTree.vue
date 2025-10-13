@@ -37,10 +37,10 @@ v-if="menu.show"
     :style="{ width: menu.width + 'px', height: menu.height + 'px', left: menu.left + 'px', top: menu.top + 'px' }"
     @mouseleave="menu.show = false"
   >
-    <div class="item" @click="handleCreate('device')" v-if="menu.type === 'device'">
+    <div class="item" @click="handleCreate('device')" v-if="menu.type === 'device111'">
       打开表
     </div>
-    <div class="item"  v-if="menu.type === 'storage111'">
+    <div class="item"  v-if="menu.type === 'storage'">
         <div class="item" @click="handleCreate('selecttable')">打开表</div>
     </div>
   </div>
@@ -196,7 +196,7 @@ function handleCreate(type) {
   console.log('handleCreate',type)
   menu.show = false
   console.log('currentNode',currentNode.value)
-  if (type === 'device') {
+  if (type === 'selecttable') {
     console.log('打开横向点位表')
     // nextTick(() => {
     //   childRef.value.loadData()

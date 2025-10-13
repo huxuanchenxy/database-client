@@ -153,6 +153,10 @@ export const databaseApi = {
     return api.post('/device/getregister', parms)
   }
 
+    ,getdatavalue: (parms) => {
+    return api.post('/device/getdatavalue', parms)
+  }
+  
   
 }
 
