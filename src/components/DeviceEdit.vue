@@ -551,6 +551,18 @@ async function handleSubmit() {
     const parm = { ...connStore.conn, devices: devices };
     const res = await databaseApi.execdevice(parm);
     if (res.code === 200) {
+
+      // console.log('res device',res)
+      if(tableData.value && tableData.value.length > 0)
+      {
+          tableData.value = tableData.value.map(item => ({ ...item, device_id: res.data })) //后端会返给我的设备id
+          const parm2 = { ...connStore.conn, registers: tableData.value }
+          const res2 = await databaseApi.execregister(parm2)
+          if(res2.code !== 200)
+          {
+            ElMessage.success("提交点位失败");
+          }
+      }
       ElMessage.success(isAdd.value ? "新增成功" : "修改成功");
       handleClose();
       emit("refresh");
