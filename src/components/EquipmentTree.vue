@@ -4,7 +4,7 @@
     <div class="toolbar">
         <span>设备列表</span>
     </div>
-
+<div class="tree-wrapper">
     <!-- 树本体 -->
     <el-tree
       ref="treeRef"
@@ -28,6 +28,7 @@
         </span>
       </template>
     </el-tree>
+    </div>
   </div>
 
       <!-- 右键菜单 -->
@@ -216,14 +217,21 @@ watch(
 
 <style scoped>
 .equipment-tree {
-  width: 300px;
+  /* width: 300px; */
   /* padding: 12px; */
   border: 1px solid #e4e7ed;
   border-radius: 4px;
-  height: 300px;
+  height: 350px;
   display: flex;
   flex-direction: column;
   border-right: 1px solid #e4e7ed;
+  overflow: auto;         /* 超出时出现滚动条 */
+}
+
+.tree-wrapper {
+  height: 350px;          /* 想要多高就写多少 */
+  overflow: auto;         /* 超出时出现滚动条 */
+  border: 1px solid #dcdfe6; /* 可选，美观 */
 }
 .toolbar {
   display: flex;
