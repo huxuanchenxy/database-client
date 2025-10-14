@@ -39,7 +39,7 @@
           <!-- 把 direction 设置成 vertical -->
           <el-container direction="vertical">
 
-            <el-tabs v-model="activeTab" class="demo-tabs" @tab-change="handleTabChange">
+            <el-tabs v-model="activeTab" @tab-change="handleTabChange">
               <el-tab-pane label="SQL命令行" name="sql">
                   <!-- SQL编辑器 -->
                   <el-aside class="sql-aside">
@@ -201,7 +201,7 @@ body {
 }
 
 .app-header {
-  background-color: #2c3e50;
+  background-color: #378fe7;
   color: white;
   padding: 0;
   display: flex;
@@ -295,5 +295,9 @@ body {
   border: 1px solid #ccc;
   padding: 10px;
   background: #fafafa;
+}
+
+.el-tabs.el-tabs--top .el-tabs__nav {
+  left: 2%;
 }
 </style>
