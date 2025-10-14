@@ -15,10 +15,8 @@
         </el-tag>
       </div>
     </div>
-
-    <el-divider />
         <div class="toolbar">
-        <span>数据库</span>
+        <span class="title">数据库</span>
     </div>
  <div class="tree-wrapper">
   <el-tree :data="treeData"
@@ -393,5 +391,10 @@ z-index: 9999;
 .toolbar {
   display: flex;
   top:0px;
+}
+
+.title{
+  left:3%;
+  position: relative;
 }
 </style>

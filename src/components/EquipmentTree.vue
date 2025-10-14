@@ -2,7 +2,7 @@
   <div class="equipment-tree">
     <!-- 顶部工具栏（可选） -->
     <div class="toolbar">
-        <span>设备列表</span>
+        <span class="title">设备列表</span>
     </div>
 <div class="tree-wrapper">
     <!-- 树本体 -->
@@ -273,5 +273,10 @@ z-index: 9999;
 
 .context-menu .item:last-child {
   border-bottom: none;
+}
+
+.title{
+  left:3%;
+  position: relative;
 }
 </style>

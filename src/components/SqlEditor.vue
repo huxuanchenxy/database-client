@@ -4,9 +4,10 @@
         <div class="editor-toolbar">
           <el-button
             type="primary"
+            size="mini"
             @click="executeSql"
             :loading="executing"
-            :icon="VideoPlay"  
+            class="execute-button"
           >
             执行
           </el-button>
@@ -109,5 +110,10 @@ const executeSqlWithText = async (sqlText) => {
   margin-top: 10px;
   display: flex;
   gap: 10px;
+}
+.execute-button{
+    left: 2%;
+    position: relative;
+    margin-bottom: 10px;
 }
 </style>
