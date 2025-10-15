@@ -22,6 +22,7 @@
       v-loading="loading"
       border
       stripe
+      keep-source
       highlight-hover-row
       auto-resize
       style="height:500px;"
@@ -149,10 +150,47 @@ function cancelEdit(row) {
 }
 
 async function saveRow(row) {
+  const $grid = xGrid.value
+
+  // ⚠️ 这行很关键，强制把输入框里的值同步到 row
+  await $grid.fullValidate().catch(() => {})
+
+  const editRecord = $grid.getEditRecord(row)
+  if (!editRecord) {
+    ElMessage.error('未获取到编辑数据')
+    return
+  }
+
+  const newData = JSON.parse(JSON.stringify(editRecord.row)) // 此时就是最新值
+  // console.log('✅ newData', newData)
+
   row.__saving = true
-  // 预留：真正保存接口
   try {
-    const parm = { ...connStore.conn, oprationInt: 1, mpJson:row}
+    const parm = { ...connStore.conn, oprationInt: 1, mpJson: newData }
+    // console.log('execdatavalue parm', parm)
+    const res = await databaseApi.execdatavalue(parm)
+    if (res.code === 200) {
+      Object.assign(row, newData)
+      $grid.clearEdit()
+      row.__editing = false
+      ElMessage.success('保存成功')
+      loadData()
+    } else {
+      ElMessage.error(res.message)
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
+  } finally {
+    row.__saving = false
+  }
+}
+
+
+
+/* ----------------- 行删除 ----------------- */
+function startDelete(row) {
+  ElMessageBox.confirm('确定删除？', '提示').then(async () => {
+    const parm = { ...connStore.conn, oprationInt: 0, mpJson:row}
     const res = await databaseApi.execdatavalue(parm)
     row.__editing = false
     if(res.code === 200)
@@ -168,24 +206,14 @@ async function saveRow(row) {
 
       // 3. 刷新当前行（可选，保证数据一致性）
       $grid.reloadRow(row)
-      ElMessage.success('保存成功')
+      ElMessage.success('删除成功')
+      loadData()
     }else
     {
         ElMessage.error(res.message)
     }
-  } catch {
-    ElMessage.error('保存失败')
-  } finally {
-    row.__saving = false
-  }
-}
-
-/* ----------------- 行删除 ----------------- */
-function startDelete(row) {
-  ElMessageBox.confirm('确定删除？', '提示').then(async () => {
-    await fakeDeleteApi(row)
-    ElMessage.success('删除成功')
-    loadData()
+    
+    
   }).catch(() => {})
 }
 
