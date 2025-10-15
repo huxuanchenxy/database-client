@@ -11,10 +11,10 @@
     @update:model-value="(v) => $emit('update:visible', v)"
   >
     <!-- 工具栏 -->
-    <div style="margin-bottom: 8px">
+    <!-- <div style="margin-bottom: 8px">
       <el-button type="primary" size="mini" @click="handleAdd">新增</el-button>
       <el-button type="success" size="mini" @click="loadData">刷新</el-button>
-    </div>
+    </div> -->
 
     <!-- 表格 -->
     <vxe-grid
@@ -152,9 +152,27 @@ async function saveRow(row) {
   row.__saving = true
   // 预留：真正保存接口
   try {
-    await fakeSaveApi(row)
+    const parm = { ...connStore.conn, oprationInt: 1, mpJson:row}
+    const res = await databaseApi.execdatavalue(parm)
     row.__editing = false
-    ElMessage.success('保存成功')
+    if(res.code === 200)
+    {
+      // 1. 让 grid 退出编辑并还原缓存
+      const $grid = xGrid.value
+      $grid.clearEdit()          // 退出编辑
+      $grid.revertData(row)      // 用最新数据刷新缓存
+
+      // 2. 再改自己的状态位
+      row.__editing = false
+      row.__saving = false
+
+      // 3. 刷新当前行（可选，保证数据一致性）
+      $grid.reloadRow(row)
+      ElMessage.success('保存成功')
+    }else
+    {
+        ElMessage.error(res.message)
+    }
   } catch {
     ElMessage.error('保存失败')
   } finally {

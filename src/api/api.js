@@ -164,6 +164,10 @@ export const databaseApi = {
   ,delregister: (parms) => {
     return api.post('/device/delregister', parms)
   }
+  // 修改删除数据的接口
+  ,execdatavalue: (parms) => {
+    return api.post('/device/execdatavalue', parms)
+  }
   
 }
 
