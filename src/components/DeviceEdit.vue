@@ -834,7 +834,8 @@ function onDialogOpened() {
   background: #fff;
 }
 .toolbar {
-  margin-bottom: 12px;
+  margin-bottom: 3px;
+  margin-top: 0px;
 }
 /* 固定操作列右侧阴影 */
 :deep(.el-table__fixed-right) {
