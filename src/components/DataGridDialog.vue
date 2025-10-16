@@ -146,7 +146,7 @@ function buildColumns(list, columns) {
 
   columns.forEach(key => {
     const editRender = detectEditRender(key, list)
-    console.log('editRender',editRender)
+    // console.log('editRender',editRender)
     cols.push({
       field: key,
       title: key,
