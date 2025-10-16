@@ -127,7 +127,7 @@
           </el-form-item>
         </template>
       </el-card>
-      <el-card>
+      <el-card class="card2">
         <template #header>
           <div class="card-header">
             <span>设备点位管理</span>
@@ -841,5 +841,7 @@ function onDialogOpened() {
   box-shadow: -2px 0 6px rgba(0, 0, 0, 0.06);
 }
 
-
+.card2 :deep(.el-card__body) {
+  margin-top: -20px;   /* 想移多少就改多少 */
+}
 </style>
