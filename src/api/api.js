@@ -46,7 +46,7 @@ api.interceptors.request.use(
     if (getToken()) {
       config.headers.Authorization = getToken()
     }
-    // console.log('API请求:', config)
+    console.log('API请求:', config)
     openLoading()
     return config
   },
