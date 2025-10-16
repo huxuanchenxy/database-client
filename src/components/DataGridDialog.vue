@@ -229,13 +229,6 @@ function handleClosed() {
   xGrid.value && xGrid.value.clearAll()
 }
 
-/* ----------------- 预留接口 ----------------- */
-function fakeSaveApi(row) {
-  return new Promise((resolve) => setTimeout(resolve, 300))
-}
-function fakeDeleteApi(row) {
-  return new Promise((resolve) => setTimeout(resolve, 300))
-}
 
 defineExpose({ loadData})
 </script>
