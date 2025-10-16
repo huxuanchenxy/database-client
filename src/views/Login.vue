@@ -238,7 +238,7 @@ async function handleLogin() {
 /* 最后 input 本身 100% 宽即可 */
 .input-box-username .el-input,
 .input-box-password .el-input {
-  width: 100%;
+  width: 90%;
   height: 82%;
   --el-input-font-size: 23px;
 }
