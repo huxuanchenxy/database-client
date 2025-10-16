@@ -80,19 +80,81 @@ const pager = reactive({
 watch(() => props.visible, async (v) => v && loadData())
 
 
+function detectEditRender(key, list) {
+  if (!list.length) return { name: 'input', attrs: { placeholder: '请输入' } }
+
+  // 拿第一行非空值做样本
+  const val = list[0][key]
+  if (val === null || val === undefined || val === '') {
+    return { name: 'input', attrs: { placeholder: '请输入' } }
+  }
+
+  // 1. 纯数字（支持小数、负数）
+  if (/^-?\d+(\.\d+)?$/.test(String(val))) {
+    return {
+      name: '$input',
+      attrs: { type: 'number', placeholder: '请输入数字' }
+    }
+  }
+
+  // 2. 日期时间  yyyy-MM-dd HH:mm:ss
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(String(val))) {
+    return {
+      name: 'ElDatePicker',
+      props: { type: 'datetime', format: 'YYYY-MM-DD HH:mm:ss', valueFormat: 'YYYY-MM-DD HH:mm:ss' },
+      immediate: true
+    }
+  }
+
+  // 3. 日期  yyyy-MM-dd
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(val))) {
+    return {
+      name: '$input',
+      attrs: { type: 'date', placeholder: '选择日期' }
+    }
+  }
+
+  // 4. 默认文本
+  return { name: 'input', attrs: { placeholder: '请输入' } }
+}
 // 根据行数据推导列配置
-function buildColumns(list,columns) {
+// function buildColumns(list,columns) {
+//   const cols = []
+//   if (!list.length) return cols
+//   const keys = columns
+//   keys.forEach((key) => {
+//     cols.push({
+//       field: key,
+//       title: key,
+//       minWidth: 120,
+//       editRender: { name: 'input', attrs: { placeholder: '请输入' } }
+//     })
+//   })
+//   // 操作列
+//   cols.push({
+//     title: '操作',
+//     width: 160,
+//     fixed: 'right',
+//     slots: { default: 'action' }
+//   })
+//   return cols
+// }
+
+function buildColumns(list, columns) {
   const cols = []
   if (!list.length) return cols
-  const keys = columns
-  keys.forEach((key) => {
+
+  columns.forEach(key => {
+    const editRender = detectEditRender(key, list)
+    console.log('editRender',editRender)
     cols.push({
       field: key,
       title: key,
       minWidth: 120,
-      editRender: { name: 'input', attrs: { placeholder: '请输入' } }
+      editRender
     })
   })
+
   // 操作列
   cols.push({
     title: '操作',
