@@ -531,9 +531,10 @@ async function handleSubmit() {
   try {
     // const api = isAdd.value ? addDevice : updateDevice
     // await api(form.value)
-
+    // console.log('form',form.value)
+    // console.log('isAdd',isAdd)
     let devices = {
-      id: isAdd ? 0 : form.value.id,
+      id: isAdd.value ? 0 : form.value.id,
       device_name: form.value.device_name,
       protocol_type: form.value.protocol_type,
       slave_id: form.value.slave_id,
@@ -805,6 +806,7 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   isAdd2.value = false;
   // 深拷贝一下，避免直接改表格
+  console.log('点位编辑 提交 row:',row)
   Object.assign(form2, JSON.parse(JSON.stringify(row)));
   dialogVisible.value = true;
 };
