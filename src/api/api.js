@@ -10,7 +10,7 @@ const api = axios.create({
   maxBodyLength: Infinity,
   headers: {
     // "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbXMiOnsidXNlcm5hbWUiOiJzZWlzIn0sImV4cCI6MTc2MDU4NDYwMH0.BtFLpqHV7VtWWZYFJqx7u35Nrf1Cxe92BTYbrJmionQ",
-    "Authorization":getToken(),
+    
     'Content-Type': 'application/json'
   }
 })
@@ -42,7 +42,11 @@ function closeLoading() {
 // 请求拦截器
 api.interceptors.request.use(
   config => {
-    console.log('API请求:', config)
+    
+    if (getToken()) {
+      config.headers.Authorization = getToken()
+    }
+    // console.log('API请求:', config)
     openLoading()
     return config
   },
