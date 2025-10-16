@@ -35,10 +35,10 @@
       </el-form-item>
 
       <!-- 数据间隔 -->
-      <el-form-item label="数据间隔(s)" prop="interval">
+      <el-form-item label="数据间隔(ms)" prop="interval">
         <el-input type="number"
           v-model="form.interval"
-          placeholder="请输入数据间隔（秒）"
+          placeholder="请输入数据间隔（毫秒）"
         />
       </el-form-item>
 
