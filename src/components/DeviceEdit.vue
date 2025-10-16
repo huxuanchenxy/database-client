@@ -314,7 +314,7 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
-                    <el-form-item label="轮询间隔(ms)" prop="poll_interval_ms">
+                    <!-- <el-form-item label="轮询间隔(ms)" prop="poll_interval_ms">
                       <el-input-number
                         v-model="form2.poll_interval_ms"
                         :min="100"
@@ -323,7 +323,7 @@
                         controls-position="right"
                         style="width: 100%"
                       />
-                    </el-form-item>
+                    </el-form-item> -->
                   </el-col>
                 </el-row>
 

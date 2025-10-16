@@ -41,8 +41,12 @@
               type="password"
               placeholder="请输入密码"
               show-password
+              class="large-input"
             />
           </el-form-item>
+        </div>
+        <div class="remember-row">
+          <el-checkbox v-model="remember">记住我</el-checkbox>
         </div>
         <div class="login-btn">
           <el-button
@@ -60,7 +64,7 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { reactive, ref,onMounted  } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { setToken } from "@/utils/auth";
@@ -69,12 +73,23 @@ import { databaseApi } from "@/api/api";
 const router = useRouter();
 const formRef = ref();
 const loading = ref(false);
+const remember = ref(false)
 
 const form = reactive({
   username: "",
   password: "",
 });
 
+/* ----------- 挂载时回填 ----------- */
+onMounted(() => {
+  const u = localStorage.getItem('loginUser')
+  const p = localStorage.getItem('loginPwd')
+  if (u) {
+    form.username = u
+    form.password = p || ''
+    remember.value = true
+  }
+})
 // const rules = {
 //   username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
 //   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
@@ -113,7 +128,17 @@ async function handleLogin() {
       console.log(ret);
       //   setToken(data.token)
       if (ret.code === 200) {
-        setToken("token");
+        setToken(ret.data);
+
+        // 记住我
+        if (remember.value) {
+          localStorage.setItem('loginUser', form.username)
+          localStorage.setItem('loginPwd', form.password)
+        } else {
+          localStorage.removeItem('loginUser')
+          localStorage.removeItem('loginPwd')
+        }
+
         ElMessage.success("登录成功");
         router.replace("/");
       } else {
@@ -233,6 +258,7 @@ async function handleLogin() {
   flex: 1;                /* 占满剩余空间 */
   display: flex;
   align-items: stretch;
+  margin-left: -10px;
 }
 
 /* 最后 input 本身 100% 宽即可 */
@@ -259,6 +285,7 @@ async function handleLogin() {
 
 .large-input {
   --el-input-font-size: 24px;
+  margin-left: -25px;
 }
 
 /* 图片容器居中 */
@@ -281,5 +308,15 @@ async function handleLogin() {
   border-bottom: none !important;
   top: 20px;
     position: relative;
+}
+
+/* 复选框行 */
+.remember-row {
+  position: absolute;
+  left: 30px;
+  bottom: 24%;
+  width: 85.5%;
+  display: flex;
+  justify-content: flex-start;
 }
 </style>

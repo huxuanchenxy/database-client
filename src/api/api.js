@@ -1,10 +1,16 @@
 import axios from 'axios'
 import { ElLoading, ElMessage } from 'element-plus'
+import { getToken,removeToken } from "@/utils/auth";
+import { useRouter } from 'vue-router'
+const router = useRouter() 
 // 创建axios实例
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT),
+  maxBodyLength: Infinity,
   headers: {
+    // "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbXMiOnsidXNlcm5hbWUiOiJzZWlzIn0sImV4cCI6MTc2MDU4NDYwMH0.BtFLpqHV7VtWWZYFJqx7u35Nrf1Cxe92BTYbrJmionQ",
+    "Authorization":getToken(),
     'Content-Type': 'application/json'
   }
 })
@@ -36,6 +42,8 @@ function closeLoading() {
 // 请求拦截器
 api.interceptors.request.use(
   config => {
+    
+
     openLoading()
     return config
   },
@@ -54,6 +62,16 @@ api.interceptors.response.use(
   error => {
     closeLoading()
     console.error('API错误:', error,import.meta.env.VITE_API_BASE_URL)
+
+    if (error.response?.status === 401) {
+      ElMessage.error('登录已过期，请重新登录')
+      removeToken()
+      // 跳转到登录页
+      // window.location.href = '/login' // 适用于非 setup 环境
+      // 如果你在使用 Vue Router 的 setup 环境，可以用：
+      // import router from '@/router'
+      router.push('/login')
+    }
     return Promise.reject(error)
   }
 )
