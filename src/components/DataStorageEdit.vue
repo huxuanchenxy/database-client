@@ -4,7 +4,7 @@
   width="600px"
   @closed="onClosed"
 >
-    <el-form ref="formRef" :rules="rules" :model="form" label-width="100px">
+    <el-form ref="formRef" :rules="rules" :model="form" label-width="130px">
       <!-- PLC 设备 -->
       <el-form-item label="PLC设备" prop="plcDevice">
         <el-select
@@ -371,3 +371,6 @@ function handleClose () {
 
 defineExpose({ fetchPlcDevices ,initForm})
 </script>
+
+<style scoped> 
+</style>
