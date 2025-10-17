@@ -13,7 +13,7 @@
       <el-table-column prop="devicename" label="设备名称" />
       <el-table-column prop="configname" label="存储数据表" />
       <el-table-column prop="ratio" label="数据点" />
-      <el-table-column prop="refreshinterval" label="存储间隔(ms)" />
+      <!-- <el-table-column prop="refreshinterval" label="存储间隔(ms)" /> -->
       <el-table-column prop="created_at" label="开始时间" />
       <el-table-column prop="updated_at" label="最后执行时间" />
       <el-table-column label="状态" width="90">
