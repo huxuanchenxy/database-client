@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { ElLoading, ElMessage } from 'element-plus'
 import { getToken,removeToken } from "@/utils/auth";
-import { useRouter } from 'vue-router'
-const router = useRouter() 
+// import { useRouter } from 'vue-router'
+// const router = useRouter() 
+
+import router from '@/router'
 // 创建axios实例
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -73,7 +75,9 @@ api.interceptors.response.use(
       // window.location.href = '/login' // 适用于非 setup 环境
       // 如果你在使用 Vue Router 的 setup 环境，可以用：
       // import router from '@/router'
+      // console.log('router111', router)
       router.push('/login')
+      // console.log('router22', router)
     }
     return Promise.reject(error)
   }
