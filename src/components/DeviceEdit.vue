@@ -327,9 +327,9 @@
                   </el-col>
                 </el-row>
 
-                <el-form-item label="是否启用" prop="is_active">
+                <!-- <el-form-item label="是否启用" prop="is_active">
                   <el-switch v-model="form2.is_active" />
-                </el-form-item>
+                </el-form-item> -->
               </el-form>
 
               <template #footer>
@@ -619,13 +619,13 @@ const columns = [
   { prop: "scaling_factor", label: "缩放因子", width: 100 },
   { prop: "offset_value", label: "偏移量", width: 90 },
   { prop: "unit", label: "单位", width: 70 },
-  { prop: "poll_interval_ms", label: "轮询间隔(ms)", width: 130 },
-  {
-    prop: "is_active",
-    label: "启用",
-    width: 70,
-    formatter: (row) => (row.is_active ? "是" : "否"),
-  },
+ // { prop: "poll_interval_ms", label: "轮询间隔(ms)", width: 130 },
+  // {
+  //   prop: "is_active",
+  //   label: "启用",
+  //   width: 70,
+  //   formatter: (row) => (row.is_active ? "是" : "否"),
+  // },
 ];
 
 /* --------------------- 弹窗表单 --------------------- */
