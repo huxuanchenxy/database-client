@@ -68,7 +68,7 @@ api.interceptors.response.use(
     closeLoading()
     console.error('API错误:', error,import.meta.env.VITE_API_BASE_URL)
 
-    if (error.status === 401) {
+    if (error.response?.status === 401) {
       ElMessage.error('登录已过期，请重新登录')
       removeToken()
       // 跳转到登录页
