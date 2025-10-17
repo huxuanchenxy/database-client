@@ -131,7 +131,7 @@ async function getList() {
         list.value = res.data
     }else
     {
-        ElMessage.error(res)
+        ElMessage.error(JSON.stringify(res))
     }
     // list.value = data.list
     // list.value = mock
@@ -180,7 +180,7 @@ async function delRow(row) {
         treeStore.triggerRefresh()
     }else
     {
-        ElMessage.error(res)
+        ElMessage.error(JSON.stringify(res))
     }
     
   } catch (e) {
