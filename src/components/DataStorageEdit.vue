@@ -294,7 +294,7 @@ const fetchPoints = async (deviceid) => {
       // 1. 先赋值
       pointOptions.value = res.data.data.map(item => ({
         ...item,
-        remark: '注释'
+        remark: item.description
       }))
 
       // // 2. 等 DOM 更新完再回显勾选
