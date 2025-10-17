@@ -569,7 +569,7 @@ async function handleSubmit() {
       emit("refresh");
       treeStore.triggerRefresh();
     } else {
-      ElMessage.error(res.message);
+      ElMessage.error(res);
     }
   } finally {
     submitLoading.value = false;
@@ -686,7 +686,7 @@ const fetchList = async () => {
     if (res.code === 200) {
       tableData.value = res.data
     } else {
-      ElMessage.error(res.message);
+      ElMessage.error(res);
     }
   } catch (e) {
     ElMessage.error("获取列表失败");
@@ -788,7 +788,7 @@ const handleDelete = async (row) => {
           fetchList();
         }else
         {
-            ElMessage.error(res.message)
+            ElMessage.error(res)
         }
     }
   } catch (e) {

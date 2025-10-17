@@ -234,7 +234,7 @@ const fetchPlcDevices = async () => {
 
     }else
     {
-      ElMessage.error(res.message)
+      ElMessage.error(res)
     }
   } catch (e) {
     ElMessage.error('PLC设备列表加载失败')
@@ -336,7 +336,7 @@ const handleConfirm = async () => {
       treeStore.triggerRefresh()
     }else
     {
-      ElMessage.error(res.message)
+      ElMessage.error(res)
     }
     emit('confirm', { ...form.value })
     emit('update:visible', false)

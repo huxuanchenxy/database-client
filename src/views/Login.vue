@@ -142,7 +142,7 @@ async function handleLogin() {
         ElMessage.success("登录成功");
         router.replace("/");
       } else {
-        ElMessage.error(ret.message);
+        ElMessage.error(ret);
       }
     } catch (e) {
       ElMessage.error(e?.msg || "登录失败");

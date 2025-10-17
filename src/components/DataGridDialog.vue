@@ -238,7 +238,7 @@ async function saveRow(row) {
       ElMessage.success('保存成功')
       loadData()
     } else {
-      ElMessage.error(res.message)
+      ElMessage.error(res)
     }
   } catch (e) {
     ElMessage.error('保存失败')
@@ -272,7 +272,7 @@ function startDelete(row) {
       loadData()
     }else
     {
-        ElMessage.error(res.message)
+        ElMessage.error(res)
     }
     
     

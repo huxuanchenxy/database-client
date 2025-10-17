@@ -106,7 +106,7 @@ async function delDevice(id) {
       handleOk();
       treeStore.triggerRefresh();
     } else {
-      ElMessage.error(res.message);
+      ElMessage.error(res);
     }
   } catch (e) {
     ElMessage.error("删除失败");
