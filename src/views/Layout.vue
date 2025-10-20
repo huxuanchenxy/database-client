@@ -5,6 +5,7 @@
       <el-header class="app-header">
         <div class="header-content">
           <div class="app-title">
+            <img src="/图层 1@1x.png" alt="logo" class="logo" />
             <span>SEIS数据库客户端</span>
           </div>
           <div class="header-actions">
@@ -23,7 +24,7 @@
 
       <el-container>
         <!-- 左侧数据库树 -->
-        <el-aside width="300px" class="app-aside">
+        <el-aside width="292px" class="app-aside">
           <DatabaseTree
             @database-selected="handleDatabaseSelect"
             @table-selected="handleTableSelect"
@@ -201,7 +202,7 @@ body {
 }
 
 .app-header {
-  background-color: #378fe7;
+  background-color: #004D9E;
   color: white;
   padding: 0;
   display: flex;
@@ -227,7 +228,7 @@ body {
 
 .app-title .el-icon {
   font-size: 20px;
-  color: #409eff;
+  color: #004D9E;
 }
 
 .app-aside {
@@ -299,5 +300,15 @@ body {
 
 .el-tabs.el-tabs--top .el-tabs__nav {
   left: 2%;
+}
+
+/* 左上角 logo */
+.logo {
+position: relative;
+top: 0px;
+left: -9px;
+width: 30px;
+height: auto;
+cursor: pointer;
 }
 </style>
