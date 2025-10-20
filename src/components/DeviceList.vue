@@ -23,7 +23,13 @@
             <span>{{ row.protocol_type.toUpperCase() === 'MODBUS_RTU' ? '/' : row.tcp_port }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="serial_port" label="串口号" />
+        <!-- <el-table-column prop="serial_port" label="串口号" /> -->
+        <el-table-column label="串口号">
+          <template #default="{ row }">
+            <span>{{ row.protocol_type.toUpperCase() === 'MODBUS_TCP' ? '/' : row.serial_port }}</span>
+          </template>
+        </el-table-column>
+
         <el-table-column prop="baud_rate" label="波特率" />
         <el-table-column prop="data_bits" label="数据位" />
         <el-table-column prop="stop_bits" label="停止位" />
