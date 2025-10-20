@@ -12,8 +12,17 @@
         <el-table-column prop="device_name" label="设备名称" />
         <el-table-column prop="protocol_type" label="协议" />
         <el-table-column prop="slave_id" label="从站地址" />
-        <el-table-column prop="ip_address" label="IP地址" />
-        <el-table-column prop="tcp_port" label="端口" width="80" />
+        <el-table-column label="IP地址">
+          <template #default="{ row }">
+            <span>{{ row.protocol_type.toUpperCase() === 'MODBUS_RTU' ? '/' : row.ip_address }}</span>
+          </template>
+        </el-table-column>
+        <!-- <el-table-column prop="tcp_port" label="端口" width="80" /> -->
+        <el-table-column label="端口">
+          <template #default="{ row }">
+            <span>{{ row.protocol_type.toUpperCase() === 'MODBUS_RTU' ? '/' : row.tcp_port }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="serial_port" label="串口号" />
         <el-table-column prop="baud_rate" label="波特率" />
         <el-table-column prop="data_bits" label="数据位" />
