@@ -146,6 +146,7 @@
               border
               stripe
               style="width: 100%"
+              height="200"
             >
 
             <!-- 1. 固定左侧：ID -->
