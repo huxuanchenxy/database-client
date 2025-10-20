@@ -147,6 +147,24 @@
               stripe
               style="width: 100%"
             >
+
+            <!-- 1. 固定左侧：ID -->
+            <el-table-column
+              prop="id"
+              label="ID"
+              width="70"
+              fixed="left"
+              show-overflow-tooltip
+            />
+
+            <!-- 2. 固定左侧：点位名称 -->
+            <el-table-column
+              prop="point_name"
+              label="点位名称"
+              min-width="140"
+              fixed="left"
+              show-overflow-tooltip
+            />
               <!-- 需要横向滚动的大部分列 -->
               <el-table-column
                 v-for="col in columns"
@@ -608,8 +626,8 @@ const tableData = ref([]);
 
 // 列配置（想加/minWidth 自己调）
 const columns = [
-  { prop: "id", label: "ID", width: 70 },
-  { prop: "point_name", label: "点位名称", minWidth: 140 },
+  // { prop: "id", label: "ID", width: 70 },
+  // { prop: "point_name", label: "点位名称", minWidth: 140 },
   { prop: "description", label: "描述", minWidth: 160 },
   { prop: "register_address", label: "寄存器地址", width: 110 },
   { prop: "register_count", label: "寄存器数量", width: 110 },
