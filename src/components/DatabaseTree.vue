@@ -9,11 +9,14 @@
         连接数据库
       </el-button>
 
-      <div v-if="currentConnection" class="connection-info">
-        <el-tag type="info">
-          已连接: {{ currentConnection.dbHost }}
-        </el-tag>
-      </div>
+    <!-- 第二行：连接状态（带圆点） -->
+    <div class="connection-info">
+      <!-- 未连接时也可以显示，也可以隐藏，按你需求 -->
+      <el-tag :type="currentConnection ? 'info' : 'warning'">
+        <span class="dot" :class="{ green: currentConnection, yellow: !currentConnection }" />
+        {{ currentConnection ? `已连接: ${currentConnection.dbHost}` : '未连接' }}
+      </el-tag>
+    </div>
     </div>
         <div class="toolbar">
         <span class="title">数据库</span>
@@ -326,16 +329,29 @@ function editTable() {
 }
 
 .tree-header {
-  padding: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0px;
+    padding-top: 10px;
 }
 
 .connection-info {
-  display: flex;
-  align-items: center;
+line-height: 1;
+margin-top: 8px;
 }
+
+/* 圆点公共样式 */
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.green  { background: #67c23a; }   
+.yellow { background: #e6a23c; }   
 
 .database-tree-view {
   flex: 1;
