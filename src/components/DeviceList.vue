@@ -28,7 +28,7 @@
         <el-table-column prop="data_bits" label="数据位" />
         <el-table-column prop="stop_bits" label="停止位" />
         <el-table-column prop="parity" label="校验位" />
-        <el-table-column prop="timeout_m" label="超时" />
+        <el-table-column prop="timeout_ms" label="超时(ms)" />
         <el-table-column prop="retry_count" label="重试次数" />
         <el-table-column prop="is_active" label="是否激活" />
         <el-table-column prop="created_at" label="创建时间" />
