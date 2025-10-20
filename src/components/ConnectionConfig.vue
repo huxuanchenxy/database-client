@@ -1,10 +1,14 @@
 <template>
   <el-dialog
     v-model="visible"
-    title="数据库连接配置"
-    width="500px"
+    width="520px"
     @close="handleClose"
   >
+      <template #header>
+      <span style="color: #004D9E; font-size: 16px; font-weight: 500;">
+        数据库连接配置
+      </span>
+    </template>
     <el-form
       ref="formRef"
       :model="connectionForm"
@@ -76,16 +80,16 @@
       <span class="dialog-footer">
         <el-button @click="handleClose">取消</el-button>
         <el-button
-          type="primary"
           @click="handleTestConnection"
           :loading="testing"
+          class="my-btn1"
         >
           测试连接
         </el-button>
         <el-button
-          type="success"
           @click="handleSaveConnection"
           :loading="saving"
+          class="my-btn2"
         >
           连接
         </el-button>
@@ -230,5 +234,37 @@ const handleSaveConnection = async () => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+:deep(.el-dialog__title) {
+  color: #00b42a;
+}
+
+.my-btn1 {
+  background: #3592F4;
+  border-color: #3592F4;
+  color: #fff;
+}
+.my-btn1:hover {
+  background: #78baf0;
+  border-color: #78baf0;
+}
+.my-btn1:active {
+  background: #78baf0;
+  border-color: #78baf0;
+}
+
+.my-btn2 {
+  background: #004D9E;
+  border-color: #004D9E;
+  color: #fff;
+}
+.my-btn1:hover {
+  background: #78baf0;
+  border-color: #78baf0;
+}
+.my-btn1:active {
+  background: #78baf0;
+  border-color: #78baf0;
 }
 </style>
