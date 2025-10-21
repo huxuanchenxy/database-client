@@ -40,7 +40,7 @@
           <!-- 把 direction 设置成 vertical -->
           <el-container direction="vertical">
 
-            <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+            <el-tabs v-model="activeTab" @tab-click="handleClick" @tab-change="handleTabChange">
               <el-tab-pane label="SQL命令行" name="sql">
                   <!-- SQL编辑器 -->
                   <el-aside class="sql-aside">
@@ -64,12 +64,12 @@
               </el-tab-pane>
               <!-- 2. 设备管理（无结果区） -->
               <el-tab-pane label="设备管理" name="device">
-                <DeviceList />
+                <DeviceList ref="deviceRef" />
               </el-tab-pane>
 
               <!-- 3. 数据存储管理（无结果区） -->
               <el-tab-pane label="数据存储管理" name="storage">
-                <DataStorageList />
+                <DataStorageList ref="storageRef" />
               </el-tab-pane>
             </el-tabs>
           </el-container>
@@ -111,9 +111,19 @@ const handleCallTree = () => {
   console.log('查看调用树')
   DatabaseTreeRef.value?.loadDatabases()
 }
-
+const deviceRef = ref()      // 对应 DeviceList
+const storageRef = ref()     // 对应 DataStorageList
 function handleTabChange(tabName) {
   tabStore.activeTab = tabName
+
+}
+
+function handleClick(tab) {
+  if (tab.props.name === 'device' && deviceRef.value) {
+    deviceRef.value.loadList()
+  } else if (tab.props.name === 'storage' && storageRef.value) {
+    storageRef.value.getList()
+  }
 }
 
 const sqlCode = ref('')

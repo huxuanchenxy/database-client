@@ -122,7 +122,7 @@ const statusMap = {
    返回 : { total, list:[] }
 ---------------------------------------------------- */
 async function getList() {
-
+// console.log('storage getList');
   if (!connStore.conn.dbHost)
   {
     return
@@ -243,6 +243,8 @@ onMounted(() => {
   getList()
 //   getLog()
 })
+
+defineExpose({ getList })
 </script>
 
 <style scoped>

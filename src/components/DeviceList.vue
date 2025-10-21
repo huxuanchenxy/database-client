@@ -88,6 +88,7 @@ const currentRow = ref(null);
 
 // 模拟数据，实际换成接口
 async function loadList() {
+  // console.log('device loadList');
   if (!connStore.conn.dbHost) return;
   const res = await databaseApi.getdevicelist(connStore.conn);
   // console.log('res',res)
@@ -151,6 +152,8 @@ const btnMap = {
   TIMEOUT: { type: "warning", text: "重连" },
   DISCONNECTED: { type: "primary", text: "连接" },
 };
+
+defineExpose({ loadList })
 </script>
 
 <style scoped>
