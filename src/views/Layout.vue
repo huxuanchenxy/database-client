@@ -40,7 +40,7 @@
           <!-- 把 direction 设置成 vertical -->
           <el-container direction="vertical">
 
-            <el-tabs v-model="activeTab" @tab-click="handleClick" @tab-change="handleTabChange">
+            <el-tabs class="tabs" v-model="activeTab" @tab-click="handleClick" @tab-change="handleTabChange">
               <el-tab-pane label="SQL命令行" name="sql">
                   <!-- SQL编辑器 -->
                   <el-aside class="sql-aside">
@@ -322,8 +322,8 @@ height: auto;
 cursor: pointer;
 }
 
-.el-tabs__item {
-  padding-left: 32px !important;
-  padding-right: 50px !important;
+:deep(.tabs .el-tabs__item) {
+  padding-left: 1px !important;
+  padding-right: 80px !important;
 }
 </style>
