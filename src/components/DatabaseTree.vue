@@ -27,6 +27,7 @@
    highlight-current
    @node-contextmenu="onContextMenu" 
    @node-click="onNodeClick"
+   class="treecss"
    >
   </el-tree>
 </div>
@@ -412,5 +413,11 @@ z-index: 9999;
 .title{
   left:3%;
   position: relative;
+}
+
+.treecss
+{
+  --el-tree-node-hover-bg-color: #DCE7FF;   /* 悬停 */
+  --el-tree-node-current-bg-color: #bae7ff; /* 当前选中 */
 }
 </style>

@@ -17,6 +17,7 @@
       @node-contextmenu="onContextMenu" 
       @node-click="onNodeClick"
       :expand-on-click-node="false"
+      class="treecss"
     >
       <!-- 自定义节点图标 -->
       <template #default="{ node, data }">
@@ -278,5 +279,11 @@ z-index: 9999;
 .title{
   left:3%;
   position: relative;
+}
+
+.treecss
+{
+  --el-tree-node-hover-bg-color: #DCE7FF;   /* 悬停 */
+  --el-tree-node-current-bg-color: #bae7ff; /* 当前选中 */
 }
 </style>
