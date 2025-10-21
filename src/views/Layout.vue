@@ -9,15 +9,15 @@
             <span>SEIS数据库客户端</span>
           </div>
           <div class="header-actions">
-            <el-button
+            <!-- <el-button
               type="primary"
               size="small"
               @click="logout"
               :icon="Plus"
             >
               退出登录
-            </el-button>
-
+            </el-button> -->
+            <UserAvatar />
           </div>
         </div>
       </el-header>
@@ -100,7 +100,7 @@ import EquipmentTree from '@/components/EquipmentTree.vue'
 import DataStorageList from '@/components/DataStorageList.vue'
 import { useTabStore } from '@/stores/tab'
 import { storeToRefs } from 'pinia'
-
+import UserAvatar from '@/components/UserAvatar.vue'
 const router = useRouter()   // 先拿到实例
 // const activeTab = ref('sql')
 
