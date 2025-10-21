@@ -93,7 +93,7 @@
                   <template #action_slot="{ row }">
                   <!-- 未编辑状态 -->
                   <template v-if="!row.__editing && addLocked === false && showbutton">
-                    <el-button type="primary" size="mini" @click="startEdit(row)">
+                    <el-button class="edit-btn" size="mini" @click="startEdit(row)">
                       编辑
                     </el-button>
                     <el-button class="del-btn" size="mini" @click="startDelete(row)">
