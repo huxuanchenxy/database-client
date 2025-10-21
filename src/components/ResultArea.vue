@@ -96,7 +96,7 @@
                     <el-button type="primary" size="mini" @click="startEdit(row)">
                       编辑
                     </el-button>
-                    <el-button type="primary" size="mini" @click="startDelete(row)">
+                    <el-button class="del-btn" size="mini" @click="startDelete(row)">
                       删除
                     </el-button>
                   </template>
@@ -290,7 +290,7 @@ const gridColumns = computed(() => {
     return baseCol
   })
 
-  if(resultSet.caozuo)
+  if(resultSet.caozuo && resultSet.columns && resultSet.columns.length > 0)
   {
     // 操作列
     cols.push({

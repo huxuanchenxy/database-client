@@ -1,0 +1,14 @@
+.del-btn {
+  background: #FA5151;
+  border-color: #FA5151;
+  color: #fff;
+}
+.del-btn:hover {
+  background: #f59a9a;
+  border-color: #f59a9a;
+  color: #fff;
+}
+.del-btn:active {
+  background: #FA5151;
+  border-color: #FA5151;
+}

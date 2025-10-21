@@ -13,6 +13,7 @@ import VxeUI from 'vxe-pc-ui'
 import 'vxe-pc-ui/lib/style.css'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import router from '@/router'
+import '@/styles/element-cover.css'
 /* 统一封装创建函数 */
 function createElementRender(Component, defaultType = 'date') {
   return {
