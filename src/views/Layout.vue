@@ -321,4 +321,9 @@ width: 30px;
 height: auto;
 cursor: pointer;
 }
+
+.el-tabs__item {
+  padding-left: 32px !important;
+  padding-right: 50px !important;
+}
 </style>
