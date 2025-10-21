@@ -36,7 +36,7 @@
         >
         <!-- 工具栏 -->
         <div class="grid-toolbar" v-if="fieldMeta">
-          
+          <span clss="table-name">{{tableName}}</span>
            <div class="btn-box" v-if="showbutton" >
           <el-button v-if="resultSet.columns.length > 0 "
             type="primary"
@@ -68,7 +68,7 @@
             @click="handleConfirmUpdate"
           >提交修改</el-button> -->
           </div>
-          <span clss="table-name">{{tableName}}</span>
+          
         </div>
           <!-- ✅ vxe-grid 自适应高度 -->
           <div class="grid-wrapper">
@@ -773,7 +773,7 @@ const handlePageChange = ({ currentPage, pageSize }) => {
   display: inline-flex;   /* 让按钮在一行 */
   flex-wrap: nowrap;      /* 坚决不换行 */
   gap: 6px;               /* 按钮间距，不喜欢可改成 4px 或 8px */
-  margin-right: auto;     /* 继续把表名顶到最右 */
+  margin-left: auto;     /* 继续把表名顶到最右 */
 }
 .btn-box .el-button {
   white-space: nowrap;
@@ -783,7 +783,7 @@ const handlePageChange = ({ currentPage, pageSize }) => {
 /* 表名本身不需要额外样式就能贴在右边 */
 .table-name {
   /* 可选：微调与按钮间距 */
-  margin-left: auto;   /* 关键：顶到最右 */
+  margin-right: auto;   /* 关键：顶到最右 */
   padding-right: 12px; /* 右边留空，不需要 position */
 }
 
