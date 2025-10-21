@@ -792,4 +792,8 @@ const handlePageChange = ({ currentPage, pageSize }) => {
   padding: 0 6px !important;
   font-size: 13px !important;
 }
+
+:deep(.vxe-table .vxe-body--row.row--stripe > td) {
+  background-color: #DCE7FF !important;   /* 想换啥色就改这里 */
+}
 </style>
