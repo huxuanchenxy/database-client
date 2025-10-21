@@ -796,4 +796,8 @@ const handlePageChange = ({ currentPage, pageSize }) => {
 :deep(.vxe-table .vxe-body--row.row--stripe > td) {
   background-color: #DCE7FF !important;   /* 想换啥色就改这里 */
 }
+
+:deep(.vxe-table .vxe-header--row .vxe-header--column) {
+  background-color: #DCE7FF !important;   /* 背景 */
+}
 </style>
