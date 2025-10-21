@@ -9,13 +9,37 @@
         连接数据库
       </el-button>
 
+
+
     <!-- 第二行：连接状态（带圆点） -->
     <div class="connection-info">
       <!-- 未连接时也可以显示，也可以隐藏，按你需求 -->
-      <el-tag :type="currentConnection ? 'info' : 'warning'">
+      <!-- <el-tag :type="currentConnection ? 'info' : 'warning'">
         <span class="dot" :class="{ green: currentConnection, yellow: !currentConnection }" />
         {{ currentConnection ? `已连接: ${currentConnection.dbHost}` : '未连接' }}
+      </el-tag> -->
+
+      <el-tag :type="currentConnection?.dbHost ? 'info' : 'warning'">
+        <span
+          class="dot"
+          :class="{ green: currentConnection?.dbHost, yellow: !currentConnection?.dbHost }"
+        />
+        {{
+          currentConnection?.dbHost
+            ? `已连接: ${currentConnection.dbHost}`
+            : '未连接'
+        }}
       </el-tag>
+                <!-- 断开按钮 -->
+    <el-button
+      v-if="currentConnection?.dbHost"
+      type="danger"
+      plain
+      @click="handleDisconnect"
+      style="margin-left:12px;height:22px; padding:0 6px; font-size:12px;"
+    >
+      断开连接
+    </el-button>
     </div>
     </div>
         <div class="toolbar">
@@ -102,7 +126,9 @@ const treeProps = {
 
 // 处理连接成功
 const handleConnectionSuccess = (connectionConfig) => {
+  // console.log('handleConnectionSuccess conn:',connectionConfig)
   currentConnection.value = connectionConfig
+  treeStore.triggerRefresh()
   loadDatabases()
 }
 
@@ -112,9 +138,9 @@ const loadDatabases = async () => {
   //todo: 获取连接信息如果失败则把connStore.conn变null
   // console.log('loadDatabases connStore.conn',connStore.conn)
   currentConnection.value = connStore.conn
-  
+  // console.log('loadDatabases currentConnection.value',currentConnection.value)
   // if (!currentConnection.value) return
-  if (!connStore.conn) return
+  if (!connStore.conn.dbHost) return
 
   try {
     const res = await databaseApi.getDatabases(connStore.conn)
@@ -129,7 +155,7 @@ const loadDatabases = async () => {
     }else
     {
       currentConnection.value = null
-      ElMessage.error('获取数据库列表失败:'+res.message)
+      ElMessage.error(JSON.stringify(res))
     }
   } catch (e) {
     console.error(e)
@@ -319,6 +345,16 @@ function editTable() {
   }
   designer.value.openDialog(oldTable) // 传参 = 修改
 }
+
+
+const handleDisconnect = () => {
+  connStore.clearConn()          // 1. 清空持久化数据
+  currentConnection.value = null // 2. 清空本地响应式状态
+  treeData.value = []            // 3. 清空左侧树
+  treeStore.triggerRefresh()
+  ElMessage.success('已断开数据库连接')
+}
+
 </script>
 
 <style scoped>

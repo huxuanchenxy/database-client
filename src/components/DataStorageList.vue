@@ -122,6 +122,11 @@ const statusMap = {
    返回 : { total, list:[] }
 ---------------------------------------------------- */
 async function getList() {
+
+  if (!connStore.conn.dbHost)
+  {
+    return
+  } 
   try {
     // const { data } = await axios.get('/api/storage/list', { params: listQuery.value })
     const res = await databaseApi.getallconfiginfotj(connStore.conn)

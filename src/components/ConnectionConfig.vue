@@ -132,6 +132,16 @@ const connectionForm = reactive({
   dbType: 'mysql'
 })
 
+// const connectionForm = reactive({
+//   name: '',
+//   host: '',
+//   port: 5432,
+//   database: '',
+//   username: '',
+//   password: '',
+//   dbType: 'mysql'
+// })
+
 const rules = {
   name: [{ required: true, message: '请输入连接名称', trigger: 'blur' }],
   host: [{ required: true, message: '请输入主机地址', trigger: 'blur' }],
@@ -158,12 +168,12 @@ const handleClose = () => {
 const resetForm = () => {
   formRef.value?.resetFields()
   Object.assign(connectionForm, {
-    name: '10.89.34.9',
-    host: '10.89.34.9',
+    name: '',
+    host: '',
     port: 5432,
-    database: 'seis',
-    username: 'seis',
-    password: 'seis',
+    database: '',
+    username: '',
+    password: '',
     dbType: 'mysql'
   })
 }
@@ -209,14 +219,19 @@ const handleSaveConnection = async () => {
 		     password:connectionForm.password,
     }
     const result = await databaseApi.testConnection(parm)
+    console.log('testConnection',result)
     if (result.code === 200) {
-      ElMessage.success('连接成功！')
-      updateConn({ dbHost: connectionForm.host + ":" + connectionForm.port,
+      
+      const connPayload = {
+        dbHost: `${connectionForm.host}:${connectionForm.port}`,
         dbName: connectionForm.database,
         user: connectionForm.username,
         password: connectionForm.password
-       })
+      }
+
+      updateConn(connPayload) 
       emit('connection-success', connectionForm)
+      ElMessage.success('连接成功！')
       handleClose()
     } else {
       ElMessage.error(result.message + ":" + result.data)

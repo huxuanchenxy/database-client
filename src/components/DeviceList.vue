@@ -88,7 +88,7 @@ const currentRow = ref(null);
 
 // 模拟数据，实际换成接口
 async function loadList() {
-  if (!connStore.conn) return;
+  if (!connStore.conn.dbHost) return;
   const res = await databaseApi.getdevicelist(connStore.conn);
   // console.log('res',res)
   if (res.code === 200) {

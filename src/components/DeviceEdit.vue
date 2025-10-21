@@ -695,6 +695,7 @@ const rules = {
 /* --------------------- API 相关 --------------------- */
 // 查询列表
 const fetchList = async () => {
+  if (!connStore.conn.dbHost) return
   loading.value = true;
   try {
     // TODO: 替换成你的真实接口

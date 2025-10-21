@@ -171,9 +171,13 @@ const buildTree = (apiData) => {
 const loadData = async () => {
 
   //todo: 获取连接信息如果失败则把connStore.conn变null
-  // console.log('loadDatabases connStore.conn',connStore.conn)
+  // console.log('eqp connStore.conn',connStore.conn)
   // if (!currentConnection.value) return
-  if (!connStore.conn) return
+  if (!connStore.conn.dbHost)
+  {
+    treeData.value = null
+    return
+  } 
 
   try {
     const res = await databaseApi.getallconfiginfo(connStore.conn)
@@ -184,7 +188,7 @@ const loadData = async () => {
     }else
     {
       
-      ElMessage.error('获取数据库列表失败:'+res.message)
+      ElMessage.error(JSON.stringify(res))
     }
   } catch (e) {
     console.error(e)
