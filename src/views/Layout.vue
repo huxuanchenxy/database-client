@@ -208,9 +208,15 @@ body {
 }
 
 .app-container {
-  height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
+.app-container > .el-container {
+  flex: 1;
+  overflow: hidden; /* 防止双重滚动条 */
+}
 .app-header {
   background-color: #004D9E;
   color: white;
@@ -255,17 +261,31 @@ body {
   overflow: auto;
 }
 
-.result-main {
+/* .result-main {
   flex: 1;
   background-color: #fff;
   padding: 0;
   overflow: auto;
+  padding-bottom: 16px;
+} */
+
+.result-main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 .app-main .el-container {
-  /* height: 100%; */
-  display: flex;
-  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* Element Plus 样式覆盖 */
@@ -279,7 +299,7 @@ body {
 
 .el-main {
   padding: 0;
-  overflow: hidden;
+  overflow: auto;
 }
 
 /* 滚动条样式 */
@@ -325,5 +345,11 @@ cursor: pointer;
 :deep(.tabs .el-tabs__item) {
   padding-left: 1px !important;
   padding-right: 80px !important;
+}
+
+.tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 </style>

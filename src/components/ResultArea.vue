@@ -82,7 +82,7 @@
                 :loading="loading"
                 border
                 stripe
-                height="99%"
+                height="100%"
                 size="mini"
                 highlight-hover-row
                 auto-resize
@@ -755,12 +755,28 @@ const handlePageChange = ({ currentPage, pageSize }) => {
 </script>
 
 <style scoped>
-.grid-wrapper {
-  flex: 1;
-  min-height: 505px;
-  padding: 8px;
-  overflow-y: auto;
+/* .grid-wrapper {
+min-height: 500px;
+    padding: 8px;
+    overflow: auto;
+    height: 542px;
+    padding-bottom: 10%;
+    margin-bottom: 2%;
+    bottom: 0px;
+    position: relative;
+} */
+
+.results-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
+.grid-wrapper {
+  flex: 1;               
+  padding: 8px;
+  overflow: auto;
+}
+
 
 .grid-toolbar {
   display: flex;
