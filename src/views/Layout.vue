@@ -30,37 +30,39 @@
             @table-selected="handleTableSelect"
             ref="DatabaseTreeRef"
           />
-          <EquipmentTree
-          @root-selected="handlestorageSelect"
-          ref="eqTree" />
+          <EquipmentTree @root-selected="handlestorageSelect" ref="eqTree" />
         </el-aside>
 
         <!-- 主内容区域 -->
         <el-main class="app-main">
           <!-- 把 direction 设置成 vertical -->
           <el-container direction="vertical">
-
-            <el-tabs class="tabs" v-model="activeTab" @tab-click="handleClick" @tab-change="handleTabChange">
+            <el-tabs
+              class="tabs"
+              v-model="activeTab"
+              @tab-click="handleClick"
+              @tab-change="handleTabChange"
+            >
               <el-tab-pane label="SQL命令行" name="sql">
-                  <!-- SQL编辑器 -->
-                  <el-aside class="sql-aside">
-                        <SqlEditor />
-                  </el-aside>
+                <!-- SQL编辑器 -->
+                <el-aside class="sql-aside">
+                  <SqlEditor />
+                </el-aside>
 
-                  <!-- 结果区域 -->
-                  <el-main class="result-main">
-                    <ResultArea
-                      :result-set="resultSet"
-                      :executing="executing"
-                      :executed="executed"
-                      :execution-time="executionTime"
-                      :affected-rows="affectedRows"
-                      :messages="messages"
-                      :history="history"
-                      @export-results="handleExportResults"
-                      @calltree="handleCallTree"
-                    />
-                  </el-main>
+                <!-- 结果区域 -->
+                <el-main class="result-main">
+                  <ResultArea
+                    :result-set="resultSet"
+                    :executing="executing"
+                    :executed="executed"
+                    :execution-time="executionTime"
+                    :affected-rows="affectedRows"
+                    :messages="messages"
+                    :history="history"
+                    @export-results="handleExportResults"
+                    @calltree="handleCallTree"
+                  />
+                </el-main>
               </el-tab-pane>
               <!-- 2. 设备管理（无结果区） -->
               <el-tab-pane label="设备管理" name="device">
@@ -86,104 +88,99 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, reactive } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
 // import { Database, Plus, InfoFilled } from '@element-plus/icons-vue'
-import DatabaseTree from '@/components/DatabaseTree.vue'
-import SqlEditor from '@/components/SqlEditor.vue'
-import ResultArea from '@/components/ResultArea.vue'
-import ConnectionConfig from '@/components/ConnectionConfig.vue'
-import DeviceList from '@/components/DeviceList.vue'
-import { removeToken } from '@/utils/auth'
-import { useRouter } from 'vue-router'
-import EquipmentTree from '@/components/EquipmentTree.vue'
-import DataStorageList from '@/components/DataStorageList.vue'
-import { useTabStore } from '@/stores/tab'
-import { storeToRefs } from 'pinia'
-import UserAvatar from '@/components/UserAvatar.vue'
-const router = useRouter()   // 先拿到实例
+import DatabaseTree from "@/components/DatabaseTree.vue";
+import SqlEditor from "@/components/SqlEditor.vue";
+import ResultArea from "@/components/ResultArea.vue";
+import ConnectionConfig from "@/components/ConnectionConfig.vue";
+import DeviceList from "@/components/DeviceList.vue";
+import { removeToken } from "@/utils/auth";
+import { useRouter } from "vue-router";
+import EquipmentTree from "@/components/EquipmentTree.vue";
+import DataStorageList from "@/components/DataStorageList.vue";
+import { useTabStore } from "@/stores/tab";
+import { storeToRefs } from "pinia";
+import UserAvatar from "@/components/UserAvatar.vue";
+const router = useRouter(); // 先拿到实例
 // const activeTab = ref('sql')
 
-const DatabaseTreeRef = ref(null)
-const tabStore = useTabStore()
-const { activeTab } = storeToRefs(tabStore)
+const DatabaseTreeRef = ref(null);
+const tabStore = useTabStore();
+const { activeTab } = storeToRefs(tabStore);
 const handleCallTree = () => {
-  console.log('查看调用树')
-  DatabaseTreeRef.value?.loadDatabases()
-}
-const deviceRef = ref()      // 对应 DeviceList
-const storageRef = ref()     // 对应 DataStorageList
+  console.log("查看调用树");
+  DatabaseTreeRef.value?.loadDatabases();
+};
+const deviceRef = ref(); // 对应 DeviceList
+const storageRef = ref(); // 对应 DataStorageList
 function handleTabChange(tabName) {
-  tabStore.activeTab = tabName
-
+  tabStore.activeTab = tabName;
 }
 
 function handleClick(tab) {
-  if (tab.props.name === 'device' && deviceRef.value) {
-    deviceRef.value.loadList()
-  } else if (tab.props.name === 'storage' && storageRef.value) {
-    storageRef.value.getList()
+  if (tab.props.name === "device" && deviceRef.value) {
+    deviceRef.value.loadList();
+  } else if (tab.props.name === "storage" && storageRef.value) {
+    storageRef.value.getList();
   }
 }
 
-const sqlCode = ref('')
+const sqlCode = ref("");
 // 响应式数据
-const showConnectionDialog = ref(false)
-const currentConnection = ref(null)
-const executing = ref(false)
-const executed = ref(false)
-const executionTime = ref(0)
-const affectedRows = ref(0)
+const showConnectionDialog = ref(false);
+const currentConnection = ref(null);
+const executing = ref(false);
+const executed = ref(false);
+const executionTime = ref(0);
+const affectedRows = ref(0);
 const resultSet = reactive({
   columns: [],
   rows: [],
   executionTime: 0,
-  affectedRows: 0
-})
-const messages = ref([])
-const history = ref([])
+  affectedRows: 0,
+});
+const messages = ref([]);
+const history = ref([]);
 
 // 处理连接成功
 const handleConnectionSuccess = (connectionConfig) => {
-  currentConnection.value = connectionConfig
-  ElMessage.success(`已连接到: ${connectionConfig.name}`)
-}
+  currentConnection.value = connectionConfig;
+  ElMessage.success(`已连接到: ${connectionConfig.name}`);
+};
 
 // 处理数据库选择
 const handleDatabaseSelect = (databaseInfo) => {
   // console.log('选择数据库:', databaseInfo)
   // ElMessage.info(`已选择数据库: ${databaseInfo.database}`)
 
-  activeTab.value = 'sql'
-}
+  activeTab.value = "sql";
+};
 
 const handlestorageSelect = (databaseInfo) => {
-  activeTab.value = 'storage'
-}
+  activeTab.value = "storage";
+};
 
 // 处理表选择
 const handleTableSelect = (tableInfo) => {
   // console.log('选择表:')
   // ElMessage.info(`已选择表: ${tableInfo.table}`)
-  activeTab.value = 'sql'
-}
-
-
+  activeTab.value = "sql";
+};
 
 // 处理导出结果
 const handleExportResults = (resultSet) => {
-  console.log('导出结果:', resultSet)
-  ElMessage.info('导出功能开发中...')
-}
-
-
+  console.log("导出结果:", resultSet);
+  ElMessage.info("导出功能开发中...");
+};
 
 // 组件挂载时的初始化
-console.log('SEIS数据库客户端已启动')
+console.log("SEIS数据库客户端已启动");
 
 function logout() {
-  removeToken()
-  router.push('/login')
+  removeToken();
+  router.push("/login");
 }
 </script>
 
@@ -195,8 +192,8 @@ function logout() {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -218,7 +215,7 @@ body {
   overflow: hidden; /* 防止双重滚动条 */
 }
 .app-header {
-  background-color: #004D9E;
+  background-color: #004d9e;
   color: white;
   padding: 0;
   display: flex;
@@ -244,7 +241,7 @@ body {
 
 .app-title .el-icon {
   font-size: 20px;
-  color: #004D9E;
+  color: #004d9e;
 }
 
 .app-aside {
@@ -253,7 +250,7 @@ body {
 }
 
 .sql-aside {
-  flex: 1;
+  /* flex: 1; */
   background-color: #fff;
   border-bottom: 1px solid #e4e7ed;
   padding: 0;
@@ -261,13 +258,13 @@ body {
   overflow: auto;
 }
 
-/* .result-main {
+.el-tab-pane {
   flex: 1;
-  background-color: #fff;
-  padding: 0;
-  overflow: auto;
-  padding-bottom: 16px;
-} */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
 
 .result-main {
   flex: 1;
@@ -334,12 +331,12 @@ body {
 
 /* 左上角 logo */
 .logo {
-position: relative;
-top: 0px;
-left: -9px;
-width: 30px;
-height: auto;
-cursor: pointer;
+  position: relative;
+  top: 0px;
+  left: -9px;
+  width: 30px;
+  height: auto;
+  cursor: pointer;
 }
 
 :deep(.tabs .el-tabs__item) {

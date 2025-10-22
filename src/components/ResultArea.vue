@@ -775,6 +775,7 @@ min-height: 500px;
   flex: 1;               
   padding: 8px;
   overflow: auto;
+  height: 100%;
 }
 
 
