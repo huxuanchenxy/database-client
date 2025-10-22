@@ -58,6 +58,7 @@ api.interceptors.request.use(
   }
 )
 
+let isShowingAuthError = false
 // 响应拦截器
 api.interceptors.response.use(
   response => {
@@ -69,15 +70,20 @@ api.interceptors.response.use(
     console.error('API错误:', error,import.meta.env.VITE_API_BASE_URL)
 
     if (error.response?.status === 401) {
-      ElMessage.error('登录已过期，请重新登录')
-      removeToken()
-      // 跳转到登录页
-      // window.location.href = '/login' // 适用于非 setup 环境
-      // 如果你在使用 Vue Router 的 setup 环境，可以用：
-      // import router from '@/router'
-      // console.log('router111', router)
-      router.push('/login')
-      // console.log('router22', router)
+      if (!isShowingAuthError) {
+        isShowingAuthError = true
+        ElMessage.error('登录已过期，请重新登录')
+
+        removeToken()
+
+        // 跳转到登录页
+        router.push('/login')
+
+        // 一段时间后允许再次提示（防止永久锁死）
+        setTimeout(() => {
+          isShowingAuthError = false
+        }, 3000)
+      }
     }
     return Promise.reject(error)
   }

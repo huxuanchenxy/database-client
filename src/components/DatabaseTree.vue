@@ -160,7 +160,7 @@ const loadDatabases = async () => {
   } catch (e) {
     console.error(e)
     currentConnection.value = null
-    ElMessage.error('连接失败:'+e)
+    // ElMessage.error('连接失败:'+e)
   } finally {
     loading.value = false
   }

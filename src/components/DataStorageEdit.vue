@@ -114,7 +114,7 @@ const fetchConfigList = async () => {
       configList.value = res.data
     }
   } catch (e) {
-    ElMessage.error('获取已存在配置列表失败')
+    console.log('fetchConfigList', e)
   }
 }
 /* 校验规则 */
