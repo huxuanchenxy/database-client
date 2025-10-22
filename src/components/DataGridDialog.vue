@@ -19,7 +19,6 @@
     <!-- 表格 -->
     <vxe-grid
       ref="xGrid"
-      v-loading="loading"
       border
       stripe
       keep-source
@@ -168,13 +167,14 @@ function buildColumns(list, columns) {
 /* ----------------- 数据加载 ----------------- */
 async function loadData() {
   loading.value = true
-  // await nextTick()
-  // console.log('extra',props.extra)
+  tableData.value = []
+  dynamicColumns.value = []
+  pager.total = 0
   let cfgstr = props.extra.data.id
   let cfgid = Number(cfgstr.replace('cfg_', ''))
   const parm = { ...connStore.conn, oprationInt: cfgid,lsInt:[pager.currentPage,pager.pageSize] }
   const res = await databaseApi.getdatavalue(parm)
-  // console.log('loadData res',res)
+  console.log('loadData res',res)
   if(res.code === 200 && res.data && res.data.list && res.data.list.length > 0)
   {
     // const total = 111

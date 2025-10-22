@@ -199,11 +199,11 @@ const loadData = async () => {
 
 
 function handleCreate(type) {
-  console.log('handleCreate',type)
+  // console.log('handleCreate',type)
   menu.show = false
-  console.log('currentNode',currentNode.value)
+  // console.log('currentNode',currentNode.value)
   if (type === 'selecttable') {
-    console.log('打开横向点位表')
+    // console.log('打开横向点位表')
     // nextTick(() => {
     //   childRef.value.loadData()
     // })
