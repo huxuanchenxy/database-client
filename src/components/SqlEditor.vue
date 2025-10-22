@@ -8,6 +8,7 @@
             @click="executeSql"
             :loading="executing"
             class="execute-button"
+            :icon="VideoPlay"
           >
             执行
           </el-button>
@@ -50,6 +51,7 @@ import { useSqlStore } from '@/stores/sqlStore'
 import { databaseApi } from '@/api/api.js'
 import { useConnStore } from '@/stores/conn'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { VideoPlay } from '@element-plus/icons-vue'
 
 const connStore = useConnStore()
 
