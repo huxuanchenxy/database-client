@@ -82,7 +82,6 @@
                 :loading="loading"
                 border
                 stripe
-                height="100%"
                 size="mini"
                 highlight-hover-row
                 auto-resize
@@ -772,10 +771,13 @@ min-height: 500px;
   height: 100%;
 }
 .grid-wrapper {
-  flex: 1;               
+  /* flex: 1;                */
   padding: 8px;
-  overflow: auto;
-  height: 100%;
+  /* overflow: auto;
+  height: 100%; */
+
+  flex: 1;                /* 占满剩余空间 */
+  min-height: 0; 
 }
 
 
@@ -816,5 +818,9 @@ min-height: 500px;
 
 :deep(.vxe-table .vxe-header--row .vxe-header--column) {
   background-color: #DCE7FF !important;   /* 背景 */
+}
+
+.result-content{
+  height: 300px;
 }
 </style>

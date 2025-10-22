@@ -33,7 +33,7 @@
           v-model:value="sqlCode"
           language="sql"
           theme="vs"
-          height="30vh"
+          height="27vh"
           class="editor"
           :options="{ minimap: { enabled: false } }"
         />
