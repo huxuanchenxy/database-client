@@ -253,4 +253,12 @@ defineExpose({ getList })
   justify-content: space-between;
   align-items: center;
 }
+
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell){
+  background-color: #DCE7FF !important;
+}
+
+:deep(.el-table th) {
+  background-color: #DCE7FF !important;   /* 你要的颜色 */
+}
 </style>
