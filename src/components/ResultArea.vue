@@ -456,7 +456,7 @@ const loadPage = async (page, size) => {
             tablePage.total = res.data.rowCount
             resultSet.affectedRows  =  0
             resultSet.caozuo = true
-            if(res.data.isSysTb)
+            if(res.data.isSysTb || selecttype.value == 'view')
             {
               showbutton.value = false
               resultSet.caozuo = false
@@ -489,12 +489,13 @@ const history = ref([
 const executing = ref(false)
 const activeTab = ref('results')
 
-
+const selecttype = ref('table')
 watch(
   () => sqlStore.data,
   (newVal) => {
     // console.log('ResultArea watch new data:', newVal)
     localData.value = newVal
+    selecttype.value = newVal.type
     loadResult(newVal)
   },
   { immediate: true }

@@ -73,6 +73,9 @@
     <div class="item" @click="handleCreate('view')" v-if="menu.type === 'view111'">
       新建视图
     </div>
+    <div class="item"  v-if="menu.type === 'alterview'">
+        <div class="item" @click="handleCreate('selectview')">打开视图</div>
+    </div>
   </div>
 
     <!-- 连接配置对话框 -->
@@ -188,7 +191,7 @@ function buildTree({ databases, tableList, viewList }) {
         {
           label: '视图',
           type: 'view',
-          children: viewList.map(v => ({ label: v.tableName }))
+          children: viewList.map(v => ({ label: v.tableName,type: 'alterview' }))
         }
       ]
     }
@@ -235,6 +238,8 @@ function onContextMenu(event, data, node) {
         menu.type = 'view';
     } else if (data.type === 'altertable') {
         menu.type = 'altertable';
+    }else if (data.type === 'alterview') {
+        menu.type = 'alterview';
     } else {
         menu.type = null;
         menu.show = false;
@@ -273,6 +278,9 @@ function handleCreate(type) {
   }else if(type === 'droptable'){
     // console.log('删除表逻辑')
     dropTable();
+  }else if(type === 'selectview'){
+    // console.log('selectview')
+    selectTable('view');
   }
 
 }
@@ -327,10 +335,10 @@ const dropTable = async()=> {
 }
 
 
-const selectTable = async()=> {
+const selectTable = async(type = 'table')=> {
   let currrenttable = currentNode.value.data.label
   let sql = ' SELECT * FROM ' + currrenttable + '  '
-  sqlStore.setResult(sql, currrenttable)
+  sqlStore.setResult(sql, currrenttable,type)
 }
 
 function editTable() {
