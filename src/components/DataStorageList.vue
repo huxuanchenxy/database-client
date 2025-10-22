@@ -142,7 +142,8 @@ async function getList() {
     // list.value = mock
     // listTotal.value = data.total
   } catch (e) {
-    ElMessage.error('获取列表失败')
+    // ElMessage.error('获取列表失败')
+    console.log('DatasStorageList:',e)
   }
 }
 

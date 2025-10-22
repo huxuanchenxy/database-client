@@ -711,7 +711,8 @@ const fetchList = async () => {
       ElMessage.error(JSON.stringify(res))
     }
   } catch (e) {
-    ElMessage.error("获取列表失败");
+    // ElMessage.error("获取列表失败");
+    console.log('DeviceEdit',e);
   } finally {
     loading.value = false;
   }

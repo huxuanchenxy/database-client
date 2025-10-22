@@ -238,7 +238,8 @@ const fetchPlcDevices = async () => {
       ElMessage.error(JSON.stringify(res))
     }
   } catch (e) {
-    ElMessage.error('PLC设备列表加载失败')
+    // ElMessage.error('PLC设备列表加载失败')
+    console.log('PLC设备列表加载失败',e)
   }
 }
 
