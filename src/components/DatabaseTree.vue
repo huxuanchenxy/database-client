@@ -8,17 +8,8 @@
       >
         连接数据库
       </el-button>
-
-
-
     <!-- 第二行：连接状态（带圆点） -->
     <div class="connection-info">
-      <!-- 未连接时也可以显示，也可以隐藏，按你需求 -->
-      <!-- <el-tag :type="currentConnection ? 'info' : 'warning'">
-        <span class="dot" :class="{ green: currentConnection, yellow: !currentConnection }" />
-        {{ currentConnection ? `已连接: ${currentConnection.dbHost}` : '未连接' }}
-      </el-tag> -->
-
       <el-tag :type="currentConnection?.dbHost ? 'info' : 'warning'">
         <span
           class="dot"
@@ -367,7 +358,7 @@ const handleDisconnect = () => {
 
 <style scoped>
 .database-tree {
-  height: 510px;
+  /* height: 510px; */
   display: flex;
   flex-direction: column;
   border-right: 1px solid #e4e7ed;
@@ -444,7 +435,7 @@ z-index: 9999;
 }
 
 .tree-wrapper {
-  height: 400px;          /* 想要多高就写多少 */
+  /* height: 400px;           */
   overflow: auto;         /* 超出时出现滚动条 */
   border: 1px solid #dcdfe6; /* 可选，美观 */
 }

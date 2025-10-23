@@ -25,12 +25,31 @@
       <el-container>
         <!-- 左侧数据库树 -->
         <el-aside width="292px" class="app-aside">
-          <DatabaseTree
-            @database-selected="handleDatabaseSelect"
-            @table-selected="handleTableSelect"
-            ref="DatabaseTreeRef"
-          />
-          <EquipmentTree @root-selected="handlestorageSelect" ref="eqTree" />
+          <!-- Splitpanes 必须有固定高度 -->
+          <div class="split-wrapper">
+            <splitpanes horizontal>
+              <!-- 上半部分 -->
+              <pane min-size="20" size="57">
+                <div class="tree-wrapper">
+                  <DatabaseTree
+                    @database-selected="handleDatabaseSelect"
+                    @table-selected="handleTableSelect"
+                    ref="DatabaseTreeRef"
+                  />
+                </div>
+              </pane>
+
+              <!-- 下半部分 -->
+              <pane min-size="20" size="43">
+                <div class="tree-wrapper">
+                  <EquipmentTree
+                    @root-selected="handlestorageSelect"
+                    ref="eqTree"
+                  />
+                </div>
+              </pane>
+            </splitpanes>
+          </div>
         </el-aside>
 
         <!-- 主内容区域 -->
@@ -90,7 +109,8 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-// import { Database, Plus, InfoFilled } from '@element-plus/icons-vue'
+import { Splitpanes, Pane } from "splitpanes";
+import "splitpanes/dist/splitpanes.css";
 import DatabaseTree from "@/components/DatabaseTree.vue";
 import SqlEditor from "@/components/SqlEditor.vue";
 import ResultArea from "@/components/ResultArea.vue";
@@ -244,9 +264,63 @@ body {
   color: #004d9e;
 }
 
-.app-aside {
+/* .app-aside {
   background-color: #f8f9fa;
   border-right: 1px solid #e4e7ed;
+} */
+
+.app-aside {
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7fa;
+  border-right: 1px solid #dcdfe6;
+  padding: 0;
+  height: 100%; /* ✅ 非常关键 */
+}
+
+.split-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* ✅ 确保 Splitpanes 有可分配空间 */
+}
+
+.tree-wrapper {
+  height: 100%;
+  overflow: auto;
+}
+
+/* 自定义拖动条样式 */
+.splitpanes__splitter {
+  position: relative;
+  background-color: #dcdfe6;
+  height: 8px !important; /* 拖动条厚度 */
+  cursor: row-resize;
+  transition: background-color 0.2s;
+}
+
+/* 悬停变色 */
+.splitpanes__splitter:hover {
+  background-color: #b1b3b8;
+}
+
+/* 中间横线 */
+.splitpanes__splitter::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;           /* 横线长度 */
+  height: 2px;           /* 横线粗细 */
+  background-color: #909399;
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* 悬停时横线颜色加深 */
+.splitpanes__splitter:hover::before {
+  background-color: #606266;
 }
 
 .sql-aside {
@@ -348,5 +422,11 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.split-container {
+  height: 100%;
+  background-color: #f5f7fa;
+  border-right: 1px solid #dcdfe6;
 }
 </style>
