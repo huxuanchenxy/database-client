@@ -673,10 +673,30 @@ const initForm = () => ({
 
 const form2 = reactive(initForm());
 
+
+/* --------------------- 计算属性：已占用的寄存器地址 --------------------- */
+const usedRegisterAddrs = computed(() => {
+  // 如果是“修改”状态，需要把自己这条记录排除掉，否则保存时会误判
+  const skipId = isAdd2.value ? -1 : form2.id;
+  return tableData.value
+    .filter(item => item.id !== skipId)
+    .map(item => Number(item.register_address));
+});
+
+/* --------------------- 校验器：寄存器地址不能重复 --------------------- */
+const validateUniqueAddr = (rule, value, callback) => {
+  if (value == null) return callback();          // 非空校验交给原规则
+  if (usedRegisterAddrs.value.includes(Number(value))) {
+    return callback(new Error('寄存器地址已存在，请重新输入'));
+  }
+  callback();
+};
+
 const rules = {
   point_name: [{ required: true, message: "请输入点位名称", trigger: "blur" }],
   register_address: [
     { required: true, message: "请输入寄存器地址", trigger: "blur" },
+    { validator: validateUniqueAddr, trigger: ['blur', 'change'] },
   ],
   register_count: [
     { required: true, message: "请输入寄存器数量", trigger: "blur" },
