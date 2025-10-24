@@ -1,39 +1,6 @@
 <template>
   <div class="database-tree">
-    <div class="tree-header">
-      <el-button
-        type="primary"
-        @click="showConnectionDialog = true"
-        :icon="Plus"
-      >
-        连接数据库
-      </el-button>
-    <!-- 第二行：连接状态（带圆点） -->
-    <div class="connection-info">
-      <el-tag :type="currentConnection?.dbHost ? 'info' : 'warning'">
-        <span
-          class="dot"
-          :class="{ green: currentConnection?.dbHost, yellow: !currentConnection?.dbHost }"
-        />
-        {{
-          currentConnection?.dbHost
-            ? `已连接: ${currentConnection.dbHost}`
-            : '未连接'
-        }}
-      </el-tag>
-                <!-- 断开按钮 -->
-    <el-button
-      v-if="currentConnection?.dbHost"
-      type="danger"
-      plain
-      @click="handleDisconnect"
-      style="margin-left:12px;height:22px; padding:0 6px; font-size:12px;"
-    >
-      断开连接
-    </el-button>
-    </div>
-    </div>
-        <div class="toolbar">
+    <div class="toolbar">
         <span class="title">数据库</span>
     </div>
  <div class="tree-wrapper">
@@ -83,7 +50,7 @@
 import { ref, onMounted,watch,reactive  } from 'vue'
 import { ElMessage,ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import ConnectionConfig from './ConnectionConfig.vue'
+import ConnectionConfig from '@/components/ConnectionConfig.vue'
 import { databaseApi } from '@/api/api'
 import { useConnStore } from '@/stores/conn'
 
@@ -132,6 +99,7 @@ const loadDatabases = async () => {
   //todo: 获取连接信息如果失败则把connStore.conn变null
   // console.log('loadDatabases connStore.conn',connStore.conn)
   currentConnection.value = connStore.conn
+  treeData.value = [] 
   // console.log('loadDatabases currentConnection.value',currentConnection.value)
   // if (!currentConnection.value) return
   if (!connStore.conn.dbHost) return
@@ -192,7 +160,7 @@ function buildTree({ databases, tableList, viewList }) {
 watch(
   () => treeStore.refreshTrigger,
   () => {
-    // console.log('进tree了')
+    console.log('进tree了')
     loadDatabases() // ✅ 触发刷新
   }
 )

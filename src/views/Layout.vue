@@ -25,6 +25,7 @@
       <el-container>
         <!-- 左侧数据库树 -->
         <el-aside width="292px" class="app-aside">
+          <DatabaseHead />
           <!-- Splitpanes 必须有固定高度 -->
           <div class="split-wrapper">
             <splitpanes horizontal>
@@ -123,6 +124,7 @@ import DataStorageList from "@/components/DataStorageList.vue";
 import { useTabStore } from "@/stores/tab";
 import { storeToRefs } from "pinia";
 import UserAvatar from "@/components/UserAvatar.vue";
+import DatabaseHead from "@/components/DatabaseHead.vue";
 const router = useRouter(); // 先拿到实例
 // const activeTab = ref('sql')
 
@@ -282,7 +284,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%; /* ✅ 确保 Splitpanes 有可分配空间 */
+  height: 100%; 
+  overflow: auto;
 }
 
 .tree-wrapper {
