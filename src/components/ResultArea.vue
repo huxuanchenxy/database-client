@@ -772,11 +772,7 @@ min-height: 500px;
   height: 100%;
 }
 .grid-wrapper {
-  /* flex: 1;                */
-  padding: 8px;
-  /* overflow: auto;
-  height: 100%; */
-
+  padding: 1% 2%;
   flex: 1;                /* 占满剩余空间 */
   min-height: 0; 
 }
@@ -786,6 +782,9 @@ min-height: 500px;
   display: flex;
   align-items: center;
   padding: 0 30px;
+}
+.vxe-grid.size--mini{
+  border: 2px solid #a0c4ff;
 }
 
 /* 按钮组占满左侧剩余空间，把表名顶到最右 */

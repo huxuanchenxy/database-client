@@ -349,6 +349,9 @@ body {
   display: flex;
   flex-direction: column;
 }
+.el-main{
+  overflow: hidden;
+}
 
 .app-main {
   display: flex;

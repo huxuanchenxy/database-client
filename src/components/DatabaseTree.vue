@@ -188,7 +188,7 @@ function onContextMenu(event, data, node) {
     currentNode.value = node;
     // 使用鼠标事件的实际坐标
     menu.left = event.clientX;
-    menu.top = event.clientY - 50;
+    menu.top = event.clientY-130;
     menu.show = true;
     
     if (data.type === 'table') {
