@@ -78,7 +78,7 @@
                 :data="resultSet.rows"
                 :columns="gridColumns"
                 keep-source
-                :edit-config="{ trigger: 'manual', mode: 'row', showStatus: true,showAsterisk: true }"
+                :edit-config="{ trigger: 'click', mode: 'row', showStatus: true,showAsterisk: true,autoClear: false }"
                 :loading="loading"
                 border
                 stripe
