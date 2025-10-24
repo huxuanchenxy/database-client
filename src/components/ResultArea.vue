@@ -785,6 +785,7 @@ min-height: 500px;
 }
 .vxe-grid.size--mini{
   border: 2px solid #a0c4ff;
+  border-radius: 4px;
 }
 
 /* 按钮组占满左侧剩余空间，把表名顶到最右 */
