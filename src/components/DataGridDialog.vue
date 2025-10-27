@@ -226,6 +226,23 @@ async function saveRow(row) {
   const newData = JSON.parse(JSON.stringify(editRecord.row)) // 此时就是最新值
   // console.log('✅ newData', newData)
 
+    // ✅ 手动转换数字字段
+  dynamicColumns.value.forEach(col => {
+    const field = col.field
+    const render = col.editRender
+    if (
+      render &&
+      render.name === '$input' &&
+      render.attrs &&
+      render.attrs.type === 'number'
+    ) {
+      if (newData[field] !== null && newData[field] !== undefined && newData[field] !== '') {
+        newData[field] = Number(newData[field])
+      }
+    }
+  })
+
+  console.log('✅ 转换后的 newData', newData)
   row.__saving = true
   try {
     const parm = { ...connStore.conn, oprationInt: 1, mpJson: newData }
