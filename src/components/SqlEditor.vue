@@ -58,13 +58,6 @@ const monaco = useMonaco()
 const sqlCode = ref('')
 const isDarkTheme = ref(true)
 const sqlStore = useSqlStore()
-const toggleTheme = () => {
-  isDarkTheme.value = !isDarkTheme.value
-}
-
-const clearSql = () => {
-  sqlCode.value = ''
-}
 
 const executeSql = async() => {
   const sqlText = sqlCode.value   // 保持原始字符串
@@ -79,39 +72,6 @@ const executeSql = async() => {
   sqlStore.setResult(sqlText, result)
 }
 
-const currentConnection = ref(null)
-// const executeSqlWithText = async (sqlText) => {
-//   currentConnection.value = connStore.conn
-//   // console.log('currentConnection',currentConnection.value)
-//   let parm = {
-//         ...currentConnection.value,
-//         oprationString: sqlText,
-//   }
-//   // console.log('parm', parm)
-//   const res = await databaseApi.executeSqlWithText(parm)
-//   console.log('res',res)
-//   if(res.code === 200){
-//     ElMessage.success('执行成功')
-//   }else{
-//     ElMessage.error('执行失败 失败原因:' + res.message)
-//   }
-
-// }
-
-// onMounted(() => {
-//   const m = monaco.value || window.monaco
-//   if (!m) return
-//   m.editor.defineTheme('custom-sql-theme', {
-//     base: 'vs', // 'vs-dark' 或 'hc-black'
-//     inherit: true,
-//     rules: [],
-//     colors: {
-//       'editor.background': '#042464',       // 编辑器背景（最重要）
-//       'editorWidget.background': '#042464',
-//       'editorGutter.background': '#042464'
-//     }
-//   })
-// })
 </script>
 
 <style>
@@ -142,12 +102,11 @@ const currentConnection = ref(null)
 }
 
 .monaco-editor,
-.monaco-editor .overflow-guard,
 .monaco-editor .monaco-editor-background,
-.monaco-editor .view-lines,
-.monaco-editor .margin,
-.monaco-editor .lines-content {
+.monaco-editor .margin {
   background-color: #DCE7FF !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 /* 有时需要覆盖编辑器外层容器（wrapper） */
