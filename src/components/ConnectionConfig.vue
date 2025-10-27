@@ -101,7 +101,7 @@
 <script setup>
 import { ref, reactive, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { databaseApi } from '../api/api'
+import { databaseApi } from '@/api/api'
 import { useConnStore } from '@/stores/conn'
 import { storeToRefs } from 'pinia'
 

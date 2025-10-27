@@ -56,6 +56,7 @@ import { ElMessage,ElMessageBox } from 'element-plus'
 import ConnectionConfig from '@/components/ConnectionConfig.vue'
 import { useConnStore } from '@/stores/conn'
 import { useTreeStore } from '@/stores/treeStore'
+import { databaseApi } from '@/api/api'
 const treeStore = useTreeStore()
 const connStore = useConnStore()
 const showConnectionDialog = ref(false)
@@ -70,16 +71,30 @@ const handleDisconnect = () => {
 }
 
 const handleConnectionSuccess = (connectionConfig) => {
-  console.log('handleConnectionSuccess conn:',connectionConfig)
+  // console.log('handleConnectionSuccess conn:',connectionConfig)
   currentConnection.value = connStore.conn
   treeStore.triggerRefresh()
 //   loadDatabases()
 }
 
 
-onMounted(() => {
-  currentConnection.value = connStore.conn
+onMounted( async() => {
+  await load()
 })
+
+async function load() {
+  // console.log('onMounted conn:',connStore.conn)
+  try {
+    const result = await databaseApi.testConnection(connStore.conn)
+    if (result.code === 200) {
+      currentConnection.value = connStore.conn
+    } else {
+      currentConnection.value = null
+    }
+  } catch (error) {
+    currentConnection.value = null
+  }
+}
 </script>
 
 <style scoped>
