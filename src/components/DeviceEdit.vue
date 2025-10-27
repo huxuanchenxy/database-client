@@ -58,6 +58,7 @@
             v-model="form.is_active"
             active-text="启用"
             inactive-text="禁用"
+            :before-change="beforeActiveChange"
           />
         </el-form-item>
 
@@ -866,6 +867,30 @@ onMounted(() => {
 
 function onDialogOpened() {
   fetchList()
+  fetchRunningList()
+}
+
+const runningDeviceIds = ref(new Set())
+async function fetchRunningList() {
+  try {
+    // 这里调你自己的接口，只要能返回 status=1 的记录即可
+    const res = await databaseApi.getallconfiginfotj(connStore.conn) // <= 换成真实接口
+    if (res.code === 200 && Array.isArray(res.data)) {
+      runningDeviceIds.value = new Set(
+        res.data.filter(i => i.status === 1).map(i => i.deviceid)
+      )
+    }
+  } catch (e) {
+    console.error('获取运行中的配置失败', e)
+  }
+}
+async function beforeActiveChange(newVal) {
+  // newVal = false 表示用户想“关闭”
+  if (!newVal && runningDeviceIds.value.has(form.value.id)) {
+    ElMessage.warning('该设备正在运行中，不允许禁用！')
+    return false // 拦截
+  }
+  return true // 放行
 }
 </script>
 
