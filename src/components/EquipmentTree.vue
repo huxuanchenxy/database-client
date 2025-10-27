@@ -255,7 +255,7 @@ watch(
 
 
 .context-menu {
-position: absolute;
+position: fixed;
 z-index: 9999;
 }
 

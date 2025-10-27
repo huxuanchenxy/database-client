@@ -188,7 +188,7 @@ function onContextMenu(event, data, node) {
     currentNode.value = node;
     // 使用鼠标事件的实际坐标
     menu.left = event.clientX;
-    menu.top = event.clientY-130;
+    menu.top = event.clientY;
     menu.show = true;
     
     if (data.type === 'table') {
@@ -377,7 +377,7 @@ position: relative;
 
 
 .context-menu {
-position: absolute;
+position: fixed;
 z-index: 9999;
 }
 
