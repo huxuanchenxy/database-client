@@ -7,7 +7,7 @@
       </div>
     </template>
     <div class="table-wrapper">
-      <el-table :data="deviceList" stripe style="width: 100%">
+      <el-table :data="deviceList" stripe height="100%" style="min-width: 700px">
         <el-table-column type="index" width="60" label="序号" />
         <el-table-column prop="device_name" label="设备名称" />
         <el-table-column prop="protocol_type" label="协议" />
@@ -166,7 +166,7 @@ defineExpose({ loadList })
 .table-wrapper {
   width: 100%;
   height:70vh;
-  overflow: auto; /* 窗口缩小时出现滚动条 */
+  overflow-y: auto; /* 窗口缩小时出现滚动条 */
 }
 
 
