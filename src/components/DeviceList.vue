@@ -58,7 +58,7 @@
             <el-button link type="primary" @click="openEdit(row)"
               >配置</el-button
             >
-            <el-popconfirm title="确定删除吗？" @confirm="delDevice(row.id)">
+            <el-popconfirm title="确定删除吗？" @confirm="delDevice(row)">
               <template #reference>
                 <el-button link type="danger">删除</el-button>
               </template>
@@ -110,12 +110,16 @@ function handleOk() {
   loadList();
 }
 
-async function delDevice(id) {
+async function delDevice(row) {
   // deviceList.value = deviceList.value.filter(item => item.id !== id)
   // ElMessage.success('删除成功')
   // console.log('id',id)
+  let chk = await beforeActiveChange(row)
+  // console.log('chk',chk)
+  if(!chk) return;
+
   try {
-    const parm = { ...connStore.conn, oprationInt: id };
+    const parm = { ...connStore.conn, oprationInt: row.id };
     const res = await databaseApi.deldevice(parm);
     if (res.code === 200) {
       ElMessage.success("删除成功");
@@ -134,8 +138,13 @@ function toggleConnect(row) {
 }
 
 onMounted(() => {
-  loadList();
+  Init()
 });
+
+function Init() {
+  loadList()
+  fetchRunningList()
+}
 
 // 颜色映射：success / danger / warning / info / primary 任选
 const statusColorMap = {
@@ -153,7 +162,34 @@ const btnMap = {
   DISCONNECTED: { type: "primary", text: "连接" },
 };
 
-defineExpose({ loadList })
+const runningDeviceIds = ref(new Set())
+async function fetchRunningList() {
+  try {
+    // 这里调你自己的接口，只要能返回 status=1 的记录即可
+    const res = await databaseApi.getallconfiginfotj(connStore.conn)
+    // console.log('running res',res)
+    if (res.code === 200 && Array.isArray(res.data)) {
+      runningDeviceIds.value = new Set(
+        res.data.filter(i => i.status === 1).map(i => i.deviceid)
+      )
+    }
+  } catch (e) {
+    console.error('获取运行中的配置失败', e)
+  }
+
+  // console.log('runningDeviceIds.value1111',runningDeviceIds.value)
+}
+async function beforeActiveChange(row) {
+  // newVal = false 表示用户想“关闭”
+  // console.log('runningDeviceIds.value222',runningDeviceIds.value,row)
+  if (row.is_active && runningDeviceIds.value.has(row.id)) {
+    ElMessage.warning('该设备正在运行中，不允许删除！')
+    return false // 拦截
+  }
+  return true // 放行
+}
+
+defineExpose({ loadList,Init })
 </script>
 
 <style scoped>

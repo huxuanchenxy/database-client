@@ -425,6 +425,8 @@ watch(
       form.value = props.row
         ? { ...defaultForm(), ...props.row }
         : defaultForm();
+
+        // console.log('form.value',form.value);
     }
   }
 );
@@ -886,7 +888,8 @@ async function fetchRunningList() {
 }
 async function beforeActiveChange(newVal) {
   // newVal = false 表示用户想“关闭”
-  if (!newVal && runningDeviceIds.value.has(form.value.id)) {
+  console.log('beforeActiveChange',form.value.is_active)
+  if (form.value.is_active && runningDeviceIds.value.has(form.value.id)) {
     ElMessage.warning('该设备正在运行中，不允许禁用！')
     return false // 拦截
   }

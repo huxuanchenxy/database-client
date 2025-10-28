@@ -143,7 +143,7 @@ function handleTabChange(tabName) {
 
 function handleClick(tab) {
   if (tab.props.name === "device" && deviceRef.value) {
-    deviceRef.value.loadList();
+    deviceRef.value.Init();
   } else if (tab.props.name === "storage" && storageRef.value) {
     storageRef.value.getList();
   }
