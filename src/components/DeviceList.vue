@@ -183,7 +183,7 @@ async function beforeActiveChange(row) {
   // newVal = false 表示用户想“关闭”
   // console.log('runningDeviceIds.value222',runningDeviceIds.value,row)
   if (row.is_active && runningDeviceIds.value.has(row.id)) {
-    ElMessage.warning('该设备正在运行中，不允许删除！')
+    ElMessage.warning('该设备已被存储管理占用，不允许删除！')
     return false // 拦截
   }
   return true // 放行

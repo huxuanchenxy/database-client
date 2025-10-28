@@ -890,7 +890,7 @@ async function beforeActiveChange(newVal) {
   // newVal = false 表示用户想“关闭”
   console.log('beforeActiveChange',form.value.is_active)
   if (form.value.is_active && runningDeviceIds.value.has(form.value.id)) {
-    ElMessage.warning('该设备正在运行中，不允许禁用！')
+    ElMessage.warning('该设备已被存储管理占用，不允许禁用！')
     return false // 拦截
   }
   return true // 放行
