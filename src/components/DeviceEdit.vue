@@ -353,7 +353,7 @@
               </el-form>
 
               <template #footer>
-                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button @click="handleClose">取 消</el-button>
                 <el-button
                   type="primary"
                   :loading="saveLoading"
@@ -602,6 +602,7 @@ async function handleSubmit() {
 
 function handleClose() {
   visible.value = false;
+  tableData.value = [];
 }
 
 //点位配置
@@ -718,6 +719,7 @@ const rules = {
 /* --------------------- API 相关 --------------------- */
 // 查询列表
 const fetchList = async () => {
+  tableData.value = []
   if (!connStore.conn.dbHost) return
   loading.value = true;
   try {
