@@ -26,7 +26,7 @@
       <el-container>
         <!-- 左侧数据库树 -->
         <el-aside width="292px" class="app-aside">
-          <DatabaseHead />
+          <DatabaseHead @request-connection="handleConnectionRequest" />
           <!-- Splitpanes 必须有固定高度 -->
           <div class="split-wrapper">
             <splitpanes horizontal>
@@ -133,6 +133,24 @@ const router = useRouter(); // 先拿到实例
 const DatabaseTreeRef = ref(null);
 const tabStore = useTabStore();
 const { activeTab } = storeToRefs(tabStore);
+
+// 暴露打开连接对话框的方法
+const openConnectionDialog = () => {
+  console.log('=== Layout: 收到打开连接对话框请求 ===')
+  showConnectionDialog.value = true
+};
+
+// 暴露给子组件使用
+defineExpose({
+  openConnectionDialog
+});
+
+// 监听子组件的连接请求事件
+const handleConnectionRequest = () => {
+  console.log('=== Layout: 收到连接请求事件 ===')
+  openConnectionDialog()
+};
+
 const handleCallTree = () => {
   console.log("查看调用树");
   DatabaseTreeRef.value?.loadDatabases();
@@ -170,8 +188,17 @@ const history = ref([]);
 
 // 处理连接成功
 const handleConnectionSuccess = (connectionConfig) => {
+  console.log('=== Layout: 收到 connection-success 事件 ===')
+  console.log('=== Layout: 连接配置:', connectionConfig)
+  console.log('=== Layout: 通知 DatabaseTree 更新 ===')
+  
   currentConnection.value = connectionConfig;
+  
+  // 通知 DatabaseTree 组件处理连接成功
+  DatabaseTreeRef.value?.handleConnectionSuccess(connectionConfig);
+  
   ElMessage.success(`已连接到: ${connectionConfig.name}`);
+  console.log('=== Layout: 连接成功处理完成 ===')
 };
 
 // 处理数据库选择

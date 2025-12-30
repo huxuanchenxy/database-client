@@ -3,7 +3,7 @@
     <div class="tree-header">
       <el-button
         type="primary"
-        @click="showConnectionDialog = true"
+        @click="handleRequestConnection"
         :icon="Plus"
       >
         连接数据库
@@ -40,12 +40,6 @@
           断开连接
         </el-button>
       </div>
-
-      <!-- 连接配置对话框 -->
-      <ConnectionConfig
-        v-model="showConnectionDialog"
-        @connection-success="handleConnectionSuccess"
-      />
     </div>
 
 </template>
@@ -53,28 +47,47 @@
 <script setup>
 import { ref, onMounted,watch,reactive  } from 'vue'
 import { ElMessage,ElMessageBox } from 'element-plus'
-import ConnectionConfig from '@/components/ConnectionConfig.vue'
 import { useConnStore } from '@/stores/conn'
 import { useTreeStore } from '@/stores/treeStore'
 import { databaseApi } from '@/api/api'
 const treeStore = useTreeStore()
 const connStore = useConnStore()
-const showConnectionDialog = ref(false)
+const emit = defineEmits(['request-connection'])
 const currentConnection = ref(null)
 
+const handleRequestConnection = () => {
+  console.log('=== DatabaseHead: 用户点击连接数据库 ===')
+  console.log('=== DatabaseHead: 发送 request-connection 事件 ===')
+  emit('request-connection')
+  console.log('=== DatabaseHead: 事件发送完成 ===')
+}
+
 const handleDisconnect = () => {
+  console.log('=== DatabaseHead: 用户点击断开连接 ===')
+  
   connStore.clearConn()          // 1. 清空持久化数据
   currentConnection.value = null // 2. 清空本地响应式状态
-//   treeData.value = []            // 3. 清空左侧树
+  
+  console.log('=== DatabaseHead: 触发 treeStore.refresh ===')
   treeStore.triggerRefresh()
+  
   ElMessage.success('已断开数据库连接')
+  console.log('=== DatabaseHead: 断开连接完成 ===')
 }
 
 const handleConnectionSuccess = (connectionConfig) => {
-  // console.log('handleConnectionSuccess conn:',connectionConfig)
+  console.log('=== DatabaseHead: 收到 connection-success 事件 ===')
+  console.log('=== DatabaseHead: handleConnectionSuccess 开始 ===')
+  console.log('=== DatabaseHead: 连接配置:', connectionConfig)
+  console.log('=== DatabaseHead: currentConnection 将在此处更新 ===')
+  
   currentConnection.value = connStore.conn
+  console.log('=== DatabaseHead: 更新 currentConnection:', currentConnection.value)
+  
   treeStore.triggerRefresh()
-//   loadDatabases()
+  console.log('=== DatabaseHead: 触发 treeStore.refresh 完成 ===')
+  
+  console.log('=== DatabaseHead: handleConnectionSuccess 结束 ===')
 }
 
 

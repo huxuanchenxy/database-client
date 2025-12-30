@@ -219,7 +219,7 @@ const handleSaveConnection = async () => {
 		     password:connectionForm.password,
     }
     const result = await databaseApi.testConnection(parm)
-    console.log('testConnection',result)
+    console.log('testConnection', result)
     if (result.code === 200) {
       
       const connPayload = {
@@ -229,10 +229,22 @@ const handleSaveConnection = async () => {
         password: connectionForm.password
       }
 
-      updateConn(connPayload) 
-      emit('connection-success', connectionForm)
+      console.log('=== ConnectionConfig: 更新 store ===')
+      updateConn(connPayload)
+      console.log('=== ConnectionConfig: store 更新完成 ===')
+      
+      // 等待一下确保 store 更新完成，然后触发事件
+      setTimeout(() => {
+        console.log('=== ConnectionConfig: 触发 connection-success 事件 ===')
+        emit('connection-success', connectionForm)
+        console.log('=== ConnectionConfig: 事件触发完成 ===')
+      }, 50)
+      
       ElMessage.success('连接成功！')
-      handleClose()
+      // 延迟关闭对话框，确保事件处理完成
+      setTimeout(() => {
+        handleClose()
+      }, 100)
     } else {
       ElMessage.error(result.message + ":" + result.data)
     }

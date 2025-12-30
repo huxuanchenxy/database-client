@@ -11,6 +11,22 @@
    @node-click="onNodeClick"
    class="treecss"
    >
+   <template #default="{ data }">
+     <div class="tree-node">
+       <span>{{ data.label }}</span>
+       <!-- 为连接根节点添加断开连接按钮 -->
+       <el-button 
+         v-if="data.type === 'connection'"
+         type="danger" 
+         size="small" 
+         text
+         @click.stop="handleDisconnectConnection(data)"
+         class="disconnect-btn"
+       >
+         断开连接
+       </el-button>
+     </div>
+   </template>
   </el-tree>
 </div>
     <!-- 右键菜单 -->
@@ -34,23 +50,19 @@
     <div class="item"  v-if="menu.type === 'alterview'">
         <div class="item" @click="handleCreate('selectview')">打开视图</div>
     </div>
+    <div class="item" @click="handleDisconnectConnection" v-if="menu.type === 'connection'">
+      断开连接
+    </div>
   </div>
-
-    <!-- 连接配置对话框 -->
-    <ConnectionConfig
-      v-model="showConnectionDialog"
-      @connection-success="handleConnectionSuccess"
-    />
   </div>
 
    <TableDesigner ref="designer" />
 </template>
 
 <script setup>
-import { ref, onMounted,watch,reactive  } from 'vue'
+import { ref, onMounted,watch,reactive, nextTick  } from 'vue'
 import { ElMessage,ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import ConnectionConfig from '@/components/ConnectionConfig.vue'
 import { databaseApi } from '@/api/api'
 import { useConnStore } from '@/stores/conn'
 
@@ -78,6 +90,8 @@ const treeRef = ref()
 const currentConnection = ref(null)
 // const treeData = ref([])
 const loading = ref(false)
+// 存储所有连接实例
+const connections = ref([])
 
 
 const treeProps = {
@@ -86,55 +100,196 @@ const treeProps = {
 }
 
 // 处理连接成功
-const handleConnectionSuccess = (connectionConfig) => {
-  // console.log('handleConnectionSuccess conn:',connectionConfig)
-  currentConnection.value = connectionConfig
+const handleConnectionSuccess = async (connectionConfig) => {
+  console.log('=== DatabaseTree: 收到 connection-success 事件 ===')
+  console.log('=== DatabaseTree: handleConnectionSuccess 开始 ===')
+  console.log('=== DatabaseTree: 连接配置:', connectionConfig)
+  console.log('=== DatabaseTree: push前 connections.value:', connections.value)
+  console.log('=== DatabaseTree: push前 connections.value.length:', connections.value.length)
+  
+  // 检查是否已存在相同IP的连接
+  const existingIndex = connections.value.findIndex(conn => 
+    conn.dbHost === connStore.conn.dbHost
+  )
+  
+  if (existingIndex !== -1) {
+    console.log('检测到相同IP的连接，但按用户要求仍会添加新的连接实例')
+  }
+  
+  // 总是添加新的连接实例（不管IP是否重复）
+  const newConnection = {
+    ...connStore.conn,
+    id: Date.now(), // 临时ID，实际应该使用唯一标识
+    connectionName: connectionConfig.name
+  }
+  
+  console.log('创建新连接实例:', newConnection)
+  
+  // 关键步骤：添加连接实例
+  connections.value.push(newConnection)
+  
+  console.log('=== push 后立即检查 ===')
+  console.log('connections.value 长度:', connections.value.length)
+  console.log('connections.value 内容:', connections.value)
+  console.log('connections.value[0]:', connections.value[0])
+  
+  currentConnection.value = connStore.conn
+  
+  // 移除 await nextTick()，避免时序问题
+  console.log('=== 准备调用 loadDatabases ===')
+  
+  try {
+    await loadDatabases()
+    console.log('loadDatabases 执行完成')
+  } catch (error) {
+    console.error('loadDatabases 执行出错:', error)
+  }
+  
+  // 通知其他组件连接成功
+  console.log('=== 通知其他组件连接成功 ===')
   treeStore.triggerRefresh()
-  loadDatabases()
+  console.log('=== handleConnectionSuccess 结束 ===')
 }
 
 // 加载数据库列表
 const loadDatabases = async () => {
-
-  //todo: 获取连接信息如果失败则把connStore.conn变null
-  // console.log('loadDatabases connStore.conn',connStore.conn)
-  currentConnection.value = connStore.conn
-  treeData.value = [] 
-  // console.log('loadDatabases currentConnection.value',currentConnection.value)
-  // if (!currentConnection.value) return
-  if (!connStore.conn.dbHost) return
-
-  try {
-    const res = await databaseApi.getDatabases(connStore.conn)
-  // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
-    if(res.code === 200) {
-      // treeData.value = buildTree(res.data
-      console.log('tree res.data:', res)
-      let tmpdb = []
-      tmpdb.push(res.data.dbName)
-      let dbdata = { databases: tmpdb, tableList: res.data.tableList, viewList: res.data.viewList }
-      treeData.value = buildTree(dbdata)
-    }else
-    {
-      currentConnection.value = null
-      ElMessage.error(JSON.stringify(res))
-    }
-  } catch (e) {
-    console.error(e)
-    currentConnection.value = null
-    // ElMessage.error('连接失败:'+e)
-  } finally {
-    loading.value = false
+  console.log('=== loadDatabases 开始 ===')
+  console.log('loadDatabases 被调用')
+  console.log('connections.value 长度:', connections.value.length)
+  console.log('connections.value 内容:', connections.value)
+  console.log('connections.value 内存地址:', connections.value)
+  console.log('当前时间戳:', Date.now())
+  
+  // 如果没有连接实例，清空树数据
+  if (connections.value.length === 0) {
+    console.log('=== 没有连接实例，清空树数据 ===')
+    treeData.value = []
+    console.log('=== loadDatabases 结束 (无连接) ===')
+    return
   }
+
+  console.log('=== 开始处理连接实例 ===')
+  // 构建树数据，支持多个连接实例
+  const allTreeData = []
+  
+  // 为每个连接实例构建树
+  for (const connection of connections.value) {
+    console.log(`处理连接: ${connection.connectionName}`)
+    try {
+      const res = await databaseApi.getDatabases(connection)
+      console.log(`连接 ${connection.connectionName} 的数据库列表:`, res)
+      if (res.code === 200) {
+        const connectionTreeData = buildTreeForConnection(res.data, connection)
+        allTreeData.push(connectionTreeData)
+      } else {
+        console.error('获取数据库列表失败:', res.message)
+        // 即使失败，也添加一个空的连接节点
+        allTreeData.push({
+          label: connection.connectionName,
+          type: 'connection',
+          connectionId: connection.id,
+          dbHost: connection.dbHost,
+          children: []
+        })
+      }
+    } catch (e) {
+      console.error('连接数据库失败:', e)
+      // 即使失败，也添加一个空的连接节点
+      allTreeData.push({
+        label: connection.connectionName,
+        type: 'connection',
+        connectionId: connection.id,
+        dbHost: connection.dbHost,
+        children: []
+      })
+    }
+  }
+  
+  console.log('准备更新树数据:', allTreeData)
+  treeData.value = allTreeData
+  console.log('最终树数据:', treeData.value)
+  
+  // 等待Vue更新DOM
+  await nextTick()
+  console.log('=== loadDatabases 结束 ===')
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 组件挂载时的初始化逻辑
+  console.log('=== 组件挂载开始 ===')
+  console.log('组件挂载时间:', new Date().toLocaleTimeString())
+  console.log('初始 connections.value:', connections.value)
+  console.log('初始 connections.value.length:', connections.value.length)
+  console.log('connStore.conn:', connStore.conn)
+  
+  // 如果有持久化的连接信息，添加到connections中
+  if (connStore.conn && connStore.conn.dbHost) {
+    console.log('从持久化存储中恢复连接:', connStore.conn)
+    const restoredConnection = {
+      ...connStore.conn,
+      id: Date.now(),
+      connectionName: connStore.conn.dbHost // 使用IP作为默认连接名称
+    }
+    console.log('准备添加恢复的连接:', restoredConnection)
+    connections.value.push(restoredConnection)
+    console.log('恢复后 connections.value:', connections.value)
+    console.log('恢复后 connections.value.length:', connections.value.length)
+  } else {
+    console.log('没有持久化的连接信息')
+  }
+  
+  await nextTick()
+  console.log('=== 组件挂载完成，准备初始化树 ===')
   loadDatabases()
+  console.log('=== 组件挂载结束 ===')
 })
 
 /* 1. 先给空数组，树第一次渲染不会报错 */
 const treeData = ref([])
+
+/* 为每个连接实例构建树结构 */
+function buildTreeForConnection(dbData, connection) {
+  console.log(`构建 ${connection.connectionName} 的树结构，原始数据:`, dbData)
+  
+  // 确保数据结构正确
+  const dbName = dbData.dbName || dbData.database || '未知数据库'
+  const tableList = dbData.tableList || []
+  const viewList = dbData.viewList || []
+  
+  const treeNode = {
+    label: connection.connectionName,
+    type: 'connection',
+    connectionId: connection.id,
+    dbHost: connection.dbHost,
+    children: [
+      {
+        label: dbName,
+        type: 'database',
+        children: [
+          {
+            label: '表',
+            type: 'table',
+            children: tableList.map(t => ({ 
+              label: t.tableName || t.name || '未知表名', 
+              type: 'altertable' 
+            }))
+          },
+          {
+            label: '视图',
+            type: 'view',
+            children: viewList.map(v => ({ 
+              label: v.tableName || v.name || '未知视图名', 
+              type: 'alterview' 
+            }))
+          }
+        ]
+      }
+    ]
+  }
+  
+  console.log(`${connection.connectionName} 的树节点:`, treeNode)
+  return treeNode
+}
 
 /* 2. 把后端数据 -> el-tree 结构 */
 function buildTree({ databases, tableList, viewList }) {
@@ -165,8 +320,35 @@ watch(
   }
 )
 
+// 监听connections数组变化，立即更新树
+watch(connections, (newConnections, oldConnections) => {
+  console.log('=== Watcher 触发 ===')
+  console.log('触发时间:', new Date().toLocaleTimeString())
+  console.log('旧值:', oldConnections)
+  console.log('旧值长度:', oldConnections ? oldConnections.length : 'undefined')
+  console.log('新值:', newConnections)
+  console.log('新值长度:', newConnections.length)
+  console.log('新值内容:', newConnections)
+  console.log('是否相等:', oldConnections === newConnections)
+  console.log('内存地址检查:', { 
+    new: newConnections, 
+    ref: connections.value,
+    equal: newConnections === connections.value 
+  })
+  
+  if (newConnections.length > 0) {
+    console.log('=== Watcher 调用 loadDatabases ===')
+    loadDatabases()
+  } else {
+    console.log('=== Watcher 清空树数据 ===')
+    treeData.value = []
+  }
+  console.log('=== Watcher 结束 ===')
+}, { deep: true })
+
 defineExpose({
-  loadDatabases
+  loadDatabases,
+  handleConnectionSuccess
 })
 
 
@@ -177,8 +359,8 @@ show: false,
 left: 0,
 top: 0,
 type: null,
-height:38,
-width:80,
+height:76, // 增加了高度，因为添加了新的菜单项
+width:100,  // 增加了宽度
 })
 
 const currentNode = ref(null)
@@ -191,13 +373,16 @@ function onContextMenu(event, data, node) {
     menu.top = event.clientY;
     menu.show = true;
     
-    if (data.type === 'table') {
+    if (data.type === 'connection') {
+        // 连接根节点右键菜单
+        menu.type = 'connection';
+    } else if (data.type === 'table') {
         menu.type = 'table';
     } else if (data.type === 'view') {
         menu.type = 'view';
     } else if (data.type === 'altertable') {
         menu.type = 'altertable';
-    }else if (data.type === 'alterview') {
+    } else if (data.type === 'alterview') {
         menu.type = 'alterview';
     } else {
         menu.type = null;
@@ -240,6 +425,9 @@ function handleCreate(type) {
   }else if(type === 'selectview'){
     // console.log('selectview')
     selectTable('view');
+  }else if(type === 'connection'){
+    // 连接节点的右键菜单逻辑
+    handleDisconnectConnection(currentNode.value.data);
   }
 
 }
@@ -317,9 +505,49 @@ function editTable() {
 const handleDisconnect = () => {
   connStore.clearConn()          // 1. 清空持久化数据
   currentConnection.value = null // 2. 清空本地响应式状态
-  treeData.value = []            // 3. 清空左侧树
+  connections.value = []         // 3. 清空所有连接实例
+  treeData.value = []            // 4. 清空左侧树
   treeStore.triggerRefresh()
   ElMessage.success('已断开数据库连接')
+}
+
+// 断开特定连接的函数
+const handleDisconnectConnection = (connectionData) => {
+  menu.show = false // 关闭右键菜单
+  
+  // 从connections数组中移除该连接
+  const index = connections.value.findIndex(conn => conn.id === connectionData.connectionId)
+  if (index !== -1) {
+    connections.value.splice(index, 1)
+  }
+  
+  // 检查是否断开的是当前活跃连接
+  const isCurrentConnection = currentConnection.value && currentConnection.value.dbHost === connectionData.dbHost
+  
+  // 如果断开的是当前活跃连接，更新currentConnection
+  if (isCurrentConnection) {
+    if (connections.value.length > 0) {
+      // 如果还有其他连接，更新为第一个连接
+      currentConnection.value = connections.value[0]
+      // 更新持久化存储为新的当前连接
+      const { id, connectionName, ...connData } = connections.value[0]
+      connStore.updateConn(connData)
+    } else {
+      // 如果没有其他连接，清空所有连接
+      currentConnection.value = null
+      connStore.clearConn()
+    }
+  } else {
+    // 如果断开的是非活跃连接，但这是最后一个连接，也需要清空持久化存储
+    if (connections.value.length === 0) {
+      connStore.clearConn()
+    }
+  }
+  
+  // 重新构建树数据
+  loadDatabases()
+  treeStore.triggerRefresh()
+  ElMessage.success(`已断开连接: ${connectionData.label}`)
 }
 
 </script>
@@ -368,6 +596,20 @@ margin-top: 8px;
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 1;
+}
+
+.disconnect-btn {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 2px 6px;
+  height: 18px;
+  line-height: 1;
+}
+
+.disconnect-btn:hover {
+  background-color: #fef0f0 !important;
+  color: #f56c6c !important;
 }
 
 
