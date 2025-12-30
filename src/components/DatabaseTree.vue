@@ -1,7 +1,7 @@
 <template>
   <div class="database-tree">
     <div class="toolbar">
-        <span class="title">数据库</span>
+        <span class="title"></span>
     </div>
  <div class="tree-wrapper">
   <el-tree :data="treeData"

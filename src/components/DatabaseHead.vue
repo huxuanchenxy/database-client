@@ -6,40 +6,9 @@
         @click="handleRequestConnection"
         :icon="Plus"
       >
-        连接数据库
+        连接数据库实例
       </el-button>
-      <!-- 第二行：连接状态（带圆点） -->
-      <div class="connection-info">
-        <el-tag :type="currentConnection?.dbHost ? 'info' : 'warning'">
-          <span
-            class="dot"
-            :class="{
-              green: currentConnection?.dbHost,
-              yellow: !currentConnection?.dbHost,
-            }"
-          />
-          {{
-            currentConnection?.dbHost
-              ? `已连接: ${currentConnection.dbHost}`
-              : "未连接"
-          }}
-        </el-tag>
-        <!-- 断开按钮 -->
-        <el-button
-          v-if="currentConnection?.dbHost"
-          type="danger"
-          plain
-          @click="handleDisconnect"
-          style="
-            margin-left: 12px;
-            height: 22px;
-            padding: 0 6px;
-            font-size: 12px;
-          "
-        >
-          断开连接
-        </el-button>
-      </div>
+      
     </div>
 
 </template>
