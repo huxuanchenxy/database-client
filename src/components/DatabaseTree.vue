@@ -50,9 +50,6 @@
     <div class="item"  v-if="menu.type === 'alterview'">
         <div class="item" @click="handleCreate('selectview')">打开视图</div>
     </div>
-    <div class="item" @click="handleDisconnectConnection" v-if="menu.type === 'connection'">
-      断开连接
-    </div>
   </div>
   </div>
 
