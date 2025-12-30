@@ -109,7 +109,7 @@ const loadDatabases = async () => {
   // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
     if(res.code === 200) {
       // treeData.value = buildTree(res.data
-      // console.log('tree res.data:', res.data)
+      console.log('tree res.data:', res)
       let tmpdb = []
       tmpdb.push(res.data.dbName)
       let dbdata = { databases: tmpdb, tableList: res.data.tableList, viewList: res.data.viewList }

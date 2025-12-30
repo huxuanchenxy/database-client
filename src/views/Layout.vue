@@ -17,6 +17,7 @@
             >
               退出登录
             </el-button> -->
+            <Backup />
             <UserAvatar />
           </div>
         </div>
@@ -125,6 +126,7 @@ import { useTabStore } from "@/stores/tab";
 import { storeToRefs } from "pinia";
 import UserAvatar from "@/components/UserAvatar.vue";
 import DatabaseHead from "@/components/DatabaseHead.vue";
+import Backup from "@/components/Backup.vue";
 const router = useRouter(); // 先拿到实例
 // const activeTab = ref('sql')
 
@@ -264,6 +266,13 @@ body {
 .app-title .el-icon {
   font-size: 20px;
   color: #004d9e;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 160px;
 }
 
 /* .app-aside {
@@ -436,3 +445,6 @@ body {
   border-right: 1px solid #dcdfe6;
 }
 </style>
+
+
+
