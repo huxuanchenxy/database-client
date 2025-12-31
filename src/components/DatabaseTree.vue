@@ -104,33 +104,32 @@ const handleConnectionSuccess = async (connectionConfig) => {
   console.log('=== DatabaseTree: push前 connections.value:', connections.value)
   console.log('=== DatabaseTree: push前 connections.value.length:', connections.value.length)
   
-  // 检查是否已存在相同IP的连接
-  const existingIndex = connections.value.findIndex(conn => 
-    conn.dbHost === connStore.conn.dbHost
-  )
-  
-  if (existingIndex !== -1) {
-    console.log('检测到相同IP的连接，但按用户要求仍会添加新的连接实例')
-  }
-  
   // 总是添加新的连接实例（不管IP是否重复）
+  // 从connectionConfig构建完整的连接实例，而不是依赖connStore.currentConnection
   const newConnection = {
-    ...connStore.conn,
-    id: Date.now(), // 临时ID，实际应该使用唯一标识
+    dbHost: `${connectionConfig.host}:${connectionConfig.port}`,
+    dbName: connectionConfig.database,
+    user: connectionConfig.username,
+    password: connectionConfig.password,
+    id: Date.now(), // Todo 临时ID，实际应该使用唯一标识
     connectionName: connectionConfig.name
   }
   
   console.log('创建新连接实例:', newConnection)
   
-  // 关键步骤：添加连接实例
+  // 关键步骤：添加连接实例到本地数组
   connections.value.push(newConnection)
+  
+  // 同时添加到connStore中持久化存储
+  connStore.addConnection(newConnection)
   
   console.log('=== push 后立即检查 ===')
   console.log('connections.value 长度:', connections.value.length)
   console.log('connections.value 内容:', connections.value)
-  console.log('connections.value[0]:', connections.value[0])
+  console.log('connStore.connections 长度:', connStore.connections.length)
+  console.log('connStore.connections 内容:', connStore.connections)
   
-  currentConnection.value = connStore.conn
+  currentConnection.value = newConnection
   
   // 移除 await nextTick()，避免时序问题
   console.log('=== 准备调用 loadDatabases ===')
@@ -217,22 +216,40 @@ onMounted(async () => {
   console.log('组件挂载时间:', new Date().toLocaleTimeString())
   console.log('初始 connections.value:', connections.value)
   console.log('初始 connections.value.length:', connections.value.length)
-  console.log('connStore.conn:', connStore.conn)
+  console.log('connStore.connections 数量:', connStore.connections.length)
+  console.log('connStore.connections:', connStore.connections)
   
-  // 如果有持久化的连接信息，添加到connections中
-  if (connStore.conn && connStore.conn.dbHost) {
-    console.log('从持久化存储中恢复连接:', connStore.conn)
-    const restoredConnection = {
-      ...connStore.conn,
-      id: Date.now(),
-      connectionName: connStore.conn.dbHost // 使用IP作为默认连接名称
-    }
-    console.log('准备添加恢复的连接:', restoredConnection)
-    connections.value.push(restoredConnection)
+  // 从 connStore 恢复所有连接实例
+  if (connStore.connections.length > 0) {
+    console.log('从 connStore 恢复所有连接实例')
+    connections.value = [...connStore.connections]
+    currentConnection.value = connStore.currentConnection || null
     console.log('恢复后 connections.value:', connections.value)
     console.log('恢复后 connections.value.length:', connections.value.length)
   } else {
     console.log('没有持久化的连接信息')
+    // 检查是否有旧版本的conn数据
+    const oldConnData = localStorage.getItem('conn')
+    if (oldConnData) {
+      try {
+        const oldConn = JSON.parse(oldConnData)
+        if (oldConn.dbHost) {
+          console.log('检测到旧版本连接数据，正在迁移:', oldConn)
+          // 创建一个新的连接实例，使用IP作为默认连接名称
+          const migratedConnection = {
+            ...oldConn,
+            id: Date.now(),
+            connectionName: oldConn.dbHost // 使用IP作为默认连接名称
+          }
+          connections.value.push(migratedConnection)
+          connStore.addConnection(migratedConnection)
+          // 清理旧数据
+          localStorage.removeItem('conn')
+        }
+      } catch (e) {
+        console.error('迁移旧连接数据失败:', e)
+      }
+    }
   }
   
   await nextTick()
@@ -393,7 +410,7 @@ function onNodeClick(data, node) {
   emit('table-selected', data)
   // console.log('emit table-selected data:', data)
   // if (data.type === 'table') {
-    
+  
   // } else if (data.type === 'database') {
   //   emit('database-selected', data)
   // }
@@ -460,7 +477,7 @@ const dropTable = async()=> {
     
     let sql = `DROP TABLE ${currrenttable}`
     const parm = {
-      ...connStore.conn,
+      ...currentConnection.value,
       oprationString: sql, // 确保 cleanedSql 是 DROP TABLE xxx
     }
     // console.log('parm:', parm)
@@ -500,7 +517,7 @@ function editTable() {
 
 
 const handleDisconnect = () => {
-  connStore.clearConn()          // 1. 清空持久化数据
+  connStore.clearAllConnections()          // 1. 清空持久化数据
   currentConnection.value = null // 2. 清空本地响应式状态
   connections.value = []         // 3. 清空所有连接实例
   treeData.value = []            // 4. 清空左侧树
@@ -518,26 +535,20 @@ const handleDisconnectConnection = (connectionData) => {
     connections.value.splice(index, 1)
   }
   
+  // 同时从connStore中移除该连接
+  connStore.removeConnection(connectionData.connectionId)
+  
   // 检查是否断开的是当前活跃连接
-  const isCurrentConnection = currentConnection.value && currentConnection.value.dbHost === connectionData.dbHost
+  const isCurrentConnection = currentConnection.value && currentConnection.value.id === connectionData.connectionId
   
   // 如果断开的是当前活跃连接，更新currentConnection
   if (isCurrentConnection) {
     if (connections.value.length > 0) {
       // 如果还有其他连接，更新为第一个连接
       currentConnection.value = connections.value[0]
-      // 更新持久化存储为新的当前连接
-      const { id, connectionName, ...connData } = connections.value[0]
-      connStore.updateConn(connData)
     } else {
-      // 如果没有其他连接，清空所有连接
+      // 如果没有其他连接，清空当前连接
       currentConnection.value = null
-      connStore.clearConn()
-    }
-  } else {
-    // 如果断开的是非活跃连接，但这是最后一个连接，也需要清空持久化存储
-    if (connections.value.length === 0) {
-      connStore.clearConn()
     }
   }
   
