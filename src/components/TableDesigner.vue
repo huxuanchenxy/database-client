@@ -424,7 +424,7 @@ const save = async () => {
 //   console.log('生成 SQL：', sqlPreview.value)
   visible.value = false
     const parm = {
-      ...connStore.conn,
+      ...connStore.currentConnection,
       oprationString: sqlPreview.value, 
     }
     
