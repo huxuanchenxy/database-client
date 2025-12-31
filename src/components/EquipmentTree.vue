@@ -173,14 +173,14 @@ const loadData = async () => {
   //todo: 获取连接信息如果失败则把connStore.conn变null
   // console.log('eqp connStore.conn',connStore.conn)
   // if (!currentConnection.value) return
-  if (!connStore.conn.dbHost)
+  if (!connStore.currentConnection.dbHost)
   {
     treeData.value = null
     return
   } 
 
   try {
-    const res = await databaseApi.getallconfiginfo(connStore.conn)
+    const res = await databaseApi.getallconfiginfo(connStore.currentConnection)
     // console.log('eqptree:',res)
   // 假设 res.data 就是 { databases:[], tableList:[], viewList:[] }
     if(res.code === 200) {

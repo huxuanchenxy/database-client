@@ -123,13 +123,13 @@ const statusMap = {
 ---------------------------------------------------- */
 async function getList() {
 // console.log('storage getList');
-  if (!connStore.conn.dbHost)
+  if (!connStore.currentConnection.dbHost)
   {
     return
   } 
   try {
     // const { data } = await axios.get('/api/storage/list', { params: listQuery.value })
-    const res = await databaseApi.getallconfiginfotj(connStore.conn)
+    const res = await databaseApi.getallconfiginfotj(connStore.currentConnection)
     // console.log('list:',res)
     if(res.code === 200)
     {
@@ -177,7 +177,7 @@ let mock =
 async function delRow(row) {
   try {
     console.log('row',row)
-    const parm = { ...connStore.conn, oprationInt: row.configid }
+    const parm = { ...connStore.currentConnection, oprationInt: row.configid }
     const res = await databaseApi.delconfig(parm)
     if(res.code === 200)
     {

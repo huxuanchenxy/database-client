@@ -139,7 +139,7 @@ const openDialog = async (initialTableName = null) => {
     /* ---------- 修改模式 ---------- */
     isDisabled.value = true
     const res = await databaseApi.getTableInfo({
-      ...connStore.conn,
+      ...connStore.currentConnection,
       oprationString: initialTableName
     })
     // console.log('表结构',res)

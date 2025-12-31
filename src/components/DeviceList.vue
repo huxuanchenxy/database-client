@@ -89,8 +89,8 @@ const currentRow = ref(null);
 // 模拟数据，实际换成接口
 async function loadList() {
   // console.log('device loadList');
-  if (!connStore.conn.dbHost) return;
-  const res = await databaseApi.getdevicelist(connStore.conn);
+  if (!connStore.currentConnection.dbHost) return;
+  const res = await databaseApi.getdevicelist(connStore.currentConnection);
   // console.log('res',res)
   if (res.code === 200) {
     deviceList.value = res.data;
@@ -119,7 +119,7 @@ async function delDevice(row) {
   if(!chk) return;
 
   try {
-    const parm = { ...connStore.conn, oprationInt: row.id };
+    const parm = { ...connStore.currentConnection, oprationInt: row.id };
     const res = await databaseApi.deldevice(parm);
     if (res.code === 200) {
       ElMessage.success("删除成功");
@@ -166,7 +166,7 @@ const runningDeviceIds = ref(new Set())
 async function fetchRunningList() {
   try {
     // 这里调你自己的接口，只要能返回 status=1 的记录即可
-    const res = await databaseApi.getallconfiginfotj(connStore.conn)
+    const res = await databaseApi.getallconfiginfotj(connStore.currentConnection)
     // console.log('running res',res)
     if (res.code === 200 && Array.isArray(res.data)) {
       runningDeviceIds.value = new Set(

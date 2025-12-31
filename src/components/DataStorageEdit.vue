@@ -109,7 +109,7 @@ const getConfiguredDeviceIds = () => {
 }
 const fetchConfigList = async () => {
   try {
-    const res = await databaseApi.getallconfiginfotj(connStore.conn)
+    const res = await databaseApi.getallconfiginfotj(connStore.currentConnection)
     if (res.code === 200 && Array.isArray(res.data)) {
       configList.value = res.data
     }
@@ -203,10 +203,10 @@ const emit = defineEmits(['update:visible', 'confirm'])
 
 
 const fetchPlcDevices = async () => {
-  if (!connStore.conn.dbHost) return
+  if (!connStore.currentConnection.dbHost) return
   try {
     // initAdd()
-    const res = await databaseApi.getdevicelist(connStore.conn)
+    const res = await databaseApi.getdevicelist(connStore.currentConnection)
     // console.log(' fetchPlcDevices res',res)
     if (res.code === 200) {
       if(Array.isArray(res.data))
@@ -217,7 +217,7 @@ const fetchPlcDevices = async () => {
           }))
           // console.log('fetchPlcDevices list all',list)
           if (!isEdit.value) {
-                const res2 = await databaseApi.getallconfiginfotj(connStore.conn)
+                const res2 = await databaseApi.getallconfiginfotj(connStore.currentConnection)
                 if (res2.code === 200 && Array.isArray(res2.data)) {
                   // console.log('getallconfiginfotj',res2.data)
                   let existed = res2.data
@@ -274,7 +274,7 @@ const checkByConfig = (configid) => {
 
 const fetchStorageOptions = async () => {
   try {
-    const res = await databaseApi.getallconfiginfo(connStore.conn)
+    const res = await databaseApi.getallconfiginfo(connStore.currentConnection)
     if(res.code === 200)
     {
       treeData.value = res.data
@@ -290,7 +290,7 @@ const fetchStorageOptions = async () => {
 }
 const fetchPoints = async (deviceid) => {
   try {
-    const parm = { ...connStore.conn, oprationString: String(deviceid) }
+    const parm = { ...connStore.currentConnection, oprationString: String(deviceid) }
     const res = await databaseApi.getregisterbydeviceid(parm)
     if (res.code === 200) {
       // 1. 先赋值
@@ -327,7 +327,7 @@ const handleConfirm = async () => {
                 "status":1,
                 "lsRegistersconfig":ids
 		}
-    const parm = { ...connStore.conn, modbusexectree: modbusexectree }
+    const parm = { ...connStore.currentConnection, modbusexectree: modbusexectree }
     const res = await databaseApi.execconfig(parm)
     if(res.code ===200)
     {

@@ -50,7 +50,7 @@ const handleConnectionSuccess = (connectionConfig) => {
   console.log('=== DatabaseHead: 连接配置:', connectionConfig)
   console.log('=== DatabaseHead: currentConnection 将在此处更新 ===')
   
-  currentConnection.value = connStore.conn
+  currentConnection.value = connStore.currentConnection
   console.log('=== DatabaseHead: 更新 currentConnection:', currentConnection.value)
   
   treeStore.triggerRefresh()
@@ -67,9 +67,9 @@ onMounted( async() => {
 async function load() {
   // console.log('onMounted conn:',connStore.conn)
   try {
-    const result = await databaseApi.testConnection(connStore.conn)
+    const result = await databaseApi.testConnection(connStore.currentConnection)
     if (result.code === 200) {
-      currentConnection.value = connStore.conn
+      currentConnection.value = connStore.currentConnection
     } else {
       currentConnection.value = null
     }

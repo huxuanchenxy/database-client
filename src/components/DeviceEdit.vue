@@ -571,7 +571,7 @@ async function handleSubmit() {
       retry_count: form.value.retry_count,
       is_active: form.value.is_active,
     };
-    const parm = { ...connStore.conn, devices: devices };
+    const parm = { ...connStore.currentConnection, devices: devices };
     const res = await databaseApi.execdevice(parm);
     if (res.code === 200) {
 
@@ -579,7 +579,7 @@ async function handleSubmit() {
       if(tableData.value && tableData.value.length > 0)
       {
           tableData.value = tableData.value.map(item => ({ ...item, device_id: res.data })) //后端会返给我的设备id
-          const parm2 = { ...connStore.conn, registers: tableData.value }
+          const parm2 = { ...connStore.currentConnection, registers: tableData.value }
           const res2 = await databaseApi.execregister(parm2)
           if(res2.code !== 200)
           {
@@ -720,14 +720,14 @@ const rules = {
 // 查询列表
 const fetchList = async () => {
   tableData.value = []
-  if (!connStore.conn.dbHost) return
+  if (!connStore.currentConnection.dbHost) return
   loading.value = true;
   try {
     // TODO: 替换成你的真实接口
     let deviceid = 0
     deviceid = form.value.id
     // console.log('form.value',form.value)
-    const parm = { ...connStore.conn, oprationInt: deviceid }
+    const parm = { ...connStore.currentConnection, oprationInt: deviceid }
     const res = await databaseApi.getregister(parm)
     // console.log('点位列表：',res)
     if (res.code === 200) {
@@ -828,7 +828,7 @@ const handleDelete = async (row) => {
     }
     if(row.id != 0)
     {
-        const parm = { ...connStore.conn, oprationInt: row.id }
+        const parm = { ...connStore.currentConnection, oprationInt: row.id }
         const res = await databaseApi.delregister(parm)
         if(res.code === 200)
         {
@@ -878,7 +878,7 @@ const runningDeviceIds = ref(new Set())
 async function fetchRunningList() {
   try {
     // 这里调你自己的接口，只要能返回 status=1 的记录即可
-    const res = await databaseApi.getallconfiginfotj(connStore.conn) // <= 换成真实接口
+    const res = await databaseApi.getallconfiginfotj(connStore.currentConnection) // <= 换成真实接口
     if (res.code === 200 && Array.isArray(res.data)) {
       runningDeviceIds.value = new Set(
         res.data.filter(i => i.status === 1).map(i => i.deviceid)

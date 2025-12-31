@@ -172,7 +172,7 @@ async function loadData() {
   pager.total = 0
   let cfgstr = props.extra.data.id
   let cfgid = Number(cfgstr.replace('cfg_', ''))
-  const parm = { ...connStore.conn, oprationInt: cfgid,lsInt:[pager.currentPage,pager.pageSize] }
+  const parm = { ...connStore.currentConnection, oprationInt: cfgid,lsInt:[pager.currentPage,pager.pageSize] }
   const res = await databaseApi.getdatavalue(parm)
   console.log('loadData res',res)
   if(res.code === 200 && res.data && res.data.list && res.data.list.length > 0)
@@ -245,7 +245,7 @@ async function saveRow(row) {
   console.log('✅ 转换后的 newData', newData)
   row.__saving = true
   try {
-    const parm = { ...connStore.conn, oprationInt: 1, mpJson: newData }
+    const parm = { ...connStore.currentConnection, oprationInt: 1, mpJson: newData }
     // console.log('execdatavalue parm', parm)
     const res = await databaseApi.execdatavalue(parm)
     if (res.code === 200) {
@@ -269,7 +269,7 @@ async function saveRow(row) {
 /* ----------------- 行删除 ----------------- */
 function startDelete(row) {
   ElMessageBox.confirm('确定删除？', '提示').then(async () => {
-    const parm = { ...connStore.conn, oprationInt: 0, mpJson:row}
+    const parm = { ...connStore.currentConnection, oprationInt: 0, mpJson:row}
     const res = await databaseApi.execdatavalue(parm)
     row.__editing = false
     if(res.code === 200)

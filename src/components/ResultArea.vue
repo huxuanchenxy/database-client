@@ -338,7 +338,7 @@ const loadResult = async (sqlText) => {
     let reschk = isSelectStatement(cleanedSql, 'postgresql')
     if (!reschk) {//非select语句就执行好后就不往下走，不分页了
       const notselectsql = await databaseApi.executeSqlWithText({
-        ...connStore.conn,
+        ...connStore.currentConnection,
         oprationString: currentSql.value
       })
           if (notselectsql.code == 200 && notselectsql.data == null) {
@@ -365,7 +365,7 @@ const loadResult = async (sqlText) => {
     {
         tablePage.currentPage = 1
         await loadPage(1, tablePage.pageSize)
-                       
+                        
     }
   } catch (e) {
   } finally {
@@ -409,9 +409,9 @@ const loadPage = async (page, size) => {
         //有from的正常语句
         showbutton.value = true
     }
-    
+    console.log('loadPage connStore.currentConnection',connStore.currentConnection)
     const res = await databaseApi.executeSqlWithText({
-      ...connStore.conn,
+      ...connStore.currentConnection,
       oprationString: sql
     })
     // console.log('loadPage',res)
@@ -422,7 +422,7 @@ const loadPage = async (page, size) => {
 
     
     const res2 = await databaseApi.getTableInfo({
-                  ...connStore.conn,
+                  ...connStore.currentConnection,
                   oprationString: tableName.value
                 })
                 // console.log('getTableInfo',res2)
@@ -542,9 +542,9 @@ function rowToWherev3(row) {
 
 
 
-function rowToWherev4(oldRow) {
+function rowToWherev4(row) {
   return Object
-    .entries(oldRow)
+    .entries(row)
     .filter(([k]) => !k.startsWith('_'))
     .map(([k, v]) => {
       if (v === null) {
@@ -594,7 +594,8 @@ async function handleConfirmInsert() {
     // console.log('row[col]',row[col])
     // console.log('formatValue(row[col])',formatValue(row[col]))
     if(col == resultSet.colSerial && row[col] == '')
-    {}else
+    {}
+    else
     {
       fields.push(quoteId(col))
       values.push(formatValue(row[col]))
@@ -606,7 +607,7 @@ async function handleConfirmInsert() {
   // console.log('sql',sql)
   try {
     const res = await databaseApi.executeSqlWithText({
-      ...connStore.conn,
+      ...connStore.currentConnection,
       oprationString: sql
     })
     // console.log('res222',res)
@@ -682,7 +683,7 @@ async function startDelete(row) {
 
     /* 2. 调接口 */
     const res = await databaseApi.executeSqlWithText({
-      ...connStore.conn,
+      ...connStore.currentConnection,
       oprationString: sql
     })
     if (res.code === 200) {
@@ -722,7 +723,7 @@ async function confirmEdit(row) {
     console.log('sql', sql)
     /* 2. 调接口 */
     const res = await databaseApi.executeSqlWithText({
-      ...connStore.conn,
+      ...connStore.currentConnection,
       oprationString: sql
     })
     if (res.code === 200) {
@@ -764,7 +765,8 @@ min-height: 500px;
     margin-bottom: 2%;
     bottom: 0px;
     position: relative;
-} */
+}
+*/
 
 .results-tab {
   display: flex;
