@@ -172,10 +172,11 @@ const loadDatabases = async () => {
   for (const connection of connections.value) {
     console.log(`处理连接: ${connection.connectionName}`)
     try {
-      const res = await databaseApi.getDatabases(connection)
+      // 使用新的getDBlist接口获取数据库列表
+      const res = await databaseApi.getDBlist(connection)
       console.log(`连接 ${connection.connectionName} 的数据库列表:`, res)
       if (res.code === 200) {
-        const connectionTreeData = buildTreeForConnection(res.data, connection)
+        const connectionTreeData = buildTreeForConnectionWithDBList(res.data, connection)
         allTreeData.push(connectionTreeData)
       } else {
         console.error('获取数据库列表失败:', res.message)
@@ -208,6 +209,33 @@ const loadDatabases = async () => {
   // 等待Vue更新DOM
   await nextTick()
   console.log('=== loadDatabases 结束 ===')
+}
+
+// 根据数据库列表构建树结构
+function buildTreeForConnectionWithDBList(dbList, connection) {
+  console.log(`构建 ${connection.connectionName} 的树结构，数据库列表:`, dbList)
+  
+  // 确保dbList是数组
+  const safeDbList = Array.isArray(dbList) ? dbList : []
+  
+  const treeNode = {
+    label: connection.connectionName,
+    type: 'connection',
+    connectionId: connection.id,
+    dbHost: connection.dbHost,
+    children: safeDbList.map(dbName => ({
+      label: dbName,
+      type: 'database',
+      dbName: dbName,
+      connectionId: connection.id,
+      connection: connection,
+      children: [], // 初始为空，双击时加载表和视图
+      isLoaded: false // 标记是否已加载表和视图
+    }))
+  }
+  
+  console.log(`${connection.connectionName} 的树节点:`, treeNode)
+  return treeNode
 }
 
 onMounted(async () => {
@@ -406,14 +434,72 @@ function onContextMenu(event, data, node) {
 }
 
 function onNodeClick(data, node) {
-
   emit('table-selected', data)
-  // console.log('emit table-selected data:', data)
-  // if (data.type === 'table') {
   
-  // } else if (data.type === 'database') {
-  //   emit('database-selected', data)
-  // }
+  // 双击数据库节点时加载表和视图
+  if (data.type === 'database' && !data.isLoaded) {
+    loadTablesAndViews(data, node)
+  }
+}
+
+// 加载数据库的表和视图
+async function loadTablesAndViews(databaseNode, treeNode) {
+  console.log(`加载数据库 ${databaseNode.label} 的表和视图`)
+  
+  // 更新节点状态为加载中
+  treeNode.loading = true
+  
+  try {
+    // 调用原来的getDatabases接口，注意需要修改connection对象，设置正确的dbName
+    const connectionConfig = {
+      ...databaseNode.connection,
+      dbName: databaseNode.dbName
+    }
+    
+    const res = await databaseApi.getDatabases(connectionConfig)
+    console.log(`数据库 ${databaseNode.label} 的表和视图:`, res)
+    
+    if (res.code === 200) {
+      // 构建表和视图的树结构
+      const tableList = res.data.tableList || []
+      const viewList = res.data.viewList || []
+      
+      const updatedChildren = [
+        {
+          label: '表',
+          type: 'table',
+          children: tableList.map(t => ({
+            label: t.tableName || t.name || '未知表名',
+            type: 'altertable'
+          }))
+        },
+        {
+          label: '视图',
+          type: 'view',
+          children: viewList.map(v => ({
+            label: v.tableName || v.name || '未知视图名',
+            type: 'alterview'
+          }))
+        }
+      ]
+      
+      // 更新节点数据
+      databaseNode.children = updatedChildren
+      databaseNode.isLoaded = true
+      
+      // 重新设置树数据以触发更新
+      treeData.value = [...treeData.value]
+    } else {
+      console.error('获取表和视图失败:', res.message)
+      ElMessage.error('获取表和视图失败: ' + res.message)
+    }
+  } catch (e) {
+    console.error('加载表和视图失败:', e)
+    ElMessage.error('加载表和视图失败: ' + e.message)
+  } finally {
+    // 取消加载状态
+    treeNode.loading = false
+  }
 }
 
 // 点击空白处关闭菜单
