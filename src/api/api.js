@@ -101,9 +101,14 @@ export const databaseApi = {
     return api.post('/connection/save', connectionConfig)
   },
 
-  // 获取数据库列表
+  // 获取某个数据库列表
   getDatabases: (connectionConfig) => {
     return api.post('/seisdb/gettblist', connectionConfig)
+  },
+
+  // 获取多个数据库列表
+  getDBlist: (connectionConfig) => {
+    return api.post('/seisdb/getdblist', connectionConfig)
   },
 
   // 获取表结构
