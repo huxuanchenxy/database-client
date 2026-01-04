@@ -143,7 +143,7 @@ async function getList() {
     // listTotal.value = data.total
   } catch (e) {
     // ElMessage.error('获取列表失败')
-    console.log('DatasStorageList:',e)
+    // console.log('DatasStorageList:',e)
   }
 }
 
@@ -176,7 +176,7 @@ let mock =
 ---------------------------------------------------- */
 async function delRow(row) {
   try {
-    console.log('row',row)
+    // console.log('row',row)
     const parm = { ...connStore.currentConnection, oprationInt: row.configid }
     const res = await databaseApi.delconfig(parm)
     if(res.code === 200)

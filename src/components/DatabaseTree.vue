@@ -98,11 +98,11 @@ const treeProps = {
 
 // 处理连接成功
 const handleConnectionSuccess = async (connectionConfig) => {
-  console.log('=== DatabaseTree: 收到 connection-success 事件 ===')
-  console.log('=== DatabaseTree: handleConnectionSuccess 开始 ===')
-  console.log('=== DatabaseTree: 连接配置:', connectionConfig)
-  console.log('=== DatabaseTree: push前 connections.value:', connections.value)
-  console.log('=== DatabaseTree: push前 connections.value.length:', connections.value.length)
+  // console.log('=== DatabaseTree: 收到 connection-success 事件 ===')
+  // console.log('=== DatabaseTree: handleConnectionSuccess 开始 ===')
+  // console.log('=== DatabaseTree: 连接配置:', connectionConfig)
+  // console.log('=== DatabaseTree: push前 connections.value:', connections.value)
+  // console.log('=== DatabaseTree: push前 connections.value.length:', connections.value.length)
   
   // 总是添加新的连接实例（不管IP是否重复）
   // 从connectionConfig构建完整的连接实例，而不是依赖connStore.currentConnection
@@ -115,7 +115,7 @@ const handleConnectionSuccess = async (connectionConfig) => {
     connectionName: connectionConfig.name
   }
   
-  console.log('创建新连接实例:', newConnection)
+  // console.log('创建新连接实例:', newConnection)
   
   // 关键步骤：添加连接实例到本地数组
   connections.value.push(newConnection)
@@ -123,16 +123,16 @@ const handleConnectionSuccess = async (connectionConfig) => {
   // 同时添加到connStore中持久化存储
   connStore.addConnection(newConnection)
   
-  console.log('=== push 后立即检查 ===')
-  console.log('connections.value 长度:', connections.value.length)
-  console.log('connections.value 内容:', connections.value)
-  console.log('connStore.connections 长度:', connStore.connections.length)
-  console.log('connStore.connections 内容:', connStore.connections)
+  // console.log('=== push 后立即检查 ===')
+  // console.log('connections.value 长度:', connections.value.length)
+  // console.log('connections.value 内容:', connections.value)
+  // console.log('connStore.connections 长度:', connStore.connections.length)
+  // console.log('connStore.connections 内容:', connStore.connections)
   
   currentConnection.value = newConnection
   
   // 移除 await nextTick()，避免时序问题
-  console.log('=== 准备调用 loadDatabases ===')
+  // console.log('=== 准备调用 loadDatabases ===')
   
   try {
     await loadDatabases()
@@ -142,19 +142,19 @@ const handleConnectionSuccess = async (connectionConfig) => {
   }
   
   // 通知其他组件连接成功
-  console.log('=== 通知其他组件连接成功 ===')
+  // console.log('=== 通知其他组件连接成功 ===')
   treeStore.triggerRefresh()
   console.log('=== handleConnectionSuccess 结束 ===')
 }
 
 // 加载数据库列表
 const loadDatabases = async () => {
-  console.log('=== loadDatabases 开始 ===')
-  console.log('loadDatabases 被调用')
-  console.log('connections.value 长度:', connections.value.length)
-  console.log('connections.value 内容:', connections.value)
-  console.log('connections.value 内存地址:', connections.value)
-  console.log('当前时间戳:', Date.now())
+  // console.log('=== loadDatabases 开始 ===')
+  // console.log('loadDatabases 被调用')
+  // console.log('connections.value 长度:', connections.value.length)
+  // console.log('connections.value 内容:', connections.value)
+  // console.log('connections.value 内存地址:', connections.value)
+  // console.log('当前时间戳:', Date.now())
   
   // 如果没有连接实例，清空树数据
   if (connections.value.length === 0) {
@@ -164,22 +164,22 @@ const loadDatabases = async () => {
     return
   }
 
-  console.log('=== 开始处理连接实例 ===')
+  // console.log('=== 开始处理连接实例 ===')
   // 构建树数据，支持多个连接实例
   const allTreeData = []
   
   // 为每个连接实例构建树
   for (const connection of connections.value) {
-    console.log(`处理连接: ${connection.connectionName}`)
+    // console.log(`处理连接: ${connection.connectionName}`)
     try {
       // 使用新的getDBlist接口获取数据库列表
       const res = await databaseApi.getDBlist(connection)
-      console.log(`连接 ${connection.connectionName} 的数据库列表:`, res)
+      // console.log(`连接 ${connection.connectionName} 的数据库列表:`, res)
       if (res.code === 200) {
         const connectionTreeData = buildTreeForConnectionWithDBList(res.data, connection)
         allTreeData.push(connectionTreeData)
       } else {
-        console.error('获取数据库列表失败:', res.message)
+        // console.error('获取数据库列表失败:', res.message)
         // 即使失败，也添加一个空的连接节点
         allTreeData.push({
           label: connection.connectionName,
@@ -202,18 +202,18 @@ const loadDatabases = async () => {
     }
   }
   
-  console.log('准备更新树数据:', allTreeData)
+  // console.log('准备更新树数据:', allTreeData)
   treeData.value = allTreeData
-  console.log('最终树数据:', treeData.value)
+  // console.log('最终树数据:', treeData.value)
   
   // 等待Vue更新DOM
   await nextTick()
-  console.log('=== loadDatabases 结束 ===')
+  // console.log('=== loadDatabases 结束 ===')
 }
 
 // 根据数据库列表构建树结构
 function buildTreeForConnectionWithDBList(dbList, connection) {
-  console.log(`构建 ${connection.connectionName} 的树结构，数据库列表:`, dbList)
+  // console.log(`构建 ${connection.connectionName} 的树结构，数据库列表:`, dbList)
   
   // 确保dbList是数组
   const safeDbList = Array.isArray(dbList) ? dbList : []
@@ -234,35 +234,35 @@ function buildTreeForConnectionWithDBList(dbList, connection) {
     }))
   }
   
-  console.log(`${connection.connectionName} 的树节点:`, treeNode)
+  // console.log(`${connection.connectionName} 的树节点:`, treeNode)
   return treeNode
 }
 
 onMounted(async () => {
   // 组件挂载时的初始化逻辑
-  console.log('=== 组件挂载开始 ===')
-  console.log('组件挂载时间:', new Date().toLocaleTimeString())
-  console.log('初始 connections.value:', connections.value)
-  console.log('初始 connections.value.length:', connections.value.length)
-  console.log('connStore.connections 数量:', connStore.connections.length)
-  console.log('connStore.connections:', connStore.connections)
+  // console.log('=== 组件挂载开始 ===')
+  // console.log('组件挂载时间:', new Date().toLocaleTimeString())
+  // console.log('初始 connections.value:', connections.value)
+  // console.log('初始 connections.value.length:', connections.value.length)
+  // console.log('connStore.connections 数量:', connStore.connections.length)
+  // console.log('connStore.connections:', connStore.connections)
   
   // 从 connStore 恢复所有连接实例
   if (connStore.connections.length > 0) {
-    console.log('从 connStore 恢复所有连接实例')
+    // console.log('从 connStore 恢复所有连接实例')
     connections.value = [...connStore.connections]
     currentConnection.value = connStore.currentConnection || null
-    console.log('恢复后 connections.value:', connections.value)
-    console.log('恢复后 connections.value.length:', connections.value.length)
+    // console.log('恢复后 connections.value:', connections.value)
+    // console.log('恢复后 connections.value.length:', connections.value.length)
   } else {
-    console.log('没有持久化的连接信息')
+    // console.log('没有持久化的连接信息')
     // 检查是否有旧版本的conn数据
     const oldConnData = localStorage.getItem('conn')
     if (oldConnData) {
       try {
         const oldConn = JSON.parse(oldConnData)
         if (oldConn.dbHost) {
-          console.log('检测到旧版本连接数据，正在迁移:', oldConn)
+          // console.log('检测到旧版本连接数据，正在迁移:', oldConn)
           // 创建一个新的连接实例，使用IP作为默认连接名称
           const migratedConnection = {
             ...oldConn,
@@ -275,15 +275,15 @@ onMounted(async () => {
           localStorage.removeItem('conn')
         }
       } catch (e) {
-        console.error('迁移旧连接数据失败:', e)
+        // console.error('迁移旧连接数据失败:', e)
       }
     }
   }
   
   await nextTick()
-  console.log('=== 组件挂载完成，准备初始化树 ===')
+  // console.log('=== 组件挂载完成，准备初始化树 ===')
   loadDatabases()
-  console.log('=== 组件挂载结束 ===')
+  // console.log('=== 组件挂载结束 ===')
 })
 
 /* 1. 先给空数组，树第一次渲染不会报错 */
@@ -291,7 +291,7 @@ const treeData = ref([])
 
 /* 为每个连接实例构建树结构 */
 function buildTreeForConnection(dbData, connection) {
-  console.log(`构建 ${connection.connectionName} 的树结构，原始数据:`, dbData)
+  // console.log(`构建 ${connection.connectionName} 的树结构，原始数据:`, dbData)
   
   // 确保数据结构正确
   const dbName = dbData.dbName || dbData.database || '未知数据库'
@@ -329,7 +329,7 @@ function buildTreeForConnection(dbData, connection) {
     ]
   }
   
-  console.log(`${connection.connectionName} 的树节点:`, treeNode)
+  // console.log(`${connection.connectionName} 的树节点:`, treeNode)
   return treeNode
 }
 
@@ -364,19 +364,19 @@ watch(
 
 // 监听connections数组变化，立即更新树
 watch(connections, (newConnections, oldConnections) => {
-  console.log('=== Watcher 触发 ===')
-  console.log('触发时间:', new Date().toLocaleTimeString())
-  console.log('旧值:', oldConnections)
-  console.log('旧值长度:', oldConnections ? oldConnections.length : 'undefined')
-  console.log('新值:', newConnections)
-  console.log('新值长度:', newConnections.length)
-  console.log('新值内容:', newConnections)
-  console.log('是否相等:', oldConnections === newConnections)
-  console.log('内存地址检查:', { 
-    new: newConnections, 
-    ref: connections.value,
-    equal: newConnections === connections.value 
-  })
+  // console.log('=== Watcher 触发 ===')
+  // console.log('触发时间:', new Date().toLocaleTimeString())
+  // console.log('旧值:', oldConnections)
+  // console.log('旧值长度:', oldConnections ? oldConnections.length : 'undefined')
+  // console.log('新值:', newConnections)
+  // console.log('新值长度:', newConnections.length)
+  // console.log('新值内容:', newConnections)
+  // console.log('是否相等:', oldConnections === newConnections)
+  // console.log('内存地址检查:', {
+  //   new: newConnections, 
+  //   ref: connections.value,
+  //   equal: newConnections === connections.value 
+  // })
   
   if (newConnections.length > 0) {
     console.log('=== Watcher 调用 loadDatabases ===')
@@ -444,7 +444,7 @@ function onNodeClick(data, node) {
 
 // 加载数据库的表和视图
 async function loadTablesAndViews(databaseNode, treeNode) {
-  console.log(`加载数据库 ${databaseNode.label} 的表和视图`)
+  // console.log(`加载数据库 ${databaseNode.label} 的表和视图`)
   
   // 更新节点状态为加载中
   treeNode.loading = true
@@ -457,7 +457,7 @@ async function loadTablesAndViews(databaseNode, treeNode) {
     }
     
     const res = await databaseApi.getDatabases(connectionConfig)
-    console.log(`数据库 ${databaseNode.label} 的表和视图:`, res)
+    // console.log(`数据库 ${databaseNode.label} 的表和视图:`, res)
     
     if (res.code === 200) {
       // 构建表和视图的树结构
@@ -490,7 +490,7 @@ async function loadTablesAndViews(databaseNode, treeNode) {
       // 重新设置树数据以触发更新
       treeData.value = [...treeData.value]
     } else {
-      console.error('获取表和视图失败:', res.message)
+      // console.error('获取表和视图失败:', res.message)
       ElMessage.error('获取表和视图失败: ' + res.message)
     }
   } catch (e) {
@@ -512,7 +512,7 @@ function handleCreate(type) {
     // console.log('新建表逻辑')
     createTable()
   } else if (type === 'view') {
-    console.log('新建视图逻辑')
+    // console.log('新建视图逻辑')
   }else if(type === 'altertable'){
     // console.log('修改表结构逻辑')
     alterTable();

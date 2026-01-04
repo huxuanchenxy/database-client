@@ -114,7 +114,7 @@ const fetchConfigList = async () => {
       configList.value = res.data
     }
   } catch (e) {
-    console.log('fetchConfigList', e)
+    // console.log('fetchConfigList', e)
   }
 }
 /* 校验规则 */

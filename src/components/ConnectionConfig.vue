@@ -227,7 +227,7 @@ const handleSaveConnection = async () => {
          issl:connectionForm.isssl ? 1 : 0
     }
     const result = await databaseApi.testConnection(parm)
-    console.log('testConnection', result)
+    // console.log('testConnection', result)
     if (result.code === 200) {
       
       const connPayload = {
@@ -238,9 +238,9 @@ const handleSaveConnection = async () => {
         issl: connectionForm.isssl ? 1 : 0
       }
 
-      console.log('=== ConnectionConfig: 更新 store ===')
+      // console.log('=== ConnectionConfig: 更新 store ===')
       updateConn(connPayload)
-      console.log('=== ConnectionConfig: store 更新完成 ===')
+      // console.log('=== ConnectionConfig: store 更新完成 ===')
       
       // 等待一下确保 store 更新完成，然后触发事件
       setTimeout(() => {
