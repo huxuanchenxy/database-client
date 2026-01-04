@@ -6,6 +6,7 @@ export interface Conn {
   dbHost: string
   user: string
   password: string
+  issl?: number
 }
 
 export interface ConnectionInstance extends Conn {

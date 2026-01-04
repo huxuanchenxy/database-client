@@ -62,6 +62,10 @@
         />
       </el-form-item>
       
+      <el-form-item label="SSL连接">
+        <el-checkbox v-model="connectionForm.isssl">启用SSL连接</el-checkbox>
+      </el-form-item>
+      
       <!-- <el-form-item label="数据库类型" prop="dbType">
         <el-select
           v-model="connectionForm.dbType"
@@ -129,7 +133,8 @@ const connectionForm = reactive({
   database: 'seis',
   username: 'seis',
   password: 'seis',
-  dbType: 'mysql'
+  dbType: 'mysql',
+  issl: 0 // 0表示不启用SSL，1表示启用SSL
 })
 
 // const connectionForm = reactive({
@@ -174,7 +179,8 @@ const resetForm = () => {
     database: '',
     username: '',
     password: '',
-    dbType: 'mysql'
+    dbType: 'mysql',
+    issl: 0 // 0表示不启用SSL，1表示启用SSL
   })
 }
 
@@ -188,7 +194,8 @@ const handleTestConnection = async () => {
          dbName:connectionForm.database,
          dbHost:connectionForm.host + ":" + connectionForm.port,
          user:connectionForm.username,
-		     password:connectionForm.password,
+	     password:connectionForm.password,
+         issl:connectionForm.isssl ? 1 : 0
     }
     const result = await databaseApi.testConnection(parm)
     
@@ -216,7 +223,8 @@ const handleSaveConnection = async () => {
          dbName:connectionForm.database,
          dbHost:connectionForm.host + ":" + connectionForm.port,
          user:connectionForm.username,
-		     password:connectionForm.password,
+	     password:connectionForm.password,
+         issl:connectionForm.isssl ? 1 : 0
     }
     const result = await databaseApi.testConnection(parm)
     console.log('testConnection', result)
@@ -226,7 +234,8 @@ const handleSaveConnection = async () => {
         dbHost: `${connectionForm.host}:${connectionForm.port}`,
         dbName: connectionForm.database,
         user: connectionForm.username,
-        password: connectionForm.password
+        password: connectionForm.password,
+        issl: connectionForm.isssl ? 1 : 0
       }
 
       console.log('=== ConnectionConfig: 更新 store ===')
