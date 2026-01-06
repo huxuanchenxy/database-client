@@ -436,9 +436,22 @@ function onContextMenu(event, data, node) {
 function onNodeClick(data, node) {
   emit('table-selected', data)
   
-  // 双击数据库节点时加载表和视图
-  if (data.type === 'database' && !data.isLoaded) {
-    loadTablesAndViews(data, node)
+  // 当点击数据库节点时，更新当前连接的dbName
+  if (data.type === 'database') {
+    // 更新当前连接的dbName为当前数据库的dbName
+    const updatedConnection = {
+      ...data.connection,
+      dbName: data.dbName
+    }
+    
+    // 更新connStore中的当前连接
+    connStore.currentConnection = updatedConnection
+    currentConnection.value = updatedConnection
+    
+    // 双击数据库节点时加载表和视图
+    if (!data.isLoaded) {
+      loadTablesAndViews(data, node)
+    }
   }
 }
 
@@ -550,6 +563,7 @@ function alterTable() {
 const dropTable = async()=> {
   try {
     let currrenttable = currentNode.value.data.label
+    
     await ElMessageBox.confirm(
       '确定要删除这张表 ('+ currrenttable+') 吗？此操作不可恢复！',
       '删除确认',
