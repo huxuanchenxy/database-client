@@ -630,7 +630,7 @@ const backupDatabase = async()=> {
     if (response.code === 200) {
       ElMessage.success('数据库备份成功');
     } else {
-      ElMessage.error(`数据库备份失败: ${response.msg || '未知错误'}`);
+      ElMessage.error(`数据库备份失败: ${response.message || '未知错误'}`);
     }
   } catch (error) {
     // 用户点击“取消”或请求失败
