@@ -1,13 +1,13 @@
 <template>
   <div class="backup-container">
-    <el-button
+    <!-- <el-button
       type="primary"
       size="small"
       @click="openBackupDialog"
       :icon="DocumentCopy"
     >
       数据库备份
-    </el-button>
+    </el-button> -->
 
     <!-- 备份配置对话框 -->
     <el-dialog
