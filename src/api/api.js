@@ -204,6 +204,10 @@ export const databaseApi = {
   ,execdatavalue: (parms) => {
     return api.post('/device/execdatavalue', parms)
   }
+  //备份接口
+  ,backup: (parms) => {
+    return api.post('/seisdb/backup', parms)
+  }
   
 }
 

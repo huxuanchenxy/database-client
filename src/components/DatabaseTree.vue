@@ -50,6 +50,9 @@
     <div class="item"  v-if="menu.type === 'alterview'">
         <div class="item" @click="handleCreate('selectview')">打开视图</div>
     </div>
+    <div class="item"  v-if="menu.type === 'database'">
+        <div class="item" @click="handleCreate('backup')">备份</div>
+    </div>
   </div>
   </div>
 
@@ -418,6 +421,9 @@ function onContextMenu(event, data, node) {
     if (data.type === 'connection') {
         // 连接根节点右键菜单
         menu.type = 'connection';
+    } else if (data.type === 'database') {
+        // 数据库节点右键菜单
+        menu.type = 'database';
     } else if (data.type === 'table') {
         menu.type = 'table';
     } else if (data.type === 'view') {
@@ -541,6 +547,9 @@ function handleCreate(type) {
   }else if(type === 'connection'){
     // 连接节点的右键菜单逻辑
     handleDisconnectConnection(currentNode.value.data);
+  }else if(type === 'backup'){
+    // 备份数据库逻辑
+    ElMessage.info('备份数据库功能开发中');
   }
 
 }
