@@ -75,7 +75,7 @@ export const useConnStore = defineStore('conn', () => {
   function reset() {
     const defaultConnection: ConnectionInstance = {
       dbName: 'seis',
-      dbHost: '10.89.34.9:5432',
+      dbHost: '10.89.34.9:6432',
       user: 'seis',
       password: 'seis',
       id: Date.now(),

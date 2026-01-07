@@ -129,7 +129,7 @@ const formRef = ref()
 const connectionForm = reactive({
   name: '10.89.34.9',
   host: '10.89.34.9',
-  port: 5432,
+  port: 6432,
   database: 'seis',
   username: 'seis',
   password: 'seis',
