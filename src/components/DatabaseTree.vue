@@ -525,7 +525,7 @@ async function loadTablesAndViews(databaseNode, treeNode) {
 document.addEventListener('click', () => (menu.show = false))
 
 /* --------------------- 业务动作 --------------------- */
-function handleCreate(type) {
+const handleCreate = (type)=> {
   menu.show = false
   if (type === 'table') {
     // console.log('新建表逻辑')
@@ -549,9 +549,8 @@ function handleCreate(type) {
     handleDisconnectConnection(currentNode.value.data);
   }else if(type === 'backup'){
     // 备份数据库逻辑
-    ElMessage.info('备份数据库功能开发中');
+    backupDatabase()
   }
-
 }
 
 
@@ -604,6 +603,43 @@ const dropTable = async()=> {
   }
 }
 
+
+const backupDatabase = async()=> {
+  try {
+    const backupData = currentNode.value.data;
+    
+    // await ElMessageBox.confirm(
+    //   '确定要备份数据库 ('+ backupData.dbName+') 吗？',
+    //   '备份确认',
+    //   {
+    //     confirmButtonText: '确定',
+    //     cancelButtonText: '取消',
+    //     type: 'info',
+    //   }
+    // );
+    
+    // 从connStore.currentConnection获取连接信息，确保参数格式正确
+    const backupParams = {
+      dbName: backupData.dbName,
+      dbHost: connStore.currentConnection.dbHost,
+      user: connStore.currentConnection.user,
+      password: connStore.currentConnection.password
+    };
+    
+    const response = await databaseApi.backup(backupParams);
+    if (response.code === 200) {
+      ElMessage.success('数据库备份成功');
+    } else {
+      ElMessage.error(`数据库备份失败: ${response.msg || '未知错误'}`);
+    }
+  } catch (error) {
+    // 用户点击“取消”或请求失败
+    if (error !== 'cancel') {
+      // console.error('备份数据库请求失败:', error);
+      ElMessage.error('数据库备份请求失败');
+    }
+  }
+}
 
 const selectTable = async(type = 'table')=> {
   let currrenttable = currentNode.value.data.label
