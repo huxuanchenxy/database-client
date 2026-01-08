@@ -51,7 +51,8 @@
         <div class="item" @click="handleCreate('selectview')">打开视图</div>
     </div>
     <div class="item"  v-if="menu.type === 'database'">
-        <div class="item" @click="handleCreate('backup')">备份</div>
+        <!-- <div class="item" @click="handleCreate('backup')">备份数据库</div> -->
+        <div class="item" @click="handleCreate('export')">备份并导出</div>
     </div>
   </div>
   </div>
@@ -550,6 +551,9 @@ const handleCreate = (type)=> {
   }else if(type === 'backup'){
     // 备份数据库逻辑
     backupDatabase()
+  }else if(type === 'export'){
+    // 导出数据库逻辑
+    exportDatabase()
   }
 }
 
@@ -637,6 +641,48 @@ const backupDatabase = async()=> {
     if (error !== 'cancel') {
       // console.error('备份数据库请求失败:', error);
       ElMessage.error('数据库备份请求失败');
+    }
+  }
+}
+
+const exportDatabase = async()=> {
+  try {
+    const backupData = currentNode.value.data;
+    
+    // 从connStore.currentConnection获取连接信息，确保参数格式正确
+    const exportParams = {
+      dbName: backupData.dbName,
+      dbHost: connStore.currentConnection.dbHost,
+      user: connStore.currentConnection.user,
+      password: connStore.currentConnection.password
+    };
+    
+    // 调用backup2接口，处理文件下载
+    const response = await databaseApi.backup2(exportParams);
+    
+    // 创建blob对象
+    const blob = new Blob([response], { type: 'application/octet-stream' });
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${backupData.dbName}_backup_${new Date().getTime()}.dump`;
+    
+    // 触发下载
+    document.body.appendChild(link);
+    link.click();
+    
+    // 清理
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    // ElMessage.success('数据库导出成功');
+  } catch (error) {
+    // 用户点击“取消”或请求失败
+    if (error !== 'cancel') {
+      // console.error('导出数据库请求失败:', error);
+      ElMessage.error('数据库导出请求失败');
     }
   }
 }

@@ -209,6 +209,9 @@ export const databaseApi = {
     return api.post('/seisdb/backup', parms)
   }
   
+    ,backup2: (parms) => {
+    return api.get('/seisdb/backup2', parms)
+  }
 }
 
 export default api
