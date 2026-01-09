@@ -18,6 +18,7 @@
               退出登录
             </el-button> -->
             <Backup />
+            <SlowQuery />
             <UserAvatar />
           </div>
         </div>
@@ -127,6 +128,7 @@ import { storeToRefs } from "pinia";
 import UserAvatar from "@/components/UserAvatar.vue";
 import DatabaseHead from "@/components/DatabaseHead.vue";
 import Backup from "@/components/Backup.vue";
+import SlowQuery from "@/components/SlowQuery.vue";
 const router = useRouter(); // 先拿到实例
 // const activeTab = ref('sql')
 
