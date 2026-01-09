@@ -208,9 +208,13 @@ export const databaseApi = {
   ,backup: (parms) => {
     return api.post('/seisdb/backup', parms)
   }
-  
+  //备份和导出
     ,backup2: (parms) => {
     return api.get('/seisdb/backup2', parms)
+  }
+  //慢查询
+    ,getslowquery: (parms) => {
+    return api.post('/seisdb/getslowquery', parms)
   }
 }
 
