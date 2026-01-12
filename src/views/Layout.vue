@@ -18,6 +18,7 @@
               退出登录
             </el-button> -->
             <Backup />
+            <Compare />
             <SlowQuery />
             <UserAvatar />
           </div>
@@ -129,6 +130,7 @@ import UserAvatar from "@/components/UserAvatar.vue";
 import DatabaseHead from "@/components/DatabaseHead.vue";
 import Backup from "@/components/Backup.vue";
 import SlowQuery from "@/components/SlowQuery.vue";
+import Compare from "@/components/Compare.vue";
 const router = useRouter(); // 先拿到实例
 // const activeTab = ref('sql')
 
