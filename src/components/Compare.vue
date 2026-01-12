@@ -33,6 +33,7 @@
                     v-model="leftSelectedKey" 
                     :label="data.key"
                     @change="handleLeftSelectChange(data)"
+                    hide-label
                   ></el-radio>
                   <span>{{ data.label }}</span>
                 </div>
@@ -60,6 +61,7 @@
                     v-model="rightSelectedKey" 
                     :label="data.key"
                     @change="handleRightSelectChange(data)"
+                    hide-label
                   ></el-radio>
                   <span>{{ data.label }}</span>
                 </div>
@@ -193,29 +195,26 @@ async function loadTreeData() {
 
 // 根据数据库列表构建树结构，参考DatabaseTree.vue
 function buildTreeForConnectionWithDBList(dbList, connection) {
-  // 确保dbList是数组
   const safeDbList = Array.isArray(dbList) ? dbList : []
-  
-  const treeNode = {
-    label: connection.connectionName,
+
+  return {
+    label: connection.connectionName,   // 10.89.34.9（连接层可以显示）
     type: 'connection',
     key: `conn_${connection.id}`,
     connectionId: connection.id,
     dbHost: connection.dbHost,
     children: safeDbList.map(dbName => ({
-      label: dbName,
+      label: dbName,                    // ✅ 只显示 seis
       type: 'database',
-      key: `db_${connection.id}_${dbName}`,
-      dbName: dbName,
-      connectionId: connection.id,
-      connection: connection,
-      children: [], // 初始为空，后续加载表
-      isLoaded: false // 标记是否已加载表
+      key: `db_${connection.id}_${dbName}`, // key 随便复杂
+      dbName,
+      connection,
+      children: [],
+      isLoaded: false
     }))
   }
-  
-  return treeNode
 }
+
 
 // 左侧节点点击事件，点击数据库节点时加载表
 async function handleLeftNodeClick(data, node) {
@@ -233,93 +232,63 @@ async function handleRightNodeClick(data, node) {
 
 // 加载数据库的表，参考DatabaseTree.vue
 async function loadTablesAndViews(treeData, databaseNode, treeNode) {
-  // 更新节点状态为加载中
   treeNode.loading = true
-  
+
   try {
-    // 调用getDatabases接口获取表列表
     const connectionConfig = {
       ...databaseNode.connection,
       dbName: databaseNode.dbName
     }
-    
+
     const res = await databaseApi.getDatabases(connectionConfig)
-    
+
     if (res.code === 200) {
-      // 构建表的树结构，只显示表，不显示视图
       const tableList = res.data.tableList || []
-      
-      // 直接将表作为数据库的子节点，不添加额外的"表"分组
-      const tableNodes = tableList.map(t => ({
-        label: t.tableName || t.name || '未知表名',
-        type: 'table',
-        key: `table_${databaseNode.key}_${t.tableName || t.name || 'unknown'}`,
-        tableName: t.tableName || t.name || '未知表名',
-        dbName: databaseNode.dbName,
-        connection: databaseNode.connection
-      }))
-      
-      // 递归更新树数据，避免循环引用
-      function updateTree(nodes) {
-        return nodes.map(node => {
-          // 深拷贝当前节点，避免循环引用
-          const newNode = {
-            label: node.label,
-            type: node.type,
-            key: node.key,
-            connectionId: node.connectionId,
-            dbHost: node.dbHost,
-            dbName: node.dbName,
-            tableName: node.tableName,
-            isLoaded: node.isLoaded,
-            connection: node.connection,
-            children: []
-          };
-          
-          // 如果是当前要更新的数据库节点，替换其子节点为表列表
-          if (node.key === databaseNode.key) {
-            newNode.children = tableNodes;
-            newNode.isLoaded = true;
-          } 
-          // 否则递归更新子节点
-          else if (node.children && node.children.length > 0) {
-            newNode.children = updateTree(node.children);
-          }
-          
-          return newNode;
-        });
-      }
-      
-      // 创建新的树数据
-      const updatedTreeData = updateTree(treeData);
-      
-      // 直接替换整个树数据，确保Vue能检测到变化
+
+      databaseNode.children = tableList.map(t => {
+        const tableName = t.tableName || t.name || 'unknown'
+        console.log(`加载数据库的表 ${tableName}`)
+        return {
+          label: tableName,   // ✅ 只显示 user1
+          type: 'table',
+          key: `table_${databaseNode.connection.id}_${databaseNode.dbName}_${tableName}`,
+          tableName,
+          dbName: databaseNode.dbName,
+          connection: databaseNode.connection
+        }
+      })
+
+      databaseNode.isLoaded = true
+
+      // 触发响应式更新
       if (treeData === leftTreeData.value) {
-        leftTreeData.value = updatedTreeData;
+        leftTreeData.value = [...leftTreeData.value]
       } else {
-        rightTreeData.value = updatedTreeData;
+        rightTreeData.value = [...rightTreeData.value]
       }
     } else {
       ElMessage.error(`加载表失败: ${res.message || '未知错误'}`)
     }
   } catch (e) {
-    console.error('加载表请求失败:', e)
+    console.error(e)
     ElMessage.error('加载表请求失败')
   } finally {
-    // 结束加载状态
     treeNode.loading = false
   }
 }
+
 
 // 移除不再需要的findAndUpdateNode函数
 
 // 左侧选择变化事件
 function handleLeftSelectChange(data) {
+  leftSelectedKey.value = data.key
   leftSelectedNode.value = data
 }
 
 // 右侧选择变化事件
 function handleRightSelectChange(data) {
+  rightSelectedKey.value = data.key
   rightSelectedNode.value = data
 }
 
@@ -515,6 +484,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* 隐藏radio的label元素 */
+:deep(.el-radio__label) {
+  display: none;
 }
 
 .compare-buttons {
