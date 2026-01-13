@@ -82,8 +82,8 @@
         <!-- <div class="item" @click="handleCreate('backup')">备份数据库</div> -->
         <div class="item" @click="handleCreate('export')">备份并导出</div>
     </div>
-    <div class="item"  v-if="menu.type === 'connection'">
-        <div v-if="currentNode.value.data.isConnected" class="item" @click="handleCreate('disconnect')">断开连接</div>
+    <div class="item"  v-if="menu.type === 'connection' && menu.data">
+        <div v-if="menu.data.isConnected" class="item" @click="handleCreate('disconnect')">断开连接</div>
         <div v-else class="item" @click="handleCreate('connect')">连接</div>
         <div class="item" @click="handleCreate('viewLogs')">查看日志</div>
         <div class="item" @click="handleCreate('deleteConnection')">删除连接配置</div>
@@ -493,6 +493,7 @@ show: false,
 left: 0,
 top: 0,
 type: null,
+data: null, // 存储当前右键点击的节点数据
 height:76, // 增加了高度，因为添加了新的菜单项
 width:100,  // 增加了宽度
 })
@@ -509,6 +510,7 @@ function onContextMenu(event, data, node) {
     // 使用鼠标事件的实际坐标
     menu.left = event.clientX;
     menu.top = event.clientY;
+    menu.data = data; // 存储当前右键点击的节点数据
     menu.show = true;
     
     if (data.type === 'connection') {
