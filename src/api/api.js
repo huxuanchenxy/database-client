@@ -216,6 +216,10 @@ export const databaseApi = {
     ,getslowquery: (parms) => {
     return api.post('/seisdb/getslowquery', parms)
   }
+    //实例日志
+    ,getlog: (parms) => {
+    return api.post('/seisdb/getlog', parms)
+  }
 }
 
 export default api

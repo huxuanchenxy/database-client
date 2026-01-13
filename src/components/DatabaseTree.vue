@@ -54,10 +54,32 @@
         <!-- <div class="item" @click="handleCreate('backup')">备份数据库</div> -->
         <div class="item" @click="handleCreate('export')">备份并导出</div>
     </div>
+    <div class="item"  v-if="menu.type === 'connection'">
+        <div class="item" @click="handleCreate('viewLogs')">查看日志</div>
+        <!-- <div class="item" @click="handleCreate('connection')">断开连接</div> -->
+    </div>
   </div>
   </div>
 
    <TableDesigner ref="designer" />
+   
+   <!-- 日志查看对话框 -->
+   <el-dialog
+     v-model="logDialogVisible"
+     title="日志文件列表"
+     width="800px"
+     append-to-body
+   >
+     <div class="log-dialog">
+       <el-table :data="logFiles" style="width: 100%">
+         <el-table-column prop="name" label="日志文件名" min-width="300">
+           <template #default="scope">
+             <span>{{ scope.row.name }}</span>
+           </template>
+         </el-table-column>
+       </el-table>
+     </div>
+   </el-dialog>
 </template>
 
 <script setup>
@@ -409,6 +431,10 @@ height:76, // 增加了高度，因为添加了新的菜单项
 width:100,  // 增加了宽度
 })
 
+// 日志查看相关
+const logDialogVisible = ref(false)
+const logFiles = ref([])
+
 const currentNode = ref(null)
 // 节点右键事件
 function onContextMenu(event, data, node) {
@@ -554,6 +580,9 @@ const handleCreate = (type)=> {
   }else if(type === 'export'){
     // 导出数据库逻辑
     exportDatabase()
+  }else if(type === 'viewLogs'){
+    // 查看日志逻辑
+    viewLogs()
   }
 }
 
@@ -747,6 +776,56 @@ const handleDisconnectConnection = (connectionData) => {
   loadDatabases()
   treeStore.triggerRefresh()
   ElMessage.success(`已断开连接: ${connectionData.label}`)
+}
+
+// 查看日志文件列表
+const viewLogs = async () => {
+  try {
+    const connectionData = currentNode.value.data;
+    // 找到对应的连接实例
+    const connection = connections.value.find(conn => conn.id === connectionData.connectionId);
+    
+    if (!connection) {
+      ElMessage.error('找不到对应的连接信息');
+      return;
+    }
+    
+    // 调用getlog接口获取日志文件列表
+    const logParams = {
+      dbName: connection.dbName,
+      dbHost: connection.dbHost,
+      user: connection.user,
+      password: connection.password,
+      isssl: 0 // 默认为0，不使用SSL
+    };
+    
+    const response = await databaseApi.getlog(logParams);
+    
+    if (response.code === 200) {
+      // 处理返回的日志文件列表，转换为适合表格展示的格式
+      const logFileList = response.data.map(logName => {
+        // 从日志文件名中提取日期信息
+        const dateMatch = logName.match(/(\d{4}-\d{2}-\d{2})_\d{6}/);
+        const date = dateMatch ? dateMatch[1] : '';
+        
+        return {
+          name: logName,
+          size: '', // 接口未返回大小信息
+          date: date
+        };
+      });
+      
+      // 更新日志文件列表
+      logFiles.value = logFileList;
+      // 打开日志查看对话框
+      logDialogVisible.value = true;
+    } else {
+      ElMessage.error(`获取日志文件列表失败: ${response.message || '未知错误'}`);
+    }
+  } catch (error) {
+    console.error('获取日志文件列表失败:', error);
+    ElMessage.error('获取日志文件列表失败');
+  }
 }
 
 </script>
