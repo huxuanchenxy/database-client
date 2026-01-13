@@ -91,12 +91,19 @@
           测试连接
         </el-button>
         <el-button
+          @click="handleSaveConfig"
+          :loading="saving"
+          class="my-btn1"
+        >
+          保存连接配置
+        </el-button>
+        <!-- <el-button
           @click="handleSaveConnection"
           :loading="saving"
           class="my-btn2"
         >
           连接
-        </el-button>
+        </el-button> -->
       </span>
     </template>
   </el-dialog>
@@ -211,6 +218,44 @@ const handleTestConnection = async () => {
   }
 }
 
+// 保存连接配置（不连接）
+const handleSaveConfig = async () => {
+  if (!formRef.value) return
+  
+  try {
+    await formRef.value.validate()
+    saving.value = true
+    
+    // 创建新的连接实例，isConnected设置为false
+    const newConnection = {
+      id: Date.now(),
+      connectionName: connectionForm.name,
+      dbHost: `${connectionForm.host}:${connectionForm.port}`,
+      dbName: connectionForm.database,
+      user: connectionForm.username,
+      password: connectionForm.password,
+      issl: connectionForm.isssl ? 1 : 0,
+      isConnected: false
+    }
+    
+    // 添加到连接列表
+    connStore.addConnection(newConnection)
+    
+    ElMessage.success('连接配置保存成功！')
+    
+    // 关闭对话框
+    setTimeout(() => {
+      handleClose()
+    }, 100)
+  } catch (error) {
+    console.error('保存连接配置失败:', error)
+    ElMessage.error('保存连接配置失败！')
+  } finally {
+    saving.value = false
+  }
+}
+
+// 连接数据库（保存并连接）
 const handleSaveConnection = async () => {
   if (!formRef.value) return
   
@@ -218,7 +263,6 @@ const handleSaveConnection = async () => {
     await formRef.value.validate()
     saving.value = true
     
-    // const result = await databaseApi.saveConnection(connectionForm)
     let parm = {
          dbName:connectionForm.database,
          dbHost:connectionForm.host + ":" + connectionForm.port,
@@ -227,26 +271,26 @@ const handleSaveConnection = async () => {
          issl:connectionForm.isssl ? 1 : 0
     }
     const result = await databaseApi.testConnection(parm)
-    // console.log('testConnection', result)
     if (result.code === 200) {
       
-      const connPayload = {
+      // 创建新的连接实例，isConnected设置为true
+      const newConnection = {
+        id: Date.now(),
+        connectionName: connectionForm.name,
         dbHost: `${connectionForm.host}:${connectionForm.port}`,
         dbName: connectionForm.database,
         user: connectionForm.username,
         password: connectionForm.password,
-        issl: connectionForm.isssl ? 1 : 0
+        issl: connectionForm.isssl ? 1 : 0,
+        isConnected: true
       }
-
-      // console.log('=== ConnectionConfig: 更新 store ===')
-      updateConn(connPayload)
-      // console.log('=== ConnectionConfig: store 更新完成 ===')
+      
+      // 添加到连接列表并设置为当前连接
+      connStore.addConnection(newConnection)
       
       // 等待一下确保 store 更新完成，然后触发事件
       setTimeout(() => {
-        console.log('=== ConnectionConfig: 触发 connection-success 事件 ===')
         emit('connection-success', connectionForm)
-        console.log('=== ConnectionConfig: 事件触发完成 ===')
       }, 50)
       
       ElMessage.success('连接成功！')
@@ -259,6 +303,7 @@ const handleSaveConnection = async () => {
     }
   } catch (error) {
     console.error('连接失败:', error)
+    ElMessage.error('连接失败！')
   } finally {
     saving.value = false
   }

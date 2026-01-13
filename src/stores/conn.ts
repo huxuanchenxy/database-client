@@ -12,6 +12,7 @@ export interface Conn {
 export interface ConnectionInstance extends Conn {
   id: number
   connectionName: string
+  isConnected: boolean
 }
 
 export const useConnStore = defineStore('conn', () => {
@@ -23,18 +24,37 @@ export const useConnStore = defineStore('conn', () => {
 
   /* 添加新连接实例 */
   function addConnection(connection: ConnectionInstance) {
+    // 确保连接实例包含isConnected字段
+    const connectionWithStatus = {
+      ...connection,
+      isConnected: connection.isConnected || false
+    }
+    
     // 检查是否已存在相同ID的连接
     const existingIndex = connections.value.findIndex(conn => conn.id === connection.id)
     if (existingIndex !== -1) {
       // 更新现有连接
-      connections.value[existingIndex] = connection
+      connections.value[existingIndex] = connectionWithStatus
     } else {
       // 添加新连接
-      connections.value.push(connection)
+      connections.value.push(connectionWithStatus)
     }
     
     // 设置为当前连接
-    currentConnection.value = connection
+    currentConnection.value = connectionWithStatus
+  }
+  
+  /* 更新连接状态 */
+  function updateConnectionStatus(id: number, isConnected: boolean) {
+    const index = connections.value.findIndex(conn => conn.id === id)
+    if (index !== -1) {
+      connections.value[index].isConnected = isConnected
+      
+      // 如果更新的是当前连接，也要更新currentConnection
+      if (currentConnection.value && currentConnection.value.id === id) {
+        currentConnection.value.isConnected = isConnected
+      }
+    }
   }
 
   /* 移除连接实例 */
@@ -79,7 +99,8 @@ export const useConnStore = defineStore('conn', () => {
       user: 'seis',
       password: 'seis',
       id: Date.now(),
-      connectionName: '默认连接'
+      connectionName: '默认连接',
+      isConnected: false
     }
     connections.value = [defaultConnection]
     currentConnection.value = defaultConnection
@@ -98,7 +119,8 @@ export const useConnStore = defineStore('conn', () => {
     clearAllConnections,
     updateConn, 
     reset, 
-    clearConn 
+    clearConn,
+    updateConnectionStatus 
   }
 }, {
   persist: {

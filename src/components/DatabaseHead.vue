@@ -7,10 +7,10 @@
           @click="handleRequestConnection"
           :icon="Plus"
         >
-          连接数据库实例
+          增加实例配置
         </el-button>
         <div v-if="currentConnection" class="connection-info">
-            <span class="dot green"></span>
+            <span class="dot" :class="{ 'green': currentConnection.isConnected, 'yellow': !currentConnection.isConnected }"></span>
             <span>{{ currentConnection.connectionName }} - {{ currentConnection.dbName }}</span>
           </div>
         <div v-else class="connection-info">
@@ -43,13 +43,20 @@ const handleRequestConnection = () => {
 const handleDisconnect = () => {
   // console.log('=== DatabaseHead: 用户点击断开连接 ===')
   
-  connStore.clearConn()          // 1. 清空持久化数据
-  currentConnection.value = null // 2. 清空本地响应式状态
+  if (currentConnection.value) {
+    // 只更新当前连接的状态为未连接，不清空所有连接配置
+    connStore.updateConnectionStatus(currentConnection.value.id, false)
+    
+    // 如果当前连接是当前活跃连接，清空本地响应式状态
+    if (connStore.currentConnection && connStore.currentConnection.id === currentConnection.value.id) {
+      connStore.currentConnection = null
+    }
+    
+    ElMessage.success('已断开数据库连接')
+  }
   
   // console.log('=== DatabaseHead: 触发 treeStore.refresh ===')
   treeStore.triggerRefresh()
-  
-  ElMessage.success('已断开数据库连接')
   // console.log('=== DatabaseHead: 断开连接完成 ===')
 }
 
@@ -69,8 +76,9 @@ const handleConnectionSuccess = (connectionConfig) => {
 }
 
 
-onMounted( async() => {
-  await load()
+onMounted(() => {
+  // 组件挂载时直接从connStore获取当前连接状态，不尝试重新连接
+  currentConnection.value = connStore.currentConnection
 })
 
 // 监听connStore.currentConnection的变化，自动更新UI
@@ -82,19 +90,21 @@ watch(
   { deep: true }
 )
 
-async function load() {
-  // console.log('onMounted conn:',connStore.conn)
-  try {
-    const result = await databaseApi.testConnection(connStore.currentConnection)
-    if (result.code === 200) {
-      currentConnection.value = connStore.currentConnection
-    } else {
-      currentConnection.value = null
+// 监听connStore.connections的变化，确保连接状态同步
+watch(
+  () => connStore.connections,
+  () => {
+    // 如果当前连接仍然存在于connections列表中，保留它
+    // 否则，清空currentConnection
+    if (currentConnection.value) {
+      const connectionExists = connStore.connections.some(conn => conn.id === currentConnection.value.id)
+      if (!connectionExists) {
+        currentConnection.value = null
+      }
     }
-  } catch (error) {
-    currentConnection.value = null
-  }
-}
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped>
