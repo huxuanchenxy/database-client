@@ -19,6 +19,7 @@
             </el-button> -->
             <Backup />
             <Compare />
+            <MonitorConfig />
             <SlowQuery />
             <UserAvatar />
           </div>
@@ -131,6 +132,7 @@ import DatabaseHead from "@/components/DatabaseHead.vue";
 import Backup from "@/components/Backup.vue";
 import SlowQuery from "@/components/SlowQuery.vue";
 import Compare from "@/components/Compare.vue";
+import MonitorConfig from "@/components/MonitorConfig.vue";
 const router = useRouter(); // 先拿到实例
 // const activeTab = ref('sql')
 
@@ -303,7 +305,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 160px;
+  width: 260px;
 }
 
 /* .app-aside {
