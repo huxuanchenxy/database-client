@@ -77,6 +77,18 @@
              <span>{{ scope.row.name }}</span>
            </template>
          </el-table-column>
+         <el-table-column label="操作" width="120" fixed="right">
+           <template #default="scope">
+             <el-button 
+               type="primary" 
+               size="small" 
+               @click="downloadLogFile(scope.row.name)"
+               :loading="scope.row.downloading"
+             >
+               下载
+             </el-button>
+           </template>
+         </el-table-column>
        </el-table>
      </div>
    </el-dialog>
@@ -811,7 +823,8 @@ const viewLogs = async () => {
         return {
           name: logName,
           size: '', // 接口未返回大小信息
-          date: date
+          date: date,
+          downloading: false // 添加下载状态标志
         };
       });
       
@@ -825,6 +838,66 @@ const viewLogs = async () => {
   } catch (error) {
     console.error('获取日志文件列表失败:', error);
     ElMessage.error('获取日志文件列表失败');
+  }
+}
+
+// 下载日志文件
+const downloadLogFile = async (logFileName) => {
+  try {
+    const connectionData = currentNode.value.data;
+    // 找到对应的连接实例
+    const connection = connections.value.find(conn => conn.id === connectionData.connectionId);
+    
+    if (!connection) {
+      ElMessage.error('找不到对应的连接信息');
+      return;
+    }
+    
+    // 更新当前日志文件的下载状态为true
+    const logFileIndex = logFiles.value.findIndex(logFile => logFile.name === logFileName);
+    if (logFileIndex !== -1) {
+      logFiles.value[logFileIndex].downloading = true;
+    }
+    
+    // 调用logdownload接口下载日志文件
+    const downloadParams = {
+      dbName: connection.dbName,
+      dbHost: connection.dbHost,
+      user: connection.user,
+      password: connection.password,
+      isssl: 0, // 默认为0，不使用SSL
+      oprationString: logFileName // 日志文件名
+    };
+    
+    const response = await databaseApi.logdownload(downloadParams);
+    
+    // 创建blob对象
+    const blob = new Blob([response], { type: 'application/octet-stream' });
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = logFileName;
+    
+    // 触发下载
+    document.body.appendChild(link);
+    link.click();
+    
+    // 清理
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    ElMessage.success(`日志文件 ${logFileName} 下载成功`);
+  } catch (error) {
+    console.error('下载日志文件失败:', error);
+    ElMessage.error('下载日志文件失败');
+  } finally {
+    // 恢复下载状态为false
+    const logFileIndex = logFiles.value.findIndex(logFile => logFile.name === logFileName);
+    if (logFileIndex !== -1) {
+      logFiles.value[logFileIndex].downloading = false;
+    }
   }
 }
 

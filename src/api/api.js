@@ -220,6 +220,10 @@ export const databaseApi = {
     ,getlog: (parms) => {
     return api.post('/seisdb/getlog', parms)
   }
+    //备份和导出
+    ,logdownload: (parms) => {
+    return api.get('/seisdb/logdownload', parms)
+  }
 }
 
 export default api
