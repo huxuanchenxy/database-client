@@ -305,47 +305,53 @@ async function compareDatabases() {
     
     // 构建对比参数
     const params = {
-      sourceDb: {
-        dbName: leftSelectedNode.value.label,
-        dbHost: leftSelectedNode.value.connection.dbHost,
-        user: leftSelectedNode.value.connection.user,
-        password: leftSelectedNode.value.connection.password
-      },
-      targetDb: {
+      dbName: leftSelectedNode.value.label,
+      dbHost: leftSelectedNode.value.connection.dbHost,
+      user: leftSelectedNode.value.connection.user,
+      password: leftSelectedNode.value.connection.password,
+      isssl: leftSelectedNode.value.connection.isssl || 0,
+      oprationInt: 0, // 0表示数据库比对
+      oprationString: "", // 数据库比对时oprationString无用，但保持参数完整性
+      mpJson: {
         dbName: rightSelectedNode.value.label,
         dbHost: rightSelectedNode.value.connection.dbHost,
         user: rightSelectedNode.value.connection.user,
-        password: rightSelectedNode.value.connection.password
+        password: rightSelectedNode.value.connection.password,
+        isssl: rightSelectedNode.value.connection.isssl || 0,
+        oprationString: "" // 数据库比对时oprationString无用，但保持参数完整性
       }
     }
     
-    // 预留对比数据库接口调用位置
-    // const response = await databaseApi.compareDatabase(params)
-    // if (response.code === 200) {
-    //   compareResult.value = JSON.stringify(response.data, null, 2)
-    // } else {
-    //   ElMessage.error(`对比数据库失败: ${response.message || '未知错误'}`)
-    //   compareResult.value = `对比失败: ${response.message || '未知错误'}`
-    // }
-    
-    // 模拟结果
-    compareResult.value = JSON.stringify({
-      code: 200,
-      message: '对比成功',
-      data: {
-        sourceDb: params.sourceDb.dbName,
-        targetDb: params.targetDb.dbName,
-        difference: {
-          tablesOnlyInSource: ['table1', 'table2'],
-          tablesOnlyInTarget: ['table3', 'table4'],
-          tablesInBoth: ['user', 'product']
+    // 调用compare接口
+    const response = await databaseApi.compare(params)
+    if (response.code === 200) {
+      // 处理数据库对比结果
+      const resultData = response.data
+      const sourceTableCount = resultData.source.tableList.length
+      const targetTableCount = resultData.target.tableList.length
+      
+      // 构建结果信息
+      const formattedResult = {
+        code: 200,
+        message: '对比成功',
+        data: {
+          sourceDb: resultData.source.dbName,
+          sourceTableCount: sourceTableCount,
+          targetDb: resultData.target.dbName,
+          targetTableCount: targetTableCount,
+          fullData: resultData
         }
       }
-    }, null, 2)
+      
+      compareResult.value = JSON.stringify(formattedResult, null, 2)
+    } else {
+      ElMessage.error(`对比数据库失败: ${response.message || '未知错误'}`)
+      compareResult.value = `对比失败: ${response.message || '未知错误'}`
+    }
     
     showResult.value = true
   } catch (error) {
-    // console.error('对比数据库请求失败:', error)
+    console.error('对比数据库请求失败:', error)
     ElMessage.error('对比数据库请求失败')
     compareResult.value = `请求失败: ${error.message || '未知错误'}`
     showResult.value = true
@@ -365,56 +371,53 @@ async function compareTables() {
     
     // 构建对比参数
     const params = {
-      sourceTable: {
-        dbName: leftSelectedNode.value.dbName,
-        tableName: leftSelectedNode.value.tableName,
-        dbHost: leftSelectedNode.value.connection.dbHost,
-        user: leftSelectedNode.value.connection.user,
-        password: leftSelectedNode.value.connection.password
-      },
-      targetTable: {
+      dbName: leftSelectedNode.value.dbName,
+      dbHost: leftSelectedNode.value.connection.dbHost,
+      user: leftSelectedNode.value.connection.user,
+      password: leftSelectedNode.value.connection.password,
+      oprationInt: 1, // 1表示表比对
+      isssl: leftSelectedNode.value.connection.isssl || 0,
+      oprationString: leftSelectedNode.value.tableName,
+      mpJson: {
         dbName: rightSelectedNode.value.dbName,
-        tableName: rightSelectedNode.value.tableName,
         dbHost: rightSelectedNode.value.connection.dbHost,
         user: rightSelectedNode.value.connection.user,
-        password: rightSelectedNode.value.connection.password
+        password: rightSelectedNode.value.connection.password,
+        isssl: rightSelectedNode.value.connection.isssl || 0,
+        oprationString: rightSelectedNode.value.tableName
       }
     }
     
-    // 预留对比表接口调用位置
-    // const response = await databaseApi.compareTable(params)
-    // if (response.code === 200) {
-    //   compareResult.value = JSON.stringify(response.data, null, 2)
-    // } else {
-    //   ElMessage.error(`对比表失败: ${response.message || '未知错误'}`)
-    //   compareResult.value = `对比失败: ${response.message || '未知错误'}`
-    // }
-    
-    // 模拟结果
-    compareResult.value = JSON.stringify({
-      code: 200,
-      message: '对比成功',
-      data: {
-        sourceTable: `${params.sourceTable.dbName}.${params.sourceTable.tableName}`,
-        targetTable: `${params.targetTable.dbName}.${params.targetTable.tableName}`,
-        difference: {
-          columnsOnlyInSource: ['column1', 'column2'],
-          columnsOnlyInTarget: ['column3', 'column4'],
-          columnsInBoth: ['id', 'name', 'created_at'],
-          columnDifferences: [
-            {
-              columnName: 'status',
-              sourceType: 'int(11)',
-              targetType: 'varchar(255)'
-            }
-          ]
+    // 调用compare接口
+    const response = await databaseApi.compare(params)
+    if (response.code === 200) {
+      // 处理表对比结果
+      const resultData = response.data
+      const sourceRowCount = resultData.source.data.length
+      const targetRowCount = resultData.target.data.length
+      
+      // 构建结果信息
+      const formattedResult = {
+        code: 200,
+        message: '对比成功',
+        data: {
+          sourceTable: `${leftSelectedNode.value.dbName}.${leftSelectedNode.value.tableName}`,
+          sourceRowCount: sourceRowCount,
+          targetTable: `${rightSelectedNode.value.dbName}.${rightSelectedNode.value.tableName}`,
+          targetRowCount: targetRowCount,
+          fullData: resultData
         }
       }
-    }, null, 2)
+      
+      compareResult.value = JSON.stringify(formattedResult, null, 2)
+    } else {
+      ElMessage.error(`对比表失败: ${response.message || '未知错误'}`)
+      compareResult.value = `对比失败: ${response.message || '未知错误'}`
+    }
     
     showResult.value = true
   } catch (error) {
-    // console.error('对比表请求失败:', error)
+    console.error('对比表请求失败:', error)
     ElMessage.error('对比表请求失败')
     compareResult.value = `请求失败: ${error.message || '未知错误'}`
     showResult.value = true

@@ -229,8 +229,12 @@ export const databaseApi = {
     return api.post('/seisdb/getmonitor', parms)
   }
   //实例启动停止
-        ,operdbservice: (parms) => {
+  ,operdbservice: (parms) => {
     return api.post('/seisdb/operdbservice', parms)
+  }
+  //比较数据库和表
+  ,compare: (parms) => {
+    return api.post('/seisdb/compare', parms)
   }
 }
 
