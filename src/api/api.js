@@ -224,6 +224,9 @@ export const databaseApi = {
     ,logdownload: (parms) => {
     return api.get('/seisdb/logdownload', parms)
   }
+      ,getmonitor: (parms) => {
+    return api.post('/seisdb/getmonitor', parms)
+  }
 }
 
 export default api

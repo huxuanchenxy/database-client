@@ -11,7 +11,7 @@
   <el-dialog
     v-model="dialogVisible"
     title="实例监控"
-    width="800px"
+    width="1100px"
     append-to-body
   >
     <div class="instance-monitor-dialog">
@@ -20,11 +20,12 @@
           type="primary"
           size="small"
           @click="handleRefresh"
+          :loading="loading"
         >
           刷新
         </el-button>
       </div>
-      <el-table :data="connectionList" style="width: 100%">
+      <el-table :data="monitorList" style="width: 100%" stripe>
         <el-table-column prop="connectionName" label="连接名称" min-width="180">
           <template #default="scope">
             <span class="connection-name">{{ scope.row.connectionName }}</span>
@@ -35,11 +36,48 @@
             <span>{{ scope.row.dbHost }}</span>
           </template>
         </el-table-column>
+        <el-table-column prop="dbName" label="数据库名" width="150">
+          <template #default="scope">
+            <span>{{ scope.row.dbName }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="isConnected" label="连接状态" width="120">
           <template #default="scope">
             <el-tag :type="scope.row.isConnected ? 'success' : 'danger'">
               {{ scope.row.isConnected ? '已连接' : '未连接' }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="CPU使用率" width="150">
+          <template #default="scope">
+            <div class="monitor-item">
+              <div v-if="!scope.row.loading" class="monitor-content">
+                <span class="monitor-text">{{ Number(scope.row.cpu) }}%</span>
+                <el-progress
+                  :percentage="Number(scope.row.cpu)"
+                  :status="scope.row.cpuStatus === 1 ? 'exception' : 'success'"
+                  :stroke-width="8"
+                  :show-text="false"
+                ></el-progress>
+              </div>
+              <el-skeleton v-else animated :rows="1" :width="'100%'" />
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="内存使用率" width="150">
+          <template #default="scope">
+            <div class="monitor-item">
+              <div v-if="!scope.row.loading" class="monitor-content">
+                <span class="monitor-text">{{ Number(scope.row.memory) }}%</span>
+                <el-progress
+                  :percentage="Number(scope.row.memory)"
+                  :status="scope.row.memoryStatus === 1 ? 'exception' : 'success'"
+                  :stroke-width="8"
+                  :show-text="false"
+                ></el-progress>
+              </div>
+              <el-skeleton v-else animated :rows="1" :width="'100%'" />
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -54,26 +92,97 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useConnStore } from '@/stores/conn'
+import { useMonitorStore } from '@/stores/monitor'
+import { databaseApi } from '@/api/api'
 
 const connStore = useConnStore()
+const monitorStore = useMonitorStore()
 const dialogVisible = ref(false)
+const loading = ref(false)
 
-// 计算属性，从connStore获取连接列表
-const connectionList = computed(() => {
-  return connStore.connections
-})
+// 监控列表数据
+const monitorList = ref([])
 
 // 打开实例监控对话框
 const handleOpenDialog = () => {
   dialogVisible.value = true
+  // 加载监控数据
+  loadMonitorData()
+}
+
+// 监听对话框显示状态，当显示时加载数据
+watch(dialogVisible, (newVal) => {
+  if (newVal) {
+    loadMonitorData()
+  }
+})
+
+// 加载监控数据
+const loadMonitorData = async () => {
+  loading.value = true
+  
+  // 获取连接列表
+  const connections = connStore.connections
+  // 获取监控配置
+  const monitorConfig = monitorStore.getMonitorConfig()
+  
+  // 构建操作字符串：cpuThreshold,memoryThreshold
+  const oprationString = `${monitorConfig.cpuThreshold},${monitorConfig.memoryThreshold}`
+  
+  // 遍历每个连接，获取监控数据
+  const monitorDataList = await Promise.all(connections.map(async (connection) => {
+    try {
+      // 调用getmonitor接口
+      const params = {
+        dbName: connection.dbName,
+        dbHost: connection.dbHost,
+        user: connection.user,
+        password: connection.password,
+        isssl: connection.isssl || 0,
+        oprationString: oprationString
+      }
+      
+      const response = await databaseApi.getmonitor(params)
+      
+      if (response.code === 200) {
+        return {
+          ...connection,
+          ...response.data,
+          loading: false
+        }
+      } else {
+        return {
+          ...connection,
+          cpu: '-',
+          cpuStatus: 0,
+          memory: '-',
+          memoryStatus: 0,
+          loading: false
+        }
+      }
+    } catch (error) {
+      console.error(`获取连接 ${connection.connectionName} 的监控数据失败:`, error)
+      return {
+        ...connection,
+        cpu: '-',
+        cpuStatus: 0,
+        memory: '-',
+        memoryStatus: 0,
+        loading: false
+      }
+    }
+  }))
+  
+  // 更新监控列表
+  monitorList.value = monitorDataList
+  loading.value = false
 }
 
 // 刷新连接列表
 const handleRefresh = () => {
-  // 连接列表会通过computed自动从connStore获取最新数据
-  // 这里可以添加额外的刷新逻辑，比如重新连接或获取更多信息
+  loadMonitorData()
 }
 </script>
 
@@ -97,5 +206,27 @@ const handleRefresh = () => {
 
 .connection-name {
   font-weight: 500;
+}
+
+.monitor-item {
+  padding: 4px 0;
+}
+
+.monitor-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.monitor-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #606266;
+}
+
+:deep(.el-progress) {
+  flex: 1;
+  margin: 0;
 }
 </style>
