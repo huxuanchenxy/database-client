@@ -93,7 +93,175 @@
       <div v-if="showResult" class="result-container">
         <h3>对比结果</h3>
         <el-card>
-          <pre>{{ compareResult }}</pre>
+          <!-- 成功结果 -->
+          <div v-if="compareResult && compareResult.code === 200">
+            <!-- 数据库对比结果 -->
+            <div v-if="compareType === 'database'" class="database-result">
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-card shadow="hover" class="result-card">
+                    <template #header>
+                      <div class="card-header">
+                        <span>源数据库</span>
+                      </div>
+                    </template>
+                    <div class="result-content">
+                      <el-statistic
+                        title="数据库名称"
+                        :value="compareResult.data.sourceDb"
+                        text-color="#3f8600"
+                        value-style="font-size: 20px; font-weight: bold;"
+                      />
+                      <el-statistic
+                        title="表数量"
+                        :value="compareResult.data.sourceTableCount"
+                        text-color="#1890ff"
+                        value-style="font-size: 24px; font-weight: bold; margin-top: 20px;"
+                      >
+                        <template #suffix>
+                          <span style="font-size: 18px; margin-left: 5px;">张表</span>
+                        </template>
+                      </el-statistic>
+                    </div>
+                  </el-card>
+                </el-col>
+                <el-col :span="12">
+                  <el-card shadow="hover" class="result-card">
+                    <template #header>
+                      <div class="card-header">
+                        <span>目标数据库</span>
+                      </div>
+                    </template>
+                    <div class="result-content">
+                      <el-statistic
+                        title="数据库名称"
+                        :value="compareResult.data.targetDb"
+                        text-color="#3f8600"
+                        value-style="font-size: 20px; font-weight: bold;"
+                      />
+                      <el-statistic
+                        title="表数量"
+                        :value="compareResult.data.targetTableCount"
+                        text-color="#1890ff"
+                        value-style="font-size: 24px; font-weight: bold; margin-top: 20px;"
+                      >
+                        <template #suffix>
+                          <span style="font-size: 18px; margin-left: 5px;">张表</span>
+                        </template>
+                      </el-statistic>
+                    </div>
+                  </el-card>
+                </el-col>
+              </el-row>
+              
+              <!-- 详细信息展开按钮 -->
+              <el-collapse v-model="activeNames" class="detail-collapse">
+                <el-collapse-item title="查看详细信息" name="1">
+                  <div class="detail-content">
+                    <h4>源数据库表列表</h4>
+                    <el-table :data="compareResult.data.fullData.source.tableList" border style="width: 100%; margin-bottom: 20px;">
+                      <el-table-column prop="tableName" label="表名" />
+                    </el-table>
+                    <h4>目标数据库表列表</h4>
+                    <el-table :data="compareResult.data.fullData.target.tableList" border style="width: 100%;">
+                      <el-table-column prop="tableName" label="表名" />
+                    </el-table>
+                  </div>
+                </el-collapse-item>
+              </el-collapse>
+            </div>
+            
+            <!-- 表对比结果 -->
+            <div v-else-if="compareType === 'table'" class="table-result">
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-card shadow="hover" class="result-card">
+                    <template #header>
+                      <div class="card-header">
+                        <span>源表</span>
+                      </div>
+                    </template>
+                    <div class="result-content">
+                      <el-statistic
+                        title="表名"
+                        :value="compareResult.data.sourceTable"
+                        text-color="#3f8600"
+                        value-style="font-size: 20px; font-weight: bold;"
+                      />
+                      <el-statistic
+                        title="行数"
+                        :value="compareResult.data.sourceRowCount"
+                        text-color="#1890ff"
+                        value-style="font-size: 24px; font-weight: bold; margin-top: 20px;"
+                      >
+                        <template #suffix>
+                          <span style="font-size: 18px; margin-left: 5px;">行</span>
+                        </template>
+                      </el-statistic>
+                    </div>
+                  </el-card>
+                </el-col>
+                <el-col :span="12">
+                  <el-card shadow="hover" class="result-card">
+                    <template #header>
+                      <div class="card-header">
+                        <span>目标表</span>
+                      </div>
+                    </template>
+                    <div class="result-content">
+                      <el-statistic
+                        title="表名"
+                        :value="compareResult.data.targetTable"
+                        text-color="#3f8600"
+                        value-style="font-size: 20px; font-weight: bold;"
+                      />
+                      <el-statistic
+                        title="行数"
+                        :value="compareResult.data.targetRowCount"
+                        text-color="#1890ff"
+                        value-style="font-size: 24px; font-weight: bold; margin-top: 20px;"
+                      >
+                        <template #suffix>
+                          <span style="font-size: 18px; margin-left: 5px;">行</span>
+                        </template>
+                      </el-statistic>
+                    </div>
+                  </el-card>
+                </el-col>
+              </el-row>
+              
+              <!-- 详细信息展开按钮 -->
+              <el-collapse v-model="activeNames" class="detail-collapse">
+                <el-collapse-item title="查看详细信息" name="1">
+                  <div class="detail-content">
+                    <h4>源表列名</h4>
+                    <el-tag v-for="column in compareResult.data.fullData.source.columns" :key="column" style="margin: 5px;">
+                      {{ column }}
+                    </el-tag>
+                    <h4 style="margin-top: 20px;">目标表列名</h4>
+                    <el-tag v-for="column in compareResult.data.fullData.target.columns" :key="column" style="margin: 5px;">
+                      {{ column }}
+                    </el-tag>
+                  </div>
+                </el-collapse-item>
+              </el-collapse>
+            </div>
+          </div>
+          
+          <!-- 错误结果 -->
+          <div v-else-if="compareResult" class="error-result">
+            <el-alert
+              title="对比失败"
+              :description="compareResult.message || '未知错误'"
+              type="error"
+              show-icon
+            />
+          </div>
+          
+          <!-- 加载中状态 -->
+          <div v-else>
+            <el-skeleton :rows="3" animated />
+          </div>
         </el-card>
       </div>
     </el-dialog>
@@ -109,7 +277,9 @@ import { useConnStore } from '@/stores/conn'
 const connStore = useConnStore()
 const dialogVisible = ref(false)
 const showResult = ref(false)
-const compareResult = ref('')
+const compareResult = ref(null)
+const compareType = ref('') // 'database' 或 'table'
+const activeNames = ref([]) // 用于控制折叠面板的展开状态
 
 // 树结构配置
 const treeProps = {
@@ -301,7 +471,7 @@ async function compareDatabases() {
   
   try {
     showResult.value = false
-    compareResult.value = '正在对比数据库...'
+    compareType.value = 'database'
     
     // 构建对比参数
     const params = {
@@ -330,8 +500,8 @@ async function compareDatabases() {
       const sourceTableCount = resultData.source.tableList.length
       const targetTableCount = resultData.target.tableList.length
       
-      // 构建结果信息
-      const formattedResult = {
+      // 构建结构化结果信息
+      compareResult.value = {
         code: 200,
         message: '对比成功',
         data: {
@@ -342,18 +512,22 @@ async function compareDatabases() {
           fullData: resultData
         }
       }
-      
-      compareResult.value = JSON.stringify(formattedResult, null, 2)
     } else {
       ElMessage.error(`对比数据库失败: ${response.message || '未知错误'}`)
-      compareResult.value = `对比失败: ${response.message || '未知错误'}`
+      compareResult.value = {
+        code: response.code || 500,
+        message: response.message || '未知错误'
+      }
     }
     
     showResult.value = true
   } catch (error) {
     console.error('对比数据库请求失败:', error)
     ElMessage.error('对比数据库请求失败')
-    compareResult.value = `请求失败: ${error.message || '未知错误'}`
+    compareResult.value = {
+      code: 500,
+      message: error.message || '未知错误'
+    }
     showResult.value = true
   }
 }
@@ -367,7 +541,7 @@ async function compareTables() {
   
   try {
     showResult.value = false
-    compareResult.value = '正在对比表...'
+    compareType.value = 'table'
     
     // 构建对比参数
     const params = {
@@ -396,8 +570,8 @@ async function compareTables() {
       const sourceRowCount = resultData.source.data.length
       const targetRowCount = resultData.target.data.length
       
-      // 构建结果信息
-      const formattedResult = {
+      // 构建结构化结果信息
+      compareResult.value = {
         code: 200,
         message: '对比成功',
         data: {
@@ -408,18 +582,22 @@ async function compareTables() {
           fullData: resultData
         }
       }
-      
-      compareResult.value = JSON.stringify(formattedResult, null, 2)
     } else {
       ElMessage.error(`对比表失败: ${response.message || '未知错误'}`)
-      compareResult.value = `对比失败: ${response.message || '未知错误'}`
+      compareResult.value = {
+        code: response.code || 500,
+        message: response.message || '未知错误'
+      }
     }
     
     showResult.value = true
   } catch (error) {
     console.error('对比表请求失败:', error)
     ElMessage.error('对比表请求失败')
-    compareResult.value = `请求失败: ${error.message || '未知错误'}`
+    compareResult.value = {
+      code: 500,
+      message: error.message || '未知错误'
+    }
     showResult.value = true
   }
 }
@@ -433,7 +611,8 @@ const handleOpen = () => {
   leftSelectedNode.value = null
   rightSelectedNode.value = null
   showResult.value = false
-  compareResult.value = ''
+  compareResult.value = null
+  compareType.value = ''
 }
 
 // 监听对话框显示变化
@@ -520,5 +699,76 @@ onUnmounted(() => {
   border-radius: 4px;
   font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
+}
+
+/* 数据库对比结果样式 */
+.database-result,
+.table-result {
+  margin-top: 20px;
+}
+
+.result-card {
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.result-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  font-weight: bold;
+  font-size: 16px;
+  color: #303133;
+}
+
+.result-content {
+  padding: 10px 0;
+}
+
+.detail-collapse {
+  margin-top: 20px;
+}
+
+.detail-content h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #303133;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.detail-content .el-table {
+  margin-bottom: 20px;
+}
+
+.error-result {
+  padding: 20px;
+  text-align: center;
+}
+
+/* 统计数字样式 */
+:deep(.el-statistic) {
+  margin-bottom: 20px;
+}
+
+:deep(.el-statistic__title) {
+  font-size: 14px !important;
+  color: #606266 !important;
+  margin-bottom: 5px;
+}
+
+/* 行高和间距调整 */
+.result-container {
+  margin-top: 20px;
+}
+
+.result-container h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #303133;
 }
 </style>
