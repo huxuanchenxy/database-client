@@ -26,29 +26,29 @@
         </el-button>
       </div>
       <el-table :data="monitorList" style="width: 100%" stripe>
-        <el-table-column prop="connectionName" label="连接名称" min-width="180">
+        <el-table-column prop="connectionName" label="连接名称" min-width="90">
           <template #default="scope">
             <span class="connection-name">{{ scope.row.connectionName }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="dbHost" label="主机地址" min-width="180">
+        <el-table-column prop="dbHost" label="主机地址" min-width="120">
           <template #default="scope">
             <span>{{ scope.row.dbHost }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="dbName" label="数据库名" width="150">
+        <el-table-column prop="dbName" label="数据库名" width="100">
           <template #default="scope">
             <span>{{ scope.row.dbName }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="isConnected" label="连接状态" width="120">
+        <el-table-column prop="isConnected" label="连接状态" width="100">
           <template #default="scope">
             <el-tag :type="scope.row.isConnected ? 'success' : 'danger'">
               {{ scope.row.isConnected ? '已连接' : '未连接' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="CPU使用率" width="150">
+        <el-table-column label="CPU使用率" width="130">
           <template #default="scope">
             <div class="monitor-item">
               <div v-if="!scope.row.loading" class="monitor-content">
@@ -80,6 +80,36 @@
             </div>
           </template>
         </el-table-column>
+        <el-table-column label="操作" width="180">
+          <template #default="scope">
+            <div class="operation-buttons">
+              <el-button
+                type="primary"
+                size="small"
+                @click="handleOperate(scope.row, 1)"
+                :loading="operationLoading[scope.row.id]"
+              >
+                启动
+              </el-button>
+              <el-button
+                type="warning"
+                size="small"
+                @click="handleOperate(scope.row, 2)"
+                :loading="operationLoading[scope.row.id]"
+              >
+                停止
+              </el-button>
+              <el-button
+                type="danger"
+                size="small"
+                @click="handleOperate(scope.row, 3)"
+                :loading="operationLoading[scope.row.id]"
+              >
+                重启
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
       </el-table>
     </div>
 
@@ -93,6 +123,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useConnStore } from '@/stores/conn'
 import { useMonitorStore } from '@/stores/monitor'
 import { databaseApi } from '@/api/api'
@@ -101,6 +132,9 @@ const connStore = useConnStore()
 const monitorStore = useMonitorStore()
 const dialogVisible = ref(false)
 const loading = ref(false)
+
+// 操作加载状态
+const operationLoading = ref({})
 
 // 监控列表数据
 const monitorList = ref([])
@@ -180,6 +214,48 @@ const loadMonitorData = async () => {
   loading.value = false
 }
 
+// 实例操作（启动/停止/重启）
+const handleOperate = async (connection, oprationInt) => {
+  try {
+    // 设置对应连接实例的loading状态
+    operationLoading.value[connection.id] = true
+    
+    // 构建请求参数
+    const params = {
+      dbName: connection.dbName,
+      dbHost: connection.dbHost,
+      user: connection.user,
+      password: connection.password,
+      oprationInt: oprationInt,
+      isssl: connection.isssl || 0
+    }
+    
+    // 调用operdbservice接口
+    const response = await databaseApi.operdbservice(params)
+    
+    // 处理返回结果
+    if (response.code === 200 && response.data.status === 1) {
+      // 操作成功
+      const operationText = oprationInt === 1 ? '启动' : oprationInt === 2 ? '停止' : '重启'
+      ElMessage.success(`${operationText}实例成功`)
+      
+      // 刷新监控数据
+      loadMonitorData()
+    } else {
+      // 操作失败
+      const operationText = oprationInt === 1 ? '启动' : oprationInt === 2 ? '停止' : '重启'
+      ElMessage.error(`${operationText}实例失败: ${response.message || '未知错误'}`)
+    }
+  } catch (error) {
+    console.error('操作实例失败:', error)
+    const operationText = oprationInt === 1 ? '启动' : oprationInt === 2 ? '停止' : '重启'
+    ElMessage.error(`${operationText}实例失败: ${error.message || '网络错误'}`)
+  } finally {
+    // 重置loading状态
+    operationLoading.value[connection.id] = false
+  }
+}
+
 // 刷新连接列表
 const handleRefresh = () => {
   loadMonitorData()
@@ -228,5 +304,18 @@ const handleRefresh = () => {
 :deep(.el-progress) {
   flex: 1;
   margin: 0;
+}
+
+.operation-buttons {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.operation-buttons :deep(.el-button) {
+  padding: 0 10px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 12px;
 }
 </style>

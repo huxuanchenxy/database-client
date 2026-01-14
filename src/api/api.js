@@ -224,8 +224,13 @@ export const databaseApi = {
     ,logdownload: (parms) => {
     return api.get('/seisdb/logdownload', parms)
   }
+  //cpu 内存
       ,getmonitor: (parms) => {
     return api.post('/seisdb/getmonitor', parms)
+  }
+  //实例启动停止
+        ,operdbservice: (parms) => {
+    return api.post('/seisdb/operdbservice', parms)
   }
 }
 
