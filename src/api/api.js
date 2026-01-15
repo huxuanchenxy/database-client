@@ -236,6 +236,15 @@ export const databaseApi = {
   ,compare: (parms) => {
     return api.post('/seisdb/compare', parms)
   }
+  //导入数据库
+    ,restore: (parms) => {
+    // 使用FormData时，不要手动设置Content-Type，浏览器会自动处理并添加正确的boundary
+    return api.post('/seisdb/restore', parms, {
+      headers: {
+        'Content-Type': undefined // 让浏览器自动设置Content-Type
+      }
+    })
+  }
 }
 
 export default api

@@ -85,6 +85,7 @@
     <div class="item"  v-if="menu.type === 'connection' && menu.data">
         <div v-if="menu.data.isConnected" class="item" @click="handleCreate('disconnect')">断开连接</div>
         <div v-else class="item" @click="handleCreate('connect')">连接</div>
+        <div class="item" @click="handleCreate('importDb')" v-if="menu.data.isConnected">导入数据库</div>
         <div class="item" @click="handleCreate('viewLogs')">查看日志</div>
         <div class="item" @click="handleCreate('deleteConnection')">删除连接配置</div>
     </div>
@@ -121,6 +122,44 @@
          </el-table-column>
        </el-table>
      </div>
+   </el-dialog>
+   
+   <!-- 导入数据库对话框 -->
+   <el-dialog
+     v-model="importDbDialogVisible"
+     title="导入数据库"
+     width="600px"
+     append-to-body
+   >
+     <el-form :model="importDbForm" :rules="importDbRules" ref="importDbFormRef" label-width="120px">
+       <el-form-item label="数据库名称" prop="dbName">
+         <el-input v-model="importDbForm.dbName" placeholder="请输入数据库名称" />
+       </el-form-item>
+       <el-form-item label="选择dump文件">
+         <el-upload
+           ref="uploadRef"
+           :auto-upload="false"
+           :file-list="fileList"
+           :limit="1"
+           accept=".dump"
+           :before-upload="beforeUpload"
+           :on-change="handleFileChange"
+         >
+           <el-button type="primary">选择文件</el-button>
+           <template #tip>
+             <div class="el-upload__tip">请选择 .dump 格式的数据库备份文件</div>
+           </template>
+         </el-upload>
+       </el-form-item>
+     </el-form>
+     <template #footer>
+       <span class="dialog-footer">
+         <el-button @click="importDbDialogVisible = false">取消</el-button>
+         <el-button type="primary" @click="handleImportDb" :loading="importDbLoading">
+           上传导入
+         </el-button>
+       </span>
+     </template>
    </el-dialog>
 </template>
 
@@ -502,7 +541,22 @@ width:100,  // 增加了宽度
 const logDialogVisible = ref(false)
 const logFiles = ref([])
 
+// 导入数据库相关
+const importDbDialogVisible = ref(false)
+const importDbForm = ref({
+  dbName: ''
+})
+const importDbFormRef = ref(null)
+const importDbLoading = ref(false)
+
+// 文件上传相关
+const uploadRef = ref(null)
+const fileList = ref([])
+const selectedFile = ref(null)
+
 const currentNode = ref(null)
+
+// 导入数据库相关 - 移动到 validateDbName 函数之后再定义 importDbRules
 // 节点右键事件
 function onContextMenu(event, data, node) {
     event.preventDefault(); // 阻止默认右键菜单
@@ -657,6 +711,13 @@ const handleCreate = (type)=> {
   }else if(type === 'viewLogs'){
     // 查看日志逻辑
     viewLogs()
+  }else if(type === 'importDb'){
+    // 导入数据库逻辑
+    importDbDialogVisible.value = true
+    // 重置表单和文件列表
+    importDbForm.value = { dbName: '' }
+    fileList.value = []
+    selectedFile.value = null
   }
 }
 
@@ -1044,6 +1105,122 @@ const downloadLogFile = async (logFileName) => {
       logFiles.value[logFileIndex].downloading = false;
     }
   }
+}
+
+// 验证数据库名称是否重复
+const validateDbName = async (rule, value, callback) => {
+  if (!value) {
+    return callback(new Error('请输入数据库名称'));
+  }
+  
+  // 获取当前连接实例
+  const connectionData = currentNode.value.data;
+  const connection = connections.value.find(conn => conn.id === connectionData.connectionId);
+  
+  if (!connection) {
+    return callback(new Error('找不到对应的连接信息'));
+  }
+  
+  try {
+    // 调用getDBlist接口获取当前实例下的数据库列表
+    const res = await databaseApi.getDBlist(connection);
+    if (res.code === 200) {
+      const dbList = res.data || [];
+      if (dbList.includes(value)) {
+        callback(new Error('数据库名称已存在'));
+      } else {
+        callback();
+      }
+    } else {
+      callback(new Error('获取数据库列表失败'));
+    }
+  } catch (error) {
+    callback(new Error('验证数据库名称失败'));
+  }
+}
+
+// 定义导入数据库表单规则（在validateDbName函数之后）
+const importDbRules = {
+  dbName: [
+    { required: true, message: '请输入数据库名称', trigger: 'blur' },
+    { validator: validateDbName, trigger: 'blur' }
+  ]
+}
+
+// 文件上传前的验证
+const beforeUpload = (file) => {
+  const isDump = file.type === 'application/octet-stream' || file.name.endsWith('.dump');
+  if (!isDump) {
+    ElMessage.error('只能上传 .dump 格式的文件');
+  }
+  return isDump;
+}
+
+// 文件选择变化事件
+const handleFileChange = (file, fileList) => {
+  if (fileList.length > 0) {
+    selectedFile.value = fileList[fileList.length - 1].raw;
+  } else {
+    selectedFile.value = null;
+  }
+}
+
+// 处理导入数据库
+const handleImportDb = async () => {
+  if (!importDbFormRef.value) return;
+  
+  // 表单验证
+  await importDbFormRef.value.validate(async (valid) => {
+    if (valid) {
+      if (!selectedFile.value) {
+        ElMessage.error('请选择要上传的dump文件');
+        return;
+      }
+      
+      importDbLoading.value = true;
+      
+      try {
+        // 获取当前连接实例
+        const connectionData = currentNode.value.data;
+        const connection = connections.value.find(conn => conn.id === connectionData.connectionId);
+        
+        if (!connection) {
+          ElMessage.error('找不到对应的连接信息');
+          return;
+        }
+        
+        // 构建参数
+        const params = {
+          dbName: importDbForm.value.dbName,
+          dbHost: connection.dbHost,
+          user: connection.user,
+          password: connection.password
+        };
+        
+        // 构建form-data
+        const formData = new FormData();
+        formData.append('file', selectedFile.value);
+        formData.append('params', JSON.stringify(params));
+        
+        // 调用restore接口
+        const response = await databaseApi.restore(formData);
+        
+        if (response.code === 200) {
+          ElMessage.success('数据库导入成功');
+          importDbDialogVisible.value = false;
+          // 重新加载数据库列表
+          await loadDatabases();
+        } else {
+          ElMessage.error(`数据库导入失败: ${response.message || '未知错误'}`);
+        }
+      } catch (error) {
+        console.error('导入数据库失败:', error);
+        ElMessage.error('导入数据库请求失败');
+      } finally {
+        importDbLoading.value = false;
+      }
+    }
+  });
 }
 
 </script>
