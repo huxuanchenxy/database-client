@@ -245,6 +245,10 @@ export const databaseApi = {
       }
     })
   }
+  //杀进程
+  ,operproc: (parms) => {
+    return api.post('/seisdb/operproc', parms)
+  }
 }
 
 export default api

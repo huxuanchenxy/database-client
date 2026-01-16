@@ -49,6 +49,18 @@
                 </el-tag>
               </template>
             </el-table-column>
+            <el-table-column label="操作" width="120px" fixed="right">
+              <template #default="{ row }">
+                <el-button 
+                  type="danger" 
+                  size="small" 
+                  @click="killProcess(row)"
+                  :loading="killingProcesses.includes(row.pid)"
+                >
+                  删除
+                </el-button>
+              </template>
+            </el-table-column>
           </el-table>
         </div>
       </el-card>
@@ -58,13 +70,14 @@
 
 <script setup>
 import { ref, onMounted,onUnmounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { databaseApi } from '@/api/api.js'
 import { useConnStore } from '@/stores/conn'
 
 const connStore = useConnStore()
 const dialogVisible = ref(false)
 const slowQueries = ref([])
+const killingProcesses = ref([]) // 存储正在删除的进程ID，用于显示加载状态
 
 // 状态颜色映射
 const stateColorMap = {
@@ -99,6 +112,60 @@ async function loadSlowQueries() {
   } catch (error) {
     // console.error('加载慢查询请求失败:', error)
     ElMessage.error('加载慢查询请求失败')
+  }
+}
+
+// 删除进程
+async function killProcess(row) {
+  if (!connStore.currentConnection) {
+    ElMessage.warning('请先连接数据库')
+    return
+  }
+  
+  try {
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      `确定要删除进程 ${row.pid} 吗？此操作不可恢复！`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    // 添加到正在删除的进程列表
+    killingProcesses.value.push(row.pid)
+    
+    // 构建请求参数
+    const params = {
+      dbName: connStore.currentConnection.dbName,
+      dbHost: connStore.currentConnection.dbHost,
+      user: connStore.currentConnection.user,
+      password: connStore.currentConnection.password,
+      isssl: connStore.currentConnection.isssl || 0,
+      oprationInt: row.pid // 进程ID
+    }
+    
+    // 调用operproc接口
+    const response = await databaseApi.operproc(params)
+    
+    if (response.code === 200) {
+      ElMessage.success(`进程 ${row.pid} 删除成功`)
+      // 重新加载慢查询列表
+      await loadSlowQueries()
+    } else {
+      ElMessage.error(`删除进程 ${row.pid} 失败: ${response.message || '未知错误'}`)
+    }
+  } catch (error) {
+    // 如果用户取消删除，不显示错误
+    if (error !== 'cancel') {
+      console.error('删除进程请求失败:', error)
+      ElMessage.error('删除进程请求失败')
+    }
+  } finally {
+    // 从正在删除的进程列表中移除
+    killingProcesses.value = killingProcesses.value.filter(pid => pid !== row.pid)
   }
 }
 
